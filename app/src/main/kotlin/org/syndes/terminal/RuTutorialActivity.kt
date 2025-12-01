@@ -105,6 +105,7 @@ class RuTutorialActivity : AppCompatActivity() {
   batchren <dir> <pattern> - массовое переименование файлов в директории
   batchedit <old> <new> <dir> [--dry] - массовая замена текста в файлах
   calc                 - открыть приложение калькулятора
+  obs64                - Утилита KanjiMapper
   cat                  - (см. Files) показать содержимое файла
   cmp                  - (см. Files) сравнить файлы
   diff [-u] [-c <n>] [-i] <f1> <f2> - показать текстовые отличия с опциями (unified/context/ignore-case)
