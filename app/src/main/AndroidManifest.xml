@@ -47,6 +47,11 @@
             android:theme="@style/AppTheme.Transparent" />
 
                     <activity
+            android:name=".RuTutorialActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.Transparent" />
+
+                    <activity
             android:name=".ResetupActivity"
             android:exported="false"
             android:theme="@style/AppTheme" />
