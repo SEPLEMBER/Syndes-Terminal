@@ -1417,6 +1417,76 @@ Hello!   \__/'---'\__/
                     "Info: opening battery settings"
                 }
 
+"kbd" -> {
+                    val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
+                    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    "Info: opening keyboard settings"
+                }
+
+                "aband" -> {
+                    val intent = Intent(Settings.ACTION_DEVICE_INFO_SETTINGS)
+                    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    "Info: opening about phone settings"
+                }
+
+                "accs" -> {
+                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    "Info: opening accessibility settings"
+                }
+
+                "priv" -> {
+                    val intent = Intent(Settings.ACTION_PRIVACY_SETTINGS)
+                    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    "Info: opening privacy settings"
+                }
+
+"lang" -> {
+                    val intent = Intent(Settings.ACTION_LOCALE_SETTINGS)
+                    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    "Info: opening language settings"
+                }
+
+                "home" -> {
+                    val intent = Intent(Settings.ACTION_HOME_SETTINGS)
+                    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    "Info: opening home screen / launcher settings"
+                }
+
+                "zen" -> {
+                    val intent = Intent(Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS)
+                    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    "Info: opening Do Not Disturb settings"
+                }
+
+                "night" -> {
+                    val intent = Intent(Settings.ACTION_NIGHT_DISPLAY_SETTINGS)
+                    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    "Info: opening night light / blue light filter"
+                }
+
+"apse" -> {
+                    if (args.isEmpty()) return "Usage: apse <app name or package>"
+                    val target = args.joinToString(" ")
+                    val pkg = if (target.contains(".")) target else findPackageByName(ctx, target)
+                        ?: return "Error: app not found: $target"
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.parse("package:$pkg")
+                        if (ctx !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    ctx.startActivity(intent)
+                    "Info: opened settings for $pkg"
+                }
+
+
                 "wifi" -> {
                     val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
                     if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
