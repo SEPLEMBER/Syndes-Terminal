@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Syndes Terminal</string>
+    <string name="app_name">Terminal</string>
     <string name="hint_command">Enter command</string>
     <string name="btn_run">Run</string>
     <string name="close">Close</string>
