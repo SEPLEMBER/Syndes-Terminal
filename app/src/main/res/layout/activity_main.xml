@@ -68,7 +68,7 @@
             android:singleLine="true"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:textColor="@color/terminal_color"
+            android:textColor="@color/terminal_text"
             android:background="@android:color/transparent"
             android:padding="8dp" />
 
