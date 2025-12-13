@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity() {
 
         // Переопределяем кнопку: текстовый вид, жёлтый цвет (вшитый)
         sendButton.text = "RUN"
-        val embeddedYellow = Color.parseColor("#FFD54F")
+        val embeddedYellow = Color.parseColor("#03A9F4")
         sendButton.setTextColor(embeddedYellow)
         sendButton.setBackgroundColor(Color.TRANSPARENT)
 
