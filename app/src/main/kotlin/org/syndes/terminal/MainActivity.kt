@@ -593,7 +593,7 @@ class MainActivity : AppCompatActivity() {
                 return "Error: invalid duration"
             }
             withContext(Dispatchers.Main) {
-                appendToTerminal(colorize("...:\n", infoColor), infoColor)
+                appendToTerminal(colorize("...\n", infoColor), infoColor)
             }
             // suspend without blocking UI
             var remaining = millis
