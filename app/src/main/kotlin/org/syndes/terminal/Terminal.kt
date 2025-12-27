@@ -27,6 +27,8 @@ import java.util.zip.ZipOutputStream
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.core.app.NotificationCompat
+import android.content.ComponentName
+import android.content.ActivityNotFoundException
 
 class Terminal {
 
