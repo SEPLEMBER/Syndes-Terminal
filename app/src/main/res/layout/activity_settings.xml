@@ -80,7 +80,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Защита от скриншотов"
+                android:text="Disable screenshots"
                 android:fontFamily="monospace"
                 android:textColor="@color/terminal_text"/>
             <androidx.appcompat.widget.SwitchCompat
