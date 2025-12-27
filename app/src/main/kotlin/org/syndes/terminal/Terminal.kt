@@ -27,8 +27,6 @@ import java.util.zip.ZipOutputStream
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.core.app.NotificationCompat
-import android.content.ComponentName
-import android.content.ActivityNotFoundException
 
 class Terminal {
 
@@ -1608,25 +1606,6 @@ Hello!   \__/'---'\__/
         "Info: opening Rust app"
     } else {
         "Error: Rust not installed"
-    }
-}
-
-"zls" -> {
-    val intent = Intent().apply {
-        component = ComponentName(
-            "com.syndes.javacomponents",
-            "com.syndes.javacomponents.ZLSActivity"
-        )
-        if (ctx !is Activity) {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-    }
-
-    try {
-        ctx.startActivity(intent)
-        "Launch ZER0LESS"
-    } catch (e: ActivityNotFoundException) {
-        "Error: ZER0LESS not installed"
     }
 }
 
