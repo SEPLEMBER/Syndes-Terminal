@@ -1609,7 +1609,7 @@ Hello!   \__/'---'\__/
     }
 }
 
-"ZLS" -> {
+"zls" -> {
     val intent = Intent().apply {
         component = ComponentName(
             "com.syndes.javacomponents",
