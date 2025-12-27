@@ -1597,6 +1597,38 @@ Hello!   \__/'---'\__/
                     "Info: opening account settings"
                 }
 
+                "rust" -> {
+    val pm = ctx.packageManager
+    val intent = pm.getLaunchIntentForPackage("org.syndes.rust")
+    if (intent != null) {
+        if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        ctx.startActivity(intent)
+        "Info: opening Rust app"
+    } else {
+        "Error: Rust not installed"
+    }
+}
+
+"ZLS" -> {
+    val intent = Intent().apply {
+        component = ComponentName(
+            "com.syndes.javacomponents",
+            "com.syndes.javacomponents.ZLSActivity"
+        )
+        if (ctx !is Activity) {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+    }
+
+    try {
+        ctx.startActivity(intent)
+        "Launch ZER0LESS"
+    } catch (e: ActivityNotFoundException) {
+        "Error: ZER0LESS not installed"
+    }
+}
+
+
                 "dev" -> {
                     val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                     if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
