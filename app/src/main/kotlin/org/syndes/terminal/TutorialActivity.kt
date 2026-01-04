@@ -50,7 +50,6 @@ Available commands:
   pm uninstall <pkg>   - uninstall package (starts system uninstall flow)
   pminfo|pkginfo <pkg> - show package information (package or app visible name)
   pkgof|findpkg <app>  - find package name(s) by visible app name
-  resetup              - open batch uninstall utility (batch remove apps)
   runsyd <name>        - load and inject script from SAF root 'scripts' folder (tries .syd, .sh, .txt)
 
 ==B: Files & File system operations==
