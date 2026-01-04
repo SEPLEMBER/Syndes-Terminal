@@ -50,7 +50,6 @@ class RuTutorialActivity : AppCompatActivity() {
   pm uninstall <pkg>   - удалить пакет (запускает системный диалог удаления)
   pminfo|pkginfo <pkg> - показать информацию о пакете (имя пакета или видимое имя приложения)
   pkgof|findpkg <app>  - найти имя(а) пакета по видимому имени приложения
-  resetup              - открыть утилиту пакетного удаления (итерирует список пакетов для удаления)
   runsyd <name>        - загрузить и вставить скрипт из папки 'scripts' в SAF root (пытается .syd, .sh, .txt)
 
 ==B: Files & File system operations==
