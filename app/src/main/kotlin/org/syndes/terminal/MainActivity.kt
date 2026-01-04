@@ -124,8 +124,8 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         // Включаем прокрутку
         terminalOutput.movementMethod = ScrollingMovementMethod()
-        // Вступительное сообщение (подсветка info)
-        val infoColor = ContextCompat.getColor(this, R.color.color_info)
+        // Вступительное сообщение
+        val infoColor = ContextCompat.getColor(this, R.color.terminal_text)
         appendToTerminal(colorize("Welcome to Syndes Terminal!\nType 'help' to see commands.\n\n", infoColor), infoColor)
         // Переопределяем кнопку: текстовый вид, жёлтый цвет (вшитый)
         sendButton.text = "RUN"
