@@ -172,7 +172,7 @@ class MainActivity : AppCompatActivity() {
         }
         // handle incoming intent (may be shortcut)
         handleIncomingIntent(intent)
-        // boot shell: если есть автозагрузочная команда — выполнить её при старте (но НЕ показывать окно)
+        // boot shell: если есть автозагрузочная команда — выполнить её при старте (но не показывать окно)
         checkBootShellOnStart()
     }
 
@@ -1402,7 +1402,7 @@ class MainActivity : AppCompatActivity() {
                 setBackgroundColor(Color.parseColor("#101010"))
             }
             val tv = TextView(this).apply {
-                text = "BootShell — автозагрузка команд\n(вставьте команды; сохраните чтобы включить, очистите чтобы отключить)"
+                text = "BootShell — command autoload\n(insert commands; save to enable, clear to disable)"
                 setTextColor(ContextCompat.getColor(this@MainActivity, R.color.color_info))
                 val padv = (8 * resources.displayMetrics.density).toInt()
                 setPadding(padv, padv, padv, padv)
