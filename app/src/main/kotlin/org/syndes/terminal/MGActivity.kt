@@ -7,15 +7,10 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.TypedValue
-import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -38,18 +33,26 @@ class MGActivity : AppCompatActivity() {
         "Boot sequence continuing..."
     )
 
+    // Фиксированный заголовок (появляется сразу)
+    private val bootHeaderText = """
+        ; ================================================
+        ; Mindbreaker UEFI Bootloader v9.07 "Neon Fracture"
+        ; E.F.P. organization.
+        ; (c) 2026 Kernel Hall / Open Source Foundation Project
+        ; ================================================
+        section .textglobal _start_start:
+    """.trimIndent()
+
     // Параметры скорости
     private val charDelay = 9L       // мс между символами (типинг)
-    private val linePause = 150L     // пауза после полной строки
-    private val finalPause = 300L    // пауза перед Finish
+    private val linePause = 150L      // пауза после полной строки
+    private val finalPause = 300L     // пауза перед Finish
 
     // Views для сплэша
     private var overlay: View? = null
     private var bootText: TextView? = null
     private var cursor: TextView? = null
-
-    // Программно созданный заголовок (фиксированный сверху)
-    private var headerView: TextView? = null
+    private var bootHeader: TextView? = null
 
     // Режим: если сплэш уже завершён, не запускать повторно
     private var bootCompleted = false
@@ -67,9 +70,11 @@ class MGActivity : AppCompatActivity() {
         overlay = findViewById(R.id.mg_boot_overlay)
         bootText = findViewById(R.id.mg_boot_text)
         cursor = findViewById(R.id.mg_boot_cursor)
+        bootHeader = findViewById(R.id.mg_boot_header)
 
-        // Создаём и прикрепляем заголовок сразу (без задержек)
-        createAndAttachHeader()
+        // Устанавливаем фиксированный хедер СРАЗУ (без задержек) и зеленый цвет уже в xml
+        bootHeader?.text = bootHeaderText
+        bootHeader?.visibility = View.VISIBLE
 
         // сразу запускаем LiveBoot, если ещё не запускали
         if (!bootCompleted) startLiveBoot()
@@ -102,7 +107,6 @@ class MGActivity : AppCompatActivity() {
         // отменяем все отложенные задачи
         handler.removeCallbacksAndMessages(null)
         stopCursorBlink()
-        removeHeaderIfAny()
     }
 
     // --- LiveBoot implementation ---
@@ -110,6 +114,8 @@ class MGActivity : AppCompatActivity() {
         bootText?.text = ""  // очистим
         overlay?.visibility = View.VISIBLE
         overlay?.alpha = 1f
+        // header уже установлен в onCreate, убедимся что он видим
+        bootHeader?.visibility = View.VISIBLE
         cursor?.visibility = View.VISIBLE
         startCursorBlink()
         // Start printing lines sequentially
@@ -164,8 +170,8 @@ class MGActivity : AppCompatActivity() {
             // скроллим вниз, если нужно (bootText в ScrollView делается в xml)
             val scroll = findViewById<View>(R.id.mg_boot_scroll)
             scroll?.post {
-                if (scroll is ScrollView) {
-                    scroll.fullScroll(View.FOCUS_DOWN)
+                if (scroll is android.widget.ScrollView) {
+                    scroll.fullScroll(android.view.View.FOCUS_DOWN)
                 }
             }
         }
@@ -174,17 +180,19 @@ class MGActivity : AppCompatActivity() {
     private fun finishBootOverlay() {
         // остановим курсор
         stopCursorBlink()
-        // Плавно скрываем overlay
+
+        // Плавно скрываем overlay (включая header, т.к. header — дочерний элемент overlay)
         overlay?.animate()
             ?.alpha(0f)
             ?.setDuration(420)
             ?.setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
-                    // прячем overlay и удаляем заголовок
+                    // полностью скрываем overlay
                     overlay?.visibility = View.GONE
                     overlay?.alpha = 1f
+                    // убедимся, что header тоже скрыт
+                    bootHeader?.visibility = View.GONE
                     bootCompleted = true
-                    removeHeaderIfAny()
                 }
             })
     }
@@ -207,82 +215,5 @@ class MGActivity : AppCompatActivity() {
         cursorRunnable?.let { handler.removeCallbacks(it) }
         cursor?.visibility = View.GONE
         cursorRunnable = null
-    }
-
-    // --- header (фиксированный сверху) ---
-    private fun createAndAttachHeader() {
-        // Если уже создан — ничего не делаем
-        if (headerView != null) return
-
-        // Текст, который попросили закрепить сверху
-        val headerText = """
-            ; ================================================
-            ; Mindbreaker UEFI Bootloader v9.07 "Neon Fracture"
-            ; E.F.P. organization.
-            ; (c) 2026 Kernel Hall / Open Source Foundation Project
-            ; ================================================
-            section .text
-            global _start_start:
-        """.trimIndent()
-
-        // Создаём TextView программно
-        val header = TextView(this).apply {
-            text = headerText
-            typeface = Typeface.MONOSPACE
-            // небольшой размер — подстраивай при желании
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            // берем цвет из bootText (если в XML задан зелёный — он сохранится)
-            bootText?.currentTextColor?.let { setTextColor(it) }
-            // предотвращаем перехват кликов/фокуса
-            isFocusable = false
-            isClickable = false
-            isFocusableInTouchMode = false
-            // немного отступов для эстетики
-            val p = (6 * resources.displayMetrics.density).toInt()
-            setPadding(p, p, p, p)
-        }
-
-        headerView = header
-
-        // Попробуем добавить header внутрь overlay (если это ViewGroup).
-        // Иначе — добавим в корень activity (android.R.id.content).
-        val added = when (val o = overlay) {
-            is ViewGroup -> {
-                // используем FrameLayout.LayoutParams с gravity TOP
-                val lp = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    gravity = Gravity.TOP or Gravity.START
-                }
-                o.addView(header, lp)
-                true
-            }
-            else -> {
-                // fallback: добавляем в корневой контейнер
-                val root = findViewById<ViewGroup>(android.R.id.content)
-                val lp = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    gravity = Gravity.TOP or Gravity.START
-                }
-                root.addView(header, lp)
-                true
-            }
-        }
-
-        // header виден сразу (без анимации задержки)
-        header.visibility = View.VISIBLE
-    }
-
-    private fun removeHeaderIfAny() {
-        headerView?.let { hv ->
-            val parent = hv.parent
-            if (parent is ViewGroup) {
-                parent.removeView(hv)
-            }
-            headerView = null
-        }
     }
 }
