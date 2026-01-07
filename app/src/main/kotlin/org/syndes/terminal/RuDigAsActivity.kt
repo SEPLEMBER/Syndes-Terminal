@@ -1,4 +1,4 @@
-package app.pawstribe.assistant
+package org.syndes.terminal
 
 import android.content.Intent
 import android.graphics.Typeface
@@ -29,7 +29,7 @@ import java.time.Month
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlin.math.*
-import app.pawstribe.assistant.R
+import org.syndes.terminal.R
 
 class RuDigAsActivity : AppCompatActivity() {
 
