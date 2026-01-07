@@ -100,6 +100,7 @@ class MGActivity : AppCompatActivity() {
     private fun startLiveBoot() {
         bootText?.text = ""  // очистим
         overlay?.visibility = View.VISIBLE
+        overlay?.alpha = 1f
         cursor?.visibility = View.VISIBLE
         startCursorBlink()
         // Start printing lines sequentially
@@ -165,12 +166,12 @@ class MGActivity : AppCompatActivity() {
     private fun finishBootOverlay() {
         // остановим курсор
         stopCursorBlink()
-        // Раскрасим последний статус (опционально добавить оттенок) — пока просто плавно исчезаем
+        // Плавно скрываем overlay
         overlay?.animate()
             ?.alpha(0f)
             ?.setDuration(420)
             ?.setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     overlay?.visibility = View.GONE
                     overlay?.alpha = 1f
                     bootCompleted = true
