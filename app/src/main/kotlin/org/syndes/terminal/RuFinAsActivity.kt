@@ -30,7 +30,7 @@ import java.time.Month
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlin.math.pow
-import app.pawstribe.assistant.R
+import org.syndes.terminal.R
 
 class RuFinAsActivity : AppCompatActivity() {
 
