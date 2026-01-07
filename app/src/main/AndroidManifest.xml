@@ -109,11 +109,6 @@
     android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
     android:exported="false" />
 
-        <activity
-    android:name=".ADPBMainActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
-
         
         <!-- foreground-service for watchdog -->
         <service
