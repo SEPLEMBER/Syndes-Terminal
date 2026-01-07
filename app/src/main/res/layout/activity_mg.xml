@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mg_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:gravity="center_horizontal"
+    android:background="#060711"> 
+
+    <!-- Инструкция (хардкод) -->
+    <TextView
+        android:id="@+id/mg_instruction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="1. Formulh\n2. RexLed\n\nВведите номер утилиты и нажмите GO"
+        android:textSize="16sp"
+        android:lineSpacingExtra="4dp"
+        android:fontFamily="monospace"
+        android:textColor="#39FFCC"      
+        android:textStyle="bold"
+        android:paddingBottom="20dp" />
+
+    <!-- Визуальный контейнер (чтобы центральный ввод выглядел как neon field) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:layout_marginBottom="18dp"
+        android:background="#071219"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp">
+
+        <EditText
+            android:id="@+id/mg_input"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:hint="Enter number"
+            android:inputType="number"
+            android:imeOptions="actionDone"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:textColor="#00FFD5"        
+            android:hintTextColor="#204040"
+            android:background="@android:color/transparent"
+            android:textSize="18sp"
+            android:fontFamily="monospace" />
+
+        <Button
+            android:id="@+id/mg_go_button"
+            android:layout_width="90dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="10dp"
+            android:text="GO"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:textColor="#041217"        
+            android:backgroundTint="#FF00B8"  
+            android:fontFamily="monospace"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Подсказка/футер в стиле neon -->
+    <TextView
+        android:id="@+id/mg_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Киберпанк режим — простой переход между утилитами"
+        android:textColor="#FF4DFF"  
+        android:textSize="12sp"
+        android:fontFamily="monospace"
+        android:paddingTop="8dp" />
+
+</LinearLayout>
