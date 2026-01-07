@@ -55,7 +55,15 @@ class FormulhMainActivity : AppCompatActivity() {
                 setPadding(18, 18, 18, 18)
                 // фон прозрачный по умолчанию
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
+                // === Разрешаем выделение и копирование текста ===
+                // Поддерживается на API 11+
+                isLongClickable = true
+                setTextIsSelectable(true)
+                // не перехватываем long click — оставляем стандартное поведение копирования
+                setOnLongClickListener { false }
             }
+
             // небольшой разделитель
             val wrapper = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -73,6 +81,10 @@ class FormulhMainActivity : AppCompatActivity() {
         fun clearHighlight() {
             highlightedView?.let { v ->
                 v.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                // если внутри был TextView, вернём прозрачный фон
+                if (v is LinearLayout && v.childCount > 0) {
+                    v.getChildAt(0).setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                }
             }
             highlightedView = null
         }
@@ -86,7 +98,6 @@ class FormulhMainActivity : AppCompatActivity() {
             if (targetView is LinearLayout && targetView.childCount > 0) {
                 val child = targetView.getChildAt(0)
                 child.setBackgroundColor(android.graphics.Color.parseColor("#001A00"))
-                // верхняя подсветка (яркий край)
                 child.setPadding(20, 20, 20, 20)
             }
             highlightedView = targetView
