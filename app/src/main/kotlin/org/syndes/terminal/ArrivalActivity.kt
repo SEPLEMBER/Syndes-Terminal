@@ -1,4 +1,4 @@
-package app.pawstribe.assistant
+package org.syndes.terminal
 
 import android.content.Intent
 import android.graphics.Typeface
