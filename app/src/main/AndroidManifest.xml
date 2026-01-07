@@ -67,6 +67,20 @@
     android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
     android:exported="false" />
 
+                <activity
+    android:name=".RexLedMainActivity"
+    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+    android:exported="false" />
+
+                <activity
+    android:name=".FormulhMainActivity"
+    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+    android:exported="false" />
+
+                <activity
+    android:name=".MGActivity"
+    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+    android:exported="false" />
         
         <!-- foreground-service for watchdog -->
         <service
