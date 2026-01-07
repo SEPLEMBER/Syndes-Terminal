@@ -91,30 +91,18 @@ class ArrivalActivity : AppCompatActivity() {
         val cmd = commandRaw.trim().toLowerCase(Locale.ROOT)
 
         when {
-            cmd.contains("finance") -> {
-                startActivity(Intent(this, app.pawstribe.assistant.locale.EnFinAsActivity::class.java))
-                finish()
-                return listOf(getString(R.string.redirect_english_finances))
-            }
+            
             cmd.contains("финансы") -> {
-                startActivity(Intent(this, app.pawstribe.assistant.locale.RuFinAsActivity::class.java))
+                startActivity(Intent(this, RuFinAsActivity::class.java))
                 finish()
                 return listOf(getString(R.string.redirect_russian_finances))
             }
-            cmd.contains("phys") -> {
-                startActivity(Intent(this, app.pawstribe.assistant.locale.EnPhysAsActivity::class.java))
-                finish()
-                return listOf(getString(R.string.redirect_english_physics))
-            }
+ 
             cmd.contains("физи") -> {
-                startActivity(Intent(this, app.pawstribe.assistant.locale.RuPhysAsActivity::class.java))
+                startActivity(Intent(this, RuPhysAsActivity::class.java))
                 finish()
                 return listOf(getString(R.string.redirect_russian_physics))
-            }
-            cmd.contains("other") || cmd.contains("другое") -> {
-                startActivity(Intent(this, PostsActivity::class.java))
-                finish()
-                return listOf(getString(R.string.redirect_main))
+
             }
             cmd.contains("dig") || cmd.contains("циф") -> {
                 startActivity(Intent(this, RuDigAsActivity::class.java))
