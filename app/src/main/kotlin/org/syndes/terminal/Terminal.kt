@@ -254,6 +254,13 @@ Hello!   \__/'---'\__/
                         null
                     }
 
+                    "mindbreaker", "MBD" -> {
+                        val intent = Intent(ctx, MGActivity::class.java) // TODO: switch to KanjiMapperActivity when available
+                        if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        ctx.startActivity(intent)
+                        null
+                    }
+
                       "exit" -> {
                           // spawn thread to shutdown after a short delay to allow UI to render the message
                           Thread {
