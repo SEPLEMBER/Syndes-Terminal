@@ -17,12 +17,8 @@ class ADPBMainActivity : AppCompatActivity() {
 
     // Хардкодированный список формул (plain text)
     private val formulas = listOf(
-        "adb shell pm list packages > App appz
-adb shell pm list packages -s > System Apps
-adb shell pm list packages -3
-",
-        "adb shell pm disable-user --user 0 <pkg>
-adb shell pm enable <pkg>",
+        "adb shell pm list packages — App list",
+        "adb shell pm disable-user --user 0 <pkg>",
         "sqrt(81) = 9",
         "3^3 = 27",
         "100 / 25 = 4",
