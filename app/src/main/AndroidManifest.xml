@@ -81,6 +81,26 @@
     android:name=".MGActivity"
     android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
     android:exported="false" />
+
+                <activity
+            android:name=".locale.RuFinAsActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
+
+                                <activity
+            android:name=".locale.RuPhysAsActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
+
+                                <activity
+            android:name=".RuDigAsActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
+
+                                <activity
+            android:name=".ArrivalActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize" />
         
         <!-- foreground-service for watchdog -->
         <service
