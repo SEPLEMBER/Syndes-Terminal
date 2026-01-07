@@ -18,7 +18,7 @@
             android:id="@+id/mg_instruction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. Formulh\n2. Numtrap\n3. Zeroless\n4. MockBird\n5. RexLed\n\"
+            android:text="1. Formulh\n2. Numtrap\n3. Zeroless\n4. MockBird\n5. RexLed\n"
             android:textSize="16sp"
             android:lineSpacingExtra="4dp"
             android:fontFamily="monospace"
@@ -90,13 +90,29 @@
         android:focusable="true"
         android:focusableInTouchMode="true">
 
-        <!-- scrollable area для логов загрузки -->
+        <!-- FIXED HEADER: закреплённый сверху, того же зелёного цвета -->
+        <TextView
+            android:id="@+id/mg_boot_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="18dp"
+            android:layout_marginEnd="18dp"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textColor="#00FF66"
+            android:textStyle="bold"
+            android:text="; ================================================\n; Mindbreaker UEFI Bootloader v9.07 &quot;Neon Fracture&quot;\n; E.F.P. organization.\n; (c) 2026 Kernel Hall / Open Source Foundation Project\n; ================================================\nsection .textglobal _start_start:"
+            android:paddingBottom="8dp" />
+
+        <!-- scrollable area для логов загрузки (ниже хедера) -->
         <ScrollView
             android:id="@+id/mg_boot_scroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="18dp"
-            android:overScrollMode="ifContentScrolls">
+            android:overScrollMode="ifContentScrolls"
+            android:layout_marginTop="8dp">
 
             <TextView
                 android:id="@+id/mg_boot_text"
@@ -109,7 +125,7 @@
                 android:lineSpacingExtra="4dp" />
         </ScrollView>
 
-        <!-- Мигающий курсор внизу справа от текста -->
+        <!-- Мигающий курсор внизу слева от текста -->
         <TextView
             android:id="@+id/mg_boot_cursor"
             android:layout_width="wrap_content"
