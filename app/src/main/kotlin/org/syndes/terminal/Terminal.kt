@@ -254,8 +254,29 @@ Hello!   \__/'---'\__/
                         null
                     }
 
-                    "mindbreaker", "uefi", "recovery", "efi" -> {
+                    "mindbreaker", "uefi", "recovery", "efi", "bios" -> {
                         val intent = Intent(ctx, MGActivity::class.java) // TODO: switch to KanjiMapperActivity when available
+                        if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        ctx.startActivity(intent)
+                        null
+                    }
+
+                   "numtrap"  -> {
+                        val intent = Intent(ctx, ArrivalActivity::class.java) // TODO: switch to KanjiMapperActivity when available
+                        if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        ctx.startActivity(intent)
+                        null
+                    }
+
+"formulh"  -> {
+                        val intent = Intent(ctx, FormulhMainActivity::class.java) // TODO: switch to KanjiMapperActivity when available
+                        if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        ctx.startActivity(intent)
+                        null
+                    }
+
+"rexled"  -> {
+                        val intent = Intent(ctx, RexLedMainActivity::class.java) // TODO: switch to KanjiMapperActivity when available
                         if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         ctx.startActivity(intent)
                         null
