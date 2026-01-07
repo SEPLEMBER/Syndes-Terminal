@@ -104,6 +104,13 @@
     android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
     android:exported="false" />
 
+                                <activity
+    android:name=".StatusRecActivity"
+    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+    android:exported="false" />
+
+        
+
         
         <!-- foreground-service for watchdog -->
         <service
