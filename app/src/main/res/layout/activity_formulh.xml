@@ -25,7 +25,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:hint="Поиск ( нечувствительно к регистру/пробелам )"
-            android:hintTextColor="#263326"
+            android:textColorHint="#263326"
             android:textColor="#00FF66"
             android:textSize="16sp"
             android:paddingStart="12dp"
