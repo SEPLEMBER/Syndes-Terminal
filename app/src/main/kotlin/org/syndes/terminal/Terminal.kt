@@ -254,7 +254,7 @@ Hello!   \__/'---'\__/
                         null
                     }
 
-                    "mindbreaker", "MBD" -> {
+                    "mindbreaker", "uefi", "recovery", "efi" -> {
                         val intent = Intent(ctx, MGActivity::class.java) // TODO: switch to KanjiMapperActivity when available
                         if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         ctx.startActivity(intent)
