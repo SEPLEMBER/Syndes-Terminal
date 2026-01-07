@@ -18,7 +18,7 @@
             android:id="@+id/mg_instruction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. Formulh\n2. RexLed\n\nВведите номер утилиты и нажмите GO"
+            android:text="1. Formulh\n2. RexLed\n\..."
             android:textSize="16sp"
             android:lineSpacingExtra="4dp"
             android:fontFamily="monospace"
@@ -33,7 +33,7 @@
             android:orientation="horizontal"
             android:padding="8dp"
             android:layout_marginBottom="18dp"
-            android:background="#071219"
+            android:background="#000000"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp">
 
@@ -73,7 +73,7 @@
             android:id="@+id/mg_footer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Киберпанк режим — простой переход между утилитами"
+            android:text="Mindbreaker EFI. Syndes Project. 2026."
             android:textColor="#FF4DFF"
             android:textSize="12sp"
             android:fontFamily="monospace"
