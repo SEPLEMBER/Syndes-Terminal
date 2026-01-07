@@ -62,10 +62,12 @@
             android:exported="false"
             android:theme="@style/AppTheme" />
 
+
         <activity
     android:name=".KanjiMapperActivity"
     android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
     android:exported="false" />
+
 
                 <activity
     android:name=".RexLedMainActivity"
@@ -82,25 +84,26 @@
     android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
     android:exported="false" />
 
-                <activity
-            android:name=".locale.RuFinAsActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize" />
-
+                        <activity
+    android:name=".RuFinAsActivity"
+    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+    android:exported="false" />
+        
                                 <activity
-            android:name=".locale.RuPhysAsActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize" />
+    android:name=".RuPhysAsActivity"
+    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+    android:exported="false" />
 
-                                <activity
-            android:name=".RuDigAsActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize" />
+                        <activity
+    android:name=".RuDigAsActivity"
+    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+    android:exported="false" />
 
-                                <activity
-            android:name=".ArrivalActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize" />
+                        <activity
+    android:name=".ArrivalActivity"
+    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+    android:exported="false" />
+
         
         <!-- foreground-service for watchdog -->
         <service
