@@ -44,7 +44,7 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:textColor="#00FFD5"        
-            android:hintTextColor="#204040"
+            android:textColorHint="#204040"
             android:background="@android:color/transparent"
             android:textSize="18sp"
             android:fontFamily="monospace" />
