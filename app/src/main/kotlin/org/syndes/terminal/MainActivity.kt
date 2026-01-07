@@ -124,8 +124,8 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         // Включаем прокрутку
         terminalOutput.movementMethod = ScrollingMovementMethod()
-        // Вступительное сообщение
-        val infoColor = ContextCompat.getColor(this, R.color.terminal_text)
+        // Вступительное сообщение (подсветка info)
+        val infoColor = ContextCompat.getColor(this, R.color.color_info)
         appendToTerminal(colorize("Welcome to Syndes Terminal!\nType 'help' to see commands.\n\n", infoColor), infoColor)
         // Переопределяем кнопку: текстовый вид, жёлтый цвет (вшитый)
         sendButton.text = "RUN"
@@ -172,7 +172,7 @@ class MainActivity : AppCompatActivity() {
         }
         // handle incoming intent (may be shortcut)
         handleIncomingIntent(intent)
-        // boot shell: если есть автозагрузочная команда — выполнить её при старте (но не показывать окно)
+        // boot shell: если есть автозагрузочная команда — выполнить её при старте (но НЕ показывать окно)
         checkBootShellOnStart()
     }
 
@@ -1402,7 +1402,7 @@ class MainActivity : AppCompatActivity() {
                 setBackgroundColor(Color.parseColor("#101010"))
             }
             val tv = TextView(this).apply {
-                text = "BootShell — command autoload\n(insert commands; save to enable, clear to disable)"
+                text = "BootShell — автозагрузка команд\n(вставьте команды; сохраните чтобы включить, очистите чтобы отключить)"
                 setTextColor(ContextCompat.getColor(this@MainActivity, R.color.color_info))
                 val padv = (8 * resources.displayMetrics.density).toInt()
                 setPadding(padv, padv, padv, padv)
