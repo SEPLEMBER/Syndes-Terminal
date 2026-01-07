@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rexled_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#000000"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/rexled_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="The Vvoid"
+        android:textSize="36sp"
+        android:fontFamily="monospace"
+        android:textStyle="bold"
+        android:textColor="#FF00B8"   <!-- neon magenta -->
+        android:letterSpacing="0.08"
+        android:contentDescription="Заглушка RexLed — The Vvoid" />
+</LinearLayout>
