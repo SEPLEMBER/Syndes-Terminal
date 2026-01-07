@@ -35,8 +35,8 @@ class MGActivity : AppCompatActivity() {
     )
 
     // Параметры скорости
-    private val charDelay = 18L       // мс между символами (типинг)
-    private val linePause = 220L      // пауза после полной строки
+    private val charDelay = 12L       // мс между символами (типинг)
+    private val linePause = 200L      // пауза после полной строки
     private val finalPause = 400L     // пауза перед Finish
 
     // Views для сплэша
@@ -69,7 +69,7 @@ class MGActivity : AppCompatActivity() {
             val value = input.text.toString().trim()
             when (value) {
                 "1" -> startActivity(Intent(this, FormulhMainActivity::class.java))
-                "2" -> startActivity(Intent(this, RexLedMainActivity::class.java))
+                "2" -> startActivity(Intent(this, ArrivalActivity::class.java))
                 ""  -> Toast.makeText(this, "Введите 1 или 2", Toast.LENGTH_SHORT).show()
                 else -> Toast.makeText(this, "Неверный ввод — введите 1 или 2", Toast.LENGTH_SHORT).show()
             }
