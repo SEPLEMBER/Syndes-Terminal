@@ -93,8 +93,8 @@ class MGActivity : AppCompatActivity() {
                     }, 1500)
                 }
 
-                "" -> Toast.makeText(this, "Enter 1, 2, 3 or 4", Toast.LENGTH_SHORT).show()
-                else -> Toast.makeText(this, "Invalid input — enter 1, 2, 3 or 4", Toast.LENGTH_SHORT).show()
+                "" -> Toast.makeText(this, "Enter number", Toast.LENGTH_SHORT).show()
+                else -> Toast.makeText(this, "Invalid input", Toast.LENGTH_SHORT).show()
             }
         }
 
