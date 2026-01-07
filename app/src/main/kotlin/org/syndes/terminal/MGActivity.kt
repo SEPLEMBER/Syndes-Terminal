@@ -70,6 +70,7 @@ class MGActivity : AppCompatActivity() {
                 "1" -> startActivity(Intent(this, SettingsActivity::class.java))
                 "2" -> startActivity(Intent(this, StatusRecActivity::class.java))
                 "5" -> startActivity(Intent(this, MainActivity::class.java))
+"6" -> startActivity(Intent(this, ADPBMainActivity::class.java))
 
                 "3" -> {
                     // App settings
