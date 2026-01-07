@@ -36,7 +36,7 @@ class ADPBMainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_adpb)
+        setContentView(R.layout.activity_main_adpb)
 
         val searchInput = findViewById<EditText>(R.id.ADPB_search)
         val searchButton = findViewById<Button>(R.id.ADPB_search_btn)
