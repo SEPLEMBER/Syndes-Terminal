@@ -19,7 +19,7 @@
             android:id="@+id/mg_instruction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. Formulh\n2. Numtrap\n3. Zeroless\n4. MockBird\n5. RexLed\n"
+            android:text="1. Console\n2. Status\n3. Wipe data\n4. Uninstall ALL Syndes\n"
             android:textSize="16sp"
             android:lineSpacingExtra="4dp"
             android:fontFamily="monospace"
@@ -107,10 +107,10 @@
                 android:layout_marginEnd="18dp"
                 android:fontFamily="monospace"
                 android:textSize="13sp"
-                android:textColor="#00FF66"
+                android:textColor="#0099CC"
                 android:textStyle="bold"
                 android:paddingBottom="8dp"
-                android:text="; ================================================\n; Mindbreaker UEFI Bootloader v9.07 &quot;Neon Fracture&quot;\n; E.F.P. organization.\n; (c) 2026 Kernel Hall / Open Source Foundation Project\n; ================================================\nsection .textglobal _start_start:" />
+                android:text="; =========================================\n; Mindbreaker UEFI Bootloader v9.07 &quot;Neon Fracture&quot;\n; E.F.P. organization.\n; (c) 2026 Kernel Hall / Open Source Foundation Project\n; =========================================\nsection .textglobal _load" />
 
             <!-- ScrollView занимает оставшееся место (не перекрывает header) -->
             <ScrollView
@@ -128,7 +128,7 @@
                     android:text=""
                     android:textSize="13sp"
                     android:fontFamily="monospace"
-                    android:textColor="#00FF66"
+                    android:textColor="#0099CC"
                     android:lineSpacingExtra="4dp" />
             </ScrollView>
         </LinearLayout>
@@ -138,10 +138,10 @@
             android:id="@+id/mg_boot_cursor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="_"
-            android:textSize="18sp"
+            android:text="."
+            android:textSize="8sp"
             android:fontFamily="monospace"
-            android:textColor="#00FF66"
+            android:textColor="#0099CC"
             android:layout_margin="18dp"
             android:layout_gravity="bottom|start" />
 
