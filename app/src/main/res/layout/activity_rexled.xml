@@ -16,7 +16,7 @@
         android:textSize="36sp"
         android:fontFamily="monospace"
         android:textStyle="bold"
-        android:textColor="#FF00B8"   <!-- neon magenta -->
+        android:textColor="#FF00B8"   
         android:letterSpacing="0.08"
         android:contentDescription="Заглушка RexLed — The Vvoid" />
 </LinearLayout>
