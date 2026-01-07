@@ -54,7 +54,7 @@ adb shell pm enable <pkg>",
                 this.text = text
                 textSize = 18f
                 // neon green monospace on black
-                setTextColor(android.graphics.Color.parseColor("#00FF66"))
+                setTextColor(android.graphics.Color.parseColor("#ff00b8"))
                 typeface = Typeface.MONOSPACE
                 setPadding(18, 18, 18, 18)
                 // фон прозрачный по умолчанию
