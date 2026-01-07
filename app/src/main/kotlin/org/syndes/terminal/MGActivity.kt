@@ -3,10 +3,13 @@ package org.syndes.terminal
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -17,10 +20,8 @@ import androidx.appcompat.app.AppCompatActivity
 
 class MGActivity : AppCompatActivity() {
 
-    // Handler для отложенных вызовов
     private val handler = Handler(Looper.getMainLooper())
 
-    // Хардкодированные строки для "LiveBoot"
     private val bootLines = listOf(
         "Initializing UEFI firmware interface..",
         "Locating EFI System Partition...",
@@ -34,18 +35,15 @@ class MGActivity : AppCompatActivity() {
         "Boot sequence continuing..."
     )
 
-    // Параметры скорости
-    private val charDelay = 4L       // мс между символами (типинг)
-    private val linePause = 100L     // пауза после полной строки
-    private val finalPause = 300L    // пауза перед Finish
+    private val charDelay = 2L
+    private val linePause = 10L
+    private val finalPause = 300L
 
-    // Views для сплэша
     private var overlay: View? = null
     private var bootText: TextView? = null
     private var cursor: TextView? = null
     private var bootHeader: TextView? = null
 
-    // Режим: если сплэш уже завершён, не запускать повторно
     private var bootCompleted = false
     private var cursorRunnable: Runnable? = null
 
@@ -53,35 +51,49 @@ class MGActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mg)
 
-        // основное UI
         val input = findViewById<EditText>(R.id.mg_input)
         val goButton = findViewById<Button>(R.id.mg_go_button)
 
-        // Инициализация overlay views
         overlay = findViewById(R.id.mg_boot_overlay)
         bootText = findViewById(R.id.mg_boot_text)
         cursor = findViewById(R.id.mg_boot_cursor)
         bootHeader = findViewById(R.id.mg_boot_header)
 
-        // Убедимся, что header и cursor на переднем плане
         bootHeader?.bringToFront()
         cursor?.bringToFront()
-
-        // header виден сразу (текст уже задан в xml) — можно переопределить при желании:
-        // bootHeader?.text = "тут текст..."
         bootHeader?.visibility = View.VISIBLE
 
-        // сразу запускаем LiveBoot, если ещё не запускали
         if (!bootCompleted) startLiveBoot()
 
-        // логика перехода по вводу
         fun handleInput() {
-            val value = input.text.toString().trim()
-            when (value) {
-                "1" -> startActivity(Intent(this, FormulhMainActivity::class.java))
+            when (input.text.toString().trim()) {
+                "1" -> startActivity(Intent(this, SettingsActivity::class.java))
                 "2" -> startActivity(Intent(this, StatusRecActivity::class.java))
-                ""  -> Toast.makeText(this, "Введите 1 или 2", Toast.LENGTH_SHORT).show()
-                else -> Toast.makeText(this, "Неверный ввод — введите 1 или 2", Toast.LENGTH_SHORT).show()
+
+                "3" -> {
+                    // App settings
+                    val intent = Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:org.syndes.terminal")
+                    )
+                    startActivity(intent)
+
+                    Toast.makeText(
+                        this,
+                        "For reliable storage cleanup, use the standard data wipe function.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+                "4" -> {
+                    handler.postDelayed({
+                        requestUninstallIfExists("org.syndes.rust")
+                        requestUninstallIfExists("org.syndes.terminal")
+                    }, 1500)
+                }
+
+                "" -> Toast.makeText(this, "Enter 1, 2, 3 or 4", Toast.LENGTH_SHORT).show()
+                else -> Toast.makeText(this, "Invalid input — enter 1, 2, 3 or 4", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -93,46 +105,60 @@ class MGActivity : AppCompatActivity() {
             } else false
         }
 
-        // optional: упростим поле ввода визуально
         input.typeface = Typeface.MONOSPACE
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // отменяем все отложенные задачи
         handler.removeCallbacksAndMessages(null)
         stopCursorBlink()
     }
 
-    // --- LiveBoot implementation ---
+    // --- uninstall helpers ---
+
+    private fun requestUninstallIfExists(pkg: String) {
+        if (!isPackageInstalled(pkg)) return
+
+        val intent = Intent(Intent.ACTION_DELETE).apply {
+            data = Uri.parse("package:$pkg")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        startActivity(intent)
+    }
+
+    private fun isPackageInstalled(pkg: String): Boolean {
+        return try {
+            packageManager.getPackageInfo(pkg, 0)
+            true
+        } catch (_: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
+    // --- LiveBoot ---
+
     private fun startLiveBoot() {
-        bootText?.text = ""  // очистим
+        bootText?.text = ""
         overlay?.visibility = View.VISIBLE
         overlay?.alpha = 1f
-        // header уже установлен в xml и видим
         bootHeader?.visibility = View.VISIBLE
         cursor?.visibility = View.VISIBLE
         startCursorBlink()
-        // Start printing lines sequentially
         printLinesSequentially(0)
     }
 
     private fun printLinesSequentially(index: Int) {
         if (index >= bootLines.size) {
-            // все строки выведены, ждем и печатаем Finish
             handler.postDelayed({
                 typeLine("Finish") {
-                    // маленькая пауза и скрываем overlay
-                    handler.postDelayed({
-                        finishBootOverlay()
-                    }, finalPause)
+                    handler.postDelayed({ finishBootOverlay() }, finalPause)
                 }
             }, linePause)
             return
         }
+
         val line = bootLines[index]
         typeLine(line) {
-            // после печати строки добавляем перевод строки и паузу, затем следующая
             appendToBoot("\n")
             handler.postDelayed({
                 printLinesSequentially(index + 1)
@@ -140,43 +166,33 @@ class MGActivity : AppCompatActivity() {
         }
     }
 
-    // печатает строку посимвольно в bootText, затем вызывает onComplete
     private fun typeLine(line: String, onComplete: () -> Unit) {
         var pos = 0
-        val runnable = object : Runnable {
+        val r = object : Runnable {
             override fun run() {
-                if (pos <= line.length - 1) {
+                if (pos < line.length) {
                     appendToBoot(line[pos].toString())
                     pos++
                     handler.postDelayed(this, charDelay)
-                } else {
-                    onComplete()
-                }
+                } else onComplete()
             }
         }
-        handler.post(runnable)
+        handler.post(r)
     }
 
-    // безопасно добавляет текст в bootText, сохраняя курсор справа
     private fun appendToBoot(s: String) {
-        bootText?.let { tv ->
-            val current = tv.text?.toString() ?: ""
-            tv.text = current + s
-            // скроллим вниз, если нужно (bootText в ScrollView делается в xml)
-            val scroll = findViewById<View>(R.id.mg_boot_scroll)
-            scroll?.post {
-                if (scroll is android.widget.ScrollView) {
-                    scroll.fullScroll(android.view.View.FOCUS_DOWN)
+        bootText?.let {
+            it.text = (it.text?.toString() ?: "") + s
+            findViewById<View>(R.id.mg_boot_scroll)?.post {
+                if (it is android.widget.ScrollView) {
+                    it.fullScroll(View.FOCUS_DOWN)
                 }
             }
         }
     }
 
     private fun finishBootOverlay() {
-        // остановим курсор
         stopCursorBlink()
-
-        // Плавно скрываем overlay (header и логи — дочерние элементы overlay)
         overlay?.animate()
             ?.alpha(0f)
             ?.setDuration(420)
@@ -190,7 +206,6 @@ class MGActivity : AppCompatActivity() {
             })
     }
 
-    // --- курсор (мигающий) ---
     private fun startCursorBlink() {
         stopCursorBlink()
         cursorRunnable = object : Runnable {
