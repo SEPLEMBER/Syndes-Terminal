@@ -12,7 +12,7 @@
         android:id="@+id/headerText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Pawstribe Assistant"
+        android:text="Numtrap"
         android:textColor="#00F5FF"
         android:textSize="16sp"
         android:padding="8dp"
