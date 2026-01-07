@@ -38,10 +38,10 @@ class ADPBMainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_adpb)
 
-        val searchInput = findViewById<EditText>(R.id.ADPB_search)
-        val searchButton = findViewById<Button>(R.id.ADPB_search_btn)
-        val scroll = findViewById<ScrollView>(R.id.ADPB_scroll)
-        val container = findViewById<LinearLayout>(R.id.ADPB_container)
+        val searchInput = findViewById<EditText>(R.id.adpb_search)
+        val searchButton = findViewById<Button>(R.id.adpb_search_btn)
+        val scroll = findViewById<ScrollView>(R.id.adpb_scroll)
+        val container = findViewById<LinearLayout>(R.id.adpb_container)
 
         // Заполняем контейнер текстовыми элементами формул
         formulas.forEachIndexed { index, text ->
@@ -103,7 +103,7 @@ class ADPBMainActivity : AppCompatActivity() {
             highlightedView = targetView
 
             // Скроллим к позиции (отложенно, чтобы layout успел измериться)
-            val scrollView = findViewById<ScrollView>(R.id.ADPB_scroll)
+            val scrollView = findViewById<ScrollView>(R.id.adpb_scroll)
             scrollView.post {
                 val y = targetView.top - 40 // немного отступ сверху
                 scrollView.smoothScrollTo(0, if (y < 0) 0 else y)
