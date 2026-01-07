@@ -3,7 +3,7 @@
     android:id="@+id/mg_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#060711"
+    android:background="#000000"
     android:padding="20dp">
 
     <!-- Основное содержимое (подложка) -->
@@ -18,7 +18,7 @@
             android:id="@+id/mg_instruction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. Formulh\n2. RexLed\n\..."
+            android:text="1. Formulh\n2. Numtrap\n3. Zeroless\n4. MockBird\n5. RexLed\n\"
             android:textSize="16sp"
             android:lineSpacingExtra="4dp"
             android:fontFamily="monospace"
