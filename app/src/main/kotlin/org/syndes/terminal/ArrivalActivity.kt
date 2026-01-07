@@ -16,6 +16,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.setPadding
 import java.util.Locale
+import org.syndes.terminal.R
 
 class ArrivalActivity : AppCompatActivity() {
 
