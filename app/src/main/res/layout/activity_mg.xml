@@ -19,7 +19,7 @@
             android:id="@+id/mg_instruction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. Console\n2. Status\n3. Wipe data\n4. Uninstall ALL Syndes\n"
+            android:text="1. Console\n2. Status\n3. Wipe data\n4. Uninstall ALL Syndes\n5. Exit\n"
             android:textSize="16sp"
             android:lineSpacingExtra="4dp"
             android:fontFamily="monospace"
