@@ -3,13 +3,17 @@ package org.syndes.terminal
 import android.app.ActivityManager
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.DisplayMetrics
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -35,16 +39,21 @@ class StatusRecActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_status_rec)
 
+        // set overall background
         window.decorView.setBackgroundColor(bgColor)
 
         container = findViewById(R.id.status_container)
         batteryCircle = findViewById(R.id.battery_circle)
 
-        // apply colors / fonts
+        // style batteryCircle programmatically (no drawable resource)
+        styleBatteryCircle()
+
+        // initial hardcoded 100 shown immediately
+        batteryCircle.text = "100"
         batteryCircle.setTextColor(accentColor)
         batteryCircle.typeface = Typeface.MONOSPACE
 
-        // initial placeholder
+        // initial placeholders (quick)
         showRow("Device", Build.MODEL ?: "unsupported")
         showRow("Manufacturer", Build.MANUFACTURER ?: "unsupported")
         showRow("Product", Build.PRODUCT ?: "unsupported")
@@ -53,9 +62,9 @@ class StatusRecActivity : AppCompatActivity() {
         io.execute {
             val rows = collectDeviceInfo()
             runOnUiThread {
-                // clear any placeholders (we kept a couple) and add real rows
+                // clear any placeholders and add real rows
                 container.removeAllViews()
-                // top line with battery on left and title
+                // header already present (title + battery)
                 setupHeader()
                 // add rows from collected info
                 for ((label, value) in rows) {
@@ -65,9 +74,31 @@ class StatusRecActivity : AppCompatActivity() {
         }
     }
 
+    private fun styleBatteryCircle() {
+        // Create an oval stroke drawable programmatically
+        val sizeDp = 56
+        val strokeDp = 2
+        val sizePx = dpToPx(sizeDp)
+        val strokePx = dpToPx(strokeDp)
+
+        val gd = GradientDrawable()
+        gd.shape = GradientDrawable.OVAL
+        gd.setSize(sizePx, sizePx)
+        gd.setColor(Color.TRANSPARENT)
+        gd.setStroke(strokePx, accentColor)
+
+        // apply to TextView
+        batteryCircle.background = gd
+        batteryCircle.gravity = Gravity.CENTER
+        batteryCircle.textSize = 18f
+        val pad = dpToPx(6)
+        batteryCircle.setPadding(pad, pad, pad, pad)
+    }
+
+    private fun dpToPx(dp: Int): Int =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics).toInt()
+
     private fun setupHeader() {
-        // The layout already includes batteryCircle view at left in XML.
-        // Update battery now (synchronously) and add a header label
         val title = findViewById<TextView>(R.id.status_title)
         title.setTextColor(accentColor)
         title.typeface = Typeface.MONOSPACE
@@ -75,18 +106,16 @@ class StatusRecActivity : AppCompatActivity() {
     }
 
     private fun showRow(label: String, value: String) {
-        // create a horizontal row with label (left) and value (right)
-        val row = layoutInflater.inflate(R.layout.row_status_item, container, false)
-        val tvLabel = row.findViewById<TextView>(R.id.item_label)
-        val tvValue = row.findViewById<TextView>(R.id.item_value)
+        val rowView: View = layoutInflater.inflate(R.layout.row_status_item, container, false)
+        val tvLabel = rowView.findViewById<TextView>(R.id.item_label)
+        val tvValue = rowView.findViewById<TextView>(R.id.item_value)
         tvLabel.text = label
         tvValue.text = value
         tvLabel.setTextColor(accentColor)
         tvValue.setTextColor(accentColor)
         tvLabel.typeface = Typeface.MONOSPACE
         tvValue.typeface = Typeface.MONOSPACE
-
-        container.addView(row)
+        container.addView(rowView)
     }
 
     private fun collectDeviceInfo(): List<Pair<String, String>> {
@@ -113,11 +142,8 @@ class StatusRecActivity : AppCompatActivity() {
         try {
             val cores = Runtime.getRuntime().availableProcessors()
             list.add("CPU cores" to cores.toString())
-
             val cpuShort = readFirstMatch("/proc/cpuinfo", listOf("Hardware", "model name", "Processor"))
             list.add("CPU model" to (cpuShort ?: "unsupported"))
-
-            // try read cpu current freq for cpu0
             val freq = readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
                 ?: readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq")
             list.add("CPU freq (kHz)" to (freq ?: "unsupported"))
@@ -141,11 +167,10 @@ class StatusRecActivity : AppCompatActivity() {
             list.add("RAM available" to "unsupported")
         }
 
-        // Battery - also update circle on main thread via sticky intent
+        // Battery - update circle (use "100" fallback)
         val batteryPct = getBatteryPercentSync()
         runOnUiThread {
-            batteryCircle.text = batteryPct ?: "N/A"
-            // color already set in onCreate
+            batteryCircle.text = batteryPct ?: "100"
         }
         list.add("Battery level" to (batteryPct?.plus("%") ?: "unsupported"))
         list.add("Battery status" to (getBatteryStatus() ?: "unsupported"))
@@ -164,7 +189,7 @@ class StatusRecActivity : AppCompatActivity() {
             list.add("Display DPI" to "unsupported")
         }
 
-        // Sensors (names)
+        // Sensors
         try {
             val sm = getSystemService(SENSOR_SERVICE) as SensorManager
             val sensors = sm.getSensorList(Sensor.TYPE_ALL)
@@ -182,7 +207,7 @@ class StatusRecActivity : AppCompatActivity() {
             list.add("Sensors count" to "unsupported")
         }
 
-        // Android ID (available without special permission)
+        // Android ID
         try {
             val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
             list.add("Android ID" to (androidId ?: "unsupported"))
@@ -190,16 +215,16 @@ class StatusRecActivity : AppCompatActivity() {
             list.add("Android ID" to "unsupported")
         }
 
-        // GPU / GL info: not trivial without GL context -> mark unsupported
+        // GPU - mark unsupported (without GL context)
         list.add("GPU vendor" to "unsupported")
         list.add("GPU renderer" to "unsupported")
         list.add("GPU version" to "unsupported")
 
-        // Network mac/address - restricted on modern Android -> unsupported to avoid permissions.
+        // Network - restricted
         list.add("WiFi MAC" to "unsupported")
         list.add("IP address" to "unsupported")
 
-        // /proc/meminfo raw hint (if available)
+        // /proc/meminfo
         val meminfo = readFirstMatch("/proc/meminfo", listOf("MemTotal"))
         list.add("proc/meminfo (MemTotal)" to (meminfo ?: "unsupported"))
 
@@ -258,7 +283,6 @@ class StatusRecActivity : AppCompatActivity() {
     private fun readMemFromProc(): String? {
         val v = readFirstMatch("/proc/meminfo", listOf("MemTotal"))
         return v?.let {
-            // MemTotal: 123456 kB
             val parts = it.split(Regex("\\s+"))
             if (parts.isNotEmpty()) try {
                 val kb = parts[0].toLong()
@@ -291,7 +315,6 @@ class StatusRecActivity : AppCompatActivity() {
                     pct.toString()
                 } else null
             } else {
-                // fallback: BatteryManager property
                 val bm = getSystemService(BATTERY_SERVICE) as BatteryManager
                 val prop = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
                 if (prop >= 0) prop.toString() else null
