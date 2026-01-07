@@ -35,9 +35,9 @@ class MGActivity : AppCompatActivity() {
         "Boot sequence continuing..."
     )
 
-    private val charDelay = 2L
-    private val linePause = 10L
-    private val finalPause = 300L
+    private val charDelay = 1L
+    private val linePause = 3L
+    private val finalPause = 25L
 
     private var overlay: View? = null
     private var bootText: TextView? = null
@@ -69,6 +69,7 @@ class MGActivity : AppCompatActivity() {
             when (input.text.toString().trim()) {
                 "1" -> startActivity(Intent(this, SettingsActivity::class.java))
                 "2" -> startActivity(Intent(this, StatusRecActivity::class.java))
+                "5" -> startActivity(Intent(this, MainActivity::class.java))
 
                 "3" -> {
                     // App settings
