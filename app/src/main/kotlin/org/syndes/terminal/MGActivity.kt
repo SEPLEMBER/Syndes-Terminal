@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class MGActivity : AppCompatActivity() {
+
     // Handler для отложенных вызовов
     private val handler = Handler(Looper.getMainLooper())
 
@@ -33,20 +34,10 @@ class MGActivity : AppCompatActivity() {
         "Boot sequence continuing..."
     )
 
-    // Фиксированный заголовок (появляется сразу)
-    private val bootHeaderText = """
-        ; ================================================
-        ; Mindbreaker UEFI Bootloader v9.07 "Neon Fracture"
-        ; E.F.P. organization.
-        ; (c) 2026 Kernel Hall / Open Source Foundation Project
-        ; ================================================
-        section .textglobal _start_start:
-    """.trimIndent()
-
     // Параметры скорости
     private val charDelay = 9L       // мс между символами (типинг)
-    private val linePause = 150L      // пауза после полной строки
-    private val finalPause = 300L     // пауза перед Finish
+    private val linePause = 150L     // пауза после полной строки
+    private val finalPause = 300L    // пауза перед Finish
 
     // Views для сплэша
     private var overlay: View? = null
@@ -72,8 +63,12 @@ class MGActivity : AppCompatActivity() {
         cursor = findViewById(R.id.mg_boot_cursor)
         bootHeader = findViewById(R.id.mg_boot_header)
 
-        // Устанавливаем фиксированный хедер СРАЗУ (без задержек) и зеленый цвет уже в xml
-        bootHeader?.text = bootHeaderText
+        // Убедимся, что header и cursor на переднем плане
+        bootHeader?.bringToFront()
+        cursor?.bringToFront()
+
+        // header виден сразу (текст уже задан в xml) — можно переопределить при желании:
+        // bootHeader?.text = "тут текст..."
         bootHeader?.visibility = View.VISIBLE
 
         // сразу запускаем LiveBoot, если ещё не запускали
@@ -114,7 +109,7 @@ class MGActivity : AppCompatActivity() {
         bootText?.text = ""  // очистим
         overlay?.visibility = View.VISIBLE
         overlay?.alpha = 1f
-        // header уже установлен в onCreate, убедимся что он видим
+        // header уже установлен в xml и видим
         bootHeader?.visibility = View.VISIBLE
         cursor?.visibility = View.VISIBLE
         startCursorBlink()
@@ -181,16 +176,14 @@ class MGActivity : AppCompatActivity() {
         // остановим курсор
         stopCursorBlink()
 
-        // Плавно скрываем overlay (включая header, т.к. header — дочерний элемент overlay)
+        // Плавно скрываем overlay (header и логи — дочерние элементы overlay)
         overlay?.animate()
             ?.alpha(0f)
             ?.setDuration(420)
             ?.setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
-                    // полностью скрываем overlay
                     overlay?.visibility = View.GONE
                     overlay?.alpha = 1f
-                    // убедимся, что header тоже скрыт
                     bootHeader?.visibility = View.GONE
                     bootCompleted = true
                 }
