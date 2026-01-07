@@ -3,6 +3,7 @@ package org.syndes.terminal
 import android.app.ActivityManager
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -27,46 +28,38 @@ import kotlin.math.roundToInt
 
 class StatusRecActivity : AppCompatActivity() {
 
-    // colors hardcoded per your theme
-    private val bgColor = 0xFF000000.toInt() // #000000
-    private val accentColor = 0xFFFF00B8.toInt() // #FF00B8
+    private val bgColor = 0xFF000000.toInt()
+    private val accentColor = 0xFFFF00B8.toInt()
 
     private lateinit var container: LinearLayout
     private lateinit var batteryCircle: TextView
+
     private val io = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_status_rec)
 
-        // set overall background
         window.decorView.setBackgroundColor(bgColor)
 
         container = findViewById(R.id.status_container)
         batteryCircle = findViewById(R.id.battery_circle)
 
-        // style batteryCircle programmatically (no drawable resource)
         styleBatteryCircle()
 
-        // initial hardcoded 100 shown immediately
         batteryCircle.text = "100"
         batteryCircle.setTextColor(accentColor)
         batteryCircle.typeface = Typeface.MONOSPACE
 
-        // initial placeholders (quick)
         showRow("Device", Build.MODEL ?: "unsupported")
         showRow("Manufacturer", Build.MANUFACTURER ?: "unsupported")
         showRow("Product", Build.PRODUCT ?: "unsupported")
 
-        // gather heavier info off the main thread
         io.execute {
             val rows = collectDeviceInfo()
             runOnUiThread {
-                // clear any placeholders and add real rows
                 container.removeAllViews()
-                // header already present (title + battery)
                 setupHeader()
-                // add rows from collected info
                 for ((label, value) in rows) {
                     showRow(label, value)
                 }
@@ -75,11 +68,8 @@ class StatusRecActivity : AppCompatActivity() {
     }
 
     private fun styleBatteryCircle() {
-        // Create an oval stroke drawable programmatically
-        val sizeDp = 56
-        val strokeDp = 2
-        val sizePx = dpToPx(sizeDp)
-        val strokePx = dpToPx(strokeDp)
+        val sizePx = dpToPx(56)
+        val strokePx = dpToPx(2)
 
         val gd = GradientDrawable()
         gd.shape = GradientDrawable.OVAL
@@ -87,7 +77,6 @@ class StatusRecActivity : AppCompatActivity() {
         gd.setColor(Color.TRANSPARENT)
         gd.setStroke(strokePx, accentColor)
 
-        // apply to TextView
         batteryCircle.background = gd
         batteryCircle.gravity = Gravity.CENTER
         batteryCircle.textSize = 18f
@@ -96,7 +85,11 @@ class StatusRecActivity : AppCompatActivity() {
     }
 
     private fun dpToPx(dp: Int): Int =
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics).toInt()
+        TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp.toFloat(),
+            resources.displayMetrics
+        ).toInt()
 
     private fun setupHeader() {
         val title = findViewById<TextView>(R.id.status_title)
@@ -106,237 +99,173 @@ class StatusRecActivity : AppCompatActivity() {
     }
 
     private fun showRow(label: String, value: String) {
-        val rowView: View = layoutInflater.inflate(R.layout.row_status_item, container, false)
+        val rowView = layoutInflater.inflate(R.layout.row_status_item, container, false)
         val tvLabel = rowView.findViewById<TextView>(R.id.item_label)
         val tvValue = rowView.findViewById<TextView>(R.id.item_value)
+
         tvLabel.text = label
         tvValue.text = value
-        tvLabel.setTextColor(accentColor)
-        tvValue.setTextColor(accentColor)
+
         tvLabel.typeface = Typeface.MONOSPACE
         tvValue.typeface = Typeface.MONOSPACE
+
+        tvLabel.setTextColor(accentColor)
+        tvValue.setTextColor(accentColor)
+
+        if (label == "TERMUX") {
+            tvValue.setTextColor(if (value == "INSTALLED") Color.GREEN else Color.YELLOW)
+        }
+
+        if (label == "SECURITY") {
+            tvValue.setTextColor(if (value == "PROTECTION ENABLED") Color.GREEN else Color.YELLOW)
+        }
+
         container.addView(rowView)
     }
 
     private fun collectDeviceInfo(): List<Pair<String, String>> {
         val list = ArrayList<Pair<String, String>>()
 
-        // Basic build info
         list.add("Model" to safeStr(Build.MODEL))
         list.add("Manufacturer" to safeStr(Build.MANUFACTURER))
         list.add("Product" to safeStr(Build.PRODUCT))
         list.add("Board" to safeStr(Build.BOARD))
         list.add("Hardware" to safeStr(Build.HARDWARE))
         list.add("Bootloader" to safeStr(Build.BOOTLOADER))
-        list.add("Android version" to ("${safeStr(Build.VERSION.RELEASE)} (SDK ${Build.VERSION.SDK_INT})"))
+        list.add("Android version" to "${safeStr(Build.VERSION.RELEASE)} (SDK ${Build.VERSION.SDK_INT})")
 
-        // Uptime
         try {
-            val upMs = SystemClock.elapsedRealtime()
-            list.add("Uptime" to formatElapsed(upMs))
-        } catch (e: Exception) {
+            list.add("Uptime" to formatElapsed(SystemClock.elapsedRealtime()))
+        } catch (_: Exception) {
             list.add("Uptime" to "unsupported")
         }
 
-        // CPU cores & info
         try {
-            val cores = Runtime.getRuntime().availableProcessors()
-            list.add("CPU cores" to cores.toString())
-            val cpuShort = readFirstMatch("/proc/cpuinfo", listOf("Hardware", "model name", "Processor"))
-            list.add("CPU model" to (cpuShort ?: "unsupported"))
-            val freq = readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
-                ?: readFirstLine("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq")
-            list.add("CPU freq (kHz)" to (freq ?: "unsupported"))
-        } catch (e: Exception) {
+            list.add("CPU cores" to Runtime.getRuntime().availableProcessors().toString())
+        } catch (_: Exception) {
             list.add("CPU cores" to "unsupported")
-            list.add("CPU model" to "unsupported")
-            list.add("CPU freq (kHz)" to "unsupported")
         }
 
-        // Memory
         try {
             val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
             val mi = ActivityManager.MemoryInfo()
             am.getMemoryInfo(mi)
-            val avail = bytesToHuman(mi.availMem)
-            val total = if (Build.VERSION.SDK_INT >= 16) bytesToHuman(mi.totalMem) else readMemFromProc()
-            list.add("RAM total" to (total ?: "unsupported"))
-            list.add("RAM available" to avail)
-        } catch (e: Exception) {
+            list.add("RAM total" to bytesToHuman(mi.totalMem))
+            list.add("RAM available" to bytesToHuman(mi.availMem))
+        } catch (_: Exception) {
             list.add("RAM total" to "unsupported")
             list.add("RAM available" to "unsupported")
         }
 
-        // Battery - update circle (use "100" fallback)
         val batteryPct = getBatteryPercentSync()
-        runOnUiThread {
-            batteryCircle.text = batteryPct ?: "100"
-        }
+        runOnUiThread { batteryCircle.text = batteryPct ?: "100" }
+
         list.add("Battery level" to (batteryPct?.plus("%") ?: "unsupported"))
         list.add("Battery status" to (getBatteryStatus() ?: "unsupported"))
 
-        // Display
         try {
             val metrics = DisplayMetrics()
             windowManager.defaultDisplay.getMetrics(metrics)
-            val w = metrics.widthPixels
-            val h = metrics.heightPixels
-            val dpi = metrics.densityDpi
-            list.add("Display resolution" to "${w}x$h")
-            list.add("Display DPI" to dpi.toString())
-        } catch (e: Exception) {
+            list.add("Display resolution" to "${metrics.widthPixels}x${metrics.heightPixels}")
+            list.add("Display DPI" to metrics.densityDpi.toString())
+        } catch (_: Exception) {
             list.add("Display resolution" to "unsupported")
             list.add("Display DPI" to "unsupported")
         }
 
-        // Sensors
         try {
             val sm = getSystemService(SENSOR_SERVICE) as SensorManager
             val sensors = sm.getSensorList(Sensor.TYPE_ALL)
-            if (sensors.isNotEmpty()) {
-                val names = sensors.take(6).map { it.name }.joinToString(", ")
-                val more = if (sensors.size > 6) " (+${sensors.size - 6} more)" else ""
-                list.add("Sensors (sample)" to "$names$more")
-                list.add("Sensors count" to sensors.size.toString())
-            } else {
-                list.add("Sensors (sample)" to "unsupported")
-                list.add("Sensors count" to "0")
-            }
-        } catch (e: Exception) {
-            list.add("Sensors (sample)" to "unsupported")
+            list.add("Sensors count" to sensors.size.toString())
+        } catch (_: Exception) {
             list.add("Sensors count" to "unsupported")
         }
 
-        // Android ID
         try {
-            val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-            list.add("Android ID" to (androidId ?: "unsupported"))
-        } catch (e: Exception) {
+            list.add(
+                "Android ID" to
+                        (Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+                            ?: "unsupported")
+            )
+        } catch (_: Exception) {
             list.add("Android ID" to "unsupported")
         }
 
-        // GPU - mark unsupported (without GL context)
-        list.add("GPU vendor" to "unsupported")
-        list.add("GPU renderer" to "unsupported")
-        list.add("GPU version" to "unsupported")
+        // === SECURITY CHECKS ===
+        val termuxInstalled = isPackageInstalled("com.termux")
+        list.add("TERMUX" to if (termuxInstalled) "INSTALLED" else "NOT INSTALLED")
 
-        // Network - restricted
-        list.add("WiFi MAC" to "unsupported")
-        list.add("IP address" to "unsupported")
-
-        // /proc/meminfo
-        val meminfo = readFirstMatch("/proc/meminfo", listOf("MemTotal"))
-        list.add("proc/meminfo (MemTotal)" to (meminfo ?: "unsupported"))
+        val nemesisInstalled = isPackageInstalled("com.nemesis.complex")
+        list.add(
+            "SECURITY" to
+                    if (nemesisInstalled) "PROTECTION ENABLED"
+                    else "SECURITY SYSTEM WEAKENED"
+        )
 
         return list
+    }
+
+    private fun isPackageInstalled(pkg: String): Boolean {
+        return try {
+            packageManager.getPackageInfo(pkg, 0)
+            true
+        } catch (_: PackageManager.NameNotFoundException) {
+            false
+        }
     }
 
     private fun safeStr(v: String?): String = v ?: "unsupported"
 
     private fun formatElapsed(ms: Long): String {
         var s = ms / 1000
-        val days = s / 86400
+        val d = s / 86400
         s %= 86400
-        val hours = s / 3600
+        val h = s / 3600
         s %= 3600
-        val minutes = s / 60
-        val seconds = s % 60
+        val m = s / 60
+        val sec = s % 60
+
         val sb = StringBuilder()
-        if (days > 0) sb.append("${days}d ")
-        if (hours > 0 || sb.isNotEmpty()) sb.append("${hours}h ")
-        if (minutes > 0 || sb.isNotEmpty()) sb.append("${minutes}m ")
-        sb.append("${seconds}s")
+        if (d > 0) sb.append("${d}d ")
+        if (h > 0 || sb.isNotEmpty()) sb.append("${h}h ")
+        if (m > 0 || sb.isNotEmpty()) sb.append("${m}m ")
+        sb.append("${sec}s")
         return sb.toString()
     }
 
-    private fun readFirstLine(path: String): String? {
-        return try {
-            val f = File(path)
-            if (!f.exists()) return null
-            f.bufferedReader().use { it.readLine()?.trim() }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun readFirstMatch(path: String, keys: List<String>): String? {
-        return try {
-            val f = File(path)
-            if (!f.exists()) return null
-            f.bufferedReader().useLines { lines ->
-                lines.forEach { line ->
-                    for (k in keys) {
-                        if (line.contains(k, ignoreCase = true)) {
-                            val parts = line.split(":", limit = 2)
-                            if (parts.size >= 2) return parts[1].trim()
-                            else return line.trim()
-                        }
-                    }
-                }
-            }
-            null
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun readMemFromProc(): String? {
-        val v = readFirstMatch("/proc/meminfo", listOf("MemTotal"))
-        return v?.let {
-            val parts = it.split(Regex("\\s+"))
-            if (parts.isNotEmpty()) try {
-                val kb = parts[0].toLong()
-                bytesToHuman(kb * 1024)
-            } catch (e: Exception) { null } else null
-        }
-    }
-
     private fun bytesToHuman(bytes: Long): String {
-        if (bytes <= 0) return "0 B"
         val units = arrayOf("B", "KB", "MB", "GB", "TB")
         var b = bytes.toDouble()
         var i = 0
-        while (b >= 1024 && i < units.size - 1) {
+        while (b >= 1024 && i < units.lastIndex) {
             b /= 1024
             i++
         }
-        return "${(b * 10.0).roundToInt() / 10.0} ${units[i]}"
+        return "${(b * 10).roundToInt() / 10.0} ${units[i]}"
     }
 
     private fun getBatteryPercentSync(): String? {
         return try {
-            val ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            val intent = registerReceiver(null, ifilter)
-            if (intent != null) {
-                val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-                val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-                if (level >= 0 && scale > 0) {
-                    val pct = (level * 100) / scale
-                    pct.toString()
-                } else null
-            } else {
-                val bm = getSystemService(BATTERY_SERVICE) as BatteryManager
-                val prop = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-                if (prop >= 0) prop.toString() else null
-            }
-        } catch (e: Exception) {
+            val intent = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: return null
+            val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+            if (scale > 0) ((level * 100) / scale).toString() else null
+        } catch (_: Exception) {
             null
         }
     }
 
     private fun getBatteryStatus(): String? {
         return try {
-            val ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            val intent = registerReceiver(null, ifilter) ?: return null
-            val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            return when (status) {
+            val intent = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            when (intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
                 BatteryManager.BATTERY_STATUS_CHARGING -> "Charging"
                 BatteryManager.BATTERY_STATUS_DISCHARGING -> "Discharging"
                 BatteryManager.BATTERY_STATUS_FULL -> "Full"
                 BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Not charging"
                 else -> "Unknown"
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
