@@ -8,6 +8,7 @@
 
     <!-- Основное содержимое (подложка) -->
     <LinearLayout
+        android:id="@+id/mg_main_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -90,42 +91,49 @@
         android:focusable="true"
         android:focusableInTouchMode="true">
 
-        <!-- FIXED HEADER: закреплённый сверху, того же зелёного цвета -->
-        <TextView
-            android:id="@+id/mg_boot_header"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:layout_marginStart="18dp"
-            android:layout_marginEnd="18dp"
-            android:fontFamily="monospace"
-            android:textSize="13sp"
-            android:textColor="#00FF66"
-            android:textStyle="bold"
-            android:text="; ================================================\n; Mindbreaker UEFI Bootloader v9.07 &quot;Neon Fracture&quot;\n; E.F.P. organization.\n; (c) 2026 Kernel Hall / Open Source Foundation Project\n; ================================================\nsection .textglobal _start_start:"
-            android:paddingBottom="8dp" />
-
-        <!-- scrollable area для логов загрузки (ниже хедера) -->
-        <ScrollView
-            android:id="@+id/mg_boot_scroll"
+        <!-- Вертикальный контейнер: header сверху + ScrollView ниже -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="18dp"
-            android:overScrollMode="ifContentScrolls"
-            android:layout_marginTop="8dp">
+            android:orientation="vertical">
 
+            <!-- FIXED HEADER (того же зелёного цвета) -->
             <TextView
-                android:id="@+id/mg_boot_text"
+                android:id="@+id/mg_boot_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:textSize="13sp"
+                android:layout_marginTop="12dp"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="18dp"
                 android:fontFamily="monospace"
+                android:textSize="13sp"
                 android:textColor="#00FF66"
-                android:lineSpacingExtra="4dp" />
-        </ScrollView>
+                android:textStyle="bold"
+                android:paddingBottom="8dp"
+                android:text="; ================================================\n; Mindbreaker UEFI Bootloader v9.07 &quot;Neon Fracture&quot;\n; E.F.P. organization.\n; (c) 2026 Kernel Hall / Open Source Foundation Project\n; ================================================\nsection .textglobal _start_start:" />
 
-        <!-- Мигающий курсор внизу слева от текста -->
+            <!-- ScrollView занимает оставшееся место (не перекрывает header) -->
+            <ScrollView
+                android:id="@+id/mg_boot_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="18dp"
+                android:overScrollMode="ifContentScrolls">
+
+                <TextView
+                    android:id="@+id/mg_boot_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="13sp"
+                    android:fontFamily="monospace"
+                    android:textColor="#00FF66"
+                    android:lineSpacingExtra="4dp" />
+            </ScrollView>
+        </LinearLayout>
+
+        <!-- Мигающий курсор: отдельный потомок FrameLayout, рисуется сверху -->
         <TextView
             android:id="@+id/mg_boot_cursor"
             android:layout_width="wrap_content"
