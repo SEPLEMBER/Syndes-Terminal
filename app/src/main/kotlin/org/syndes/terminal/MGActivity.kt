@@ -25,19 +25,15 @@ class MGActivity : AppCompatActivity() {
     private val bootLines = listOf(
         "Initializing UEFI firmware interface..",
         "Locating EFI System Partition...",
-        "Loading boot configuration...",
         "Checking Kotlin Libraries...",
         "Success",
-        "Loading Mindbreaker UI...",
-        "Applying neon shader...",
         "Executing kernel hand-off...",
-        "Verifying integrity...",
-        "Boot sequence continuing..."
+        "Verifying integrity..."
     )
 
     private val charDelay = 1L
-    private val linePause = 3L
-    private val finalPause = 25L
+    private val linePause = 1L
+    private val finalPause = 10L
 
     private var overlay: View? = null
     private var bootText: TextView? = null
