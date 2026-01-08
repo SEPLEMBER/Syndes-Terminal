@@ -24,9 +24,7 @@ class MGActivity : AppCompatActivity() {
 
     private val bootLines = listOf(
         "Initializing...",
-        "Locating EFI interface...",
         "Success",
-        "Executing kernel hand-off...",
         "Verifying integrity..."
     )
 
