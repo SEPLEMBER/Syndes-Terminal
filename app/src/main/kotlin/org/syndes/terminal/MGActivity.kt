@@ -23,9 +23,8 @@ class MGActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
 
     private val bootLines = listOf(
-        "Initializing UEFI firmware interface..",
-        "Locating EFI System Partition...",
-        "Checking Kotlin Libraries...",
+        "Initializing...",
+        "Locating EFI interface...",
         "Success",
         "Executing kernel hand-off...",
         "Verifying integrity..."
