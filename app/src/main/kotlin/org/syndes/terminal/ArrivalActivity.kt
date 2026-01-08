@@ -92,23 +92,31 @@ class ArrivalActivity : AppCompatActivity() {
 
         when {
             
-            cmd.contains("финансы") -> {
+           cmd.contains("2.") || cmd.contains("финансы") -> {
                 startActivity(Intent(this, RuFinAsActivity::class.java))
                 finish()
                 return listOf(getString(R.string.redirect_russian_finances))
             }
  
-            cmd.contains("физи") -> {
+           cmd.contains("3.") || cmd.contains("физи") -> {
                 startActivity(Intent(this, RuPhysAsActivity::class.java))
                 finish()
                 return listOf(getString(R.string.redirect_russian_physics))
 
             }
-            cmd.contains("dig") || cmd.contains("циф") -> {
+            cmd.contains("циф") || cmd.contains("1.") -> {
                 startActivity(Intent(this, RuDigAsActivity::class.java))
                 finish()
                 return listOf(getString(R.string.redirect_main))
             }
+            
+            cmd.contains("дат") || cmd.contains("4.") -> {
+                startActivity(Intent(this, RuDigAsActivity::class.java))
+                finish()
+                return listOf(getString(R.string.redirect_main))
+            }
+
+            
             else -> return listOf(getString(R.string.unknown_choice))
         }
     }
