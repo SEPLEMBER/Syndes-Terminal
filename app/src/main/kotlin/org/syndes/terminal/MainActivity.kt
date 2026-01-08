@@ -433,61 +433,12 @@ class MainActivity : AppCompatActivity() {
      * Выполнение одной команды. Возвращает строковый результат (или сообщение об ошибке).
      * Функция сама пишет в терминал (progress, info), но также возвращает результат для условной логики.
      */
-    private fun sendToTermux(command: String): Boolean {
-        return try {
-            // quick check: is Termux installed?
-            try {
-                packageManager.getPackageInfo("com.termux", 0)
-            } catch (_: Throwable) {
-                return false
-            }
-            val intent = Intent("com.termux.RUN_COMMAND").apply {
-                setPackage("com.termux")
-                putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/bash")
-                putExtra("com.termux.RUN_COMMAND_ARGUMENTS", arrayOf("-lc", command))
-                putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home")
-                putExtra("com.termux.RUN_COMMAND_BACKGROUND", true)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(intent)
-            true
-        } catch (_: Throwable) {
-            false
-        }
-    }
-
     private suspend fun runSingleCommand(command: String): String? {
+        val inputToken = command.split("\\s+".toRegex()).firstOrNull()?.lowercase() ?: ""
         val defaultColor = ContextCompat.getColor(this@MainActivity, R.color.terminal_text)
         val infoColor = ContextCompat.getColor(this, R.color.color_info)
         val errorColor = ContextCompat.getColor(this, R.color.color_error)
         val systemYellow = Color.parseColor("#FFD54F")
-
-        // ==== TRMX: redirect to Termux ====
-        if (command.startsWith("trmx:", ignoreCase = true) || command.startsWith("TRMX:", ignoreCase = true)) {
-            val realCmd = command.substringAfter(':').trim()
-            if (realCmd.isBlank()) {
-                withContext(Dispatchers.Main) {
-                    appendToTerminal(colorize("Error: trmx: empty command\n", errorColor), errorColor)
-                }
-                return "Error: trmx empty"
-            }
-
-            val ok = withContext(Dispatchers.Main) {
-                sendToTermux(realCmd)
-            }
-
-            withContext(Dispatchers.Main) {
-                if (ok) {
-                    appendToTerminal(colorize("[trmx] sent to Termux: $realCmd\n", infoColor), infoColor)
-                } else {
-                    appendToTerminal(colorize("Error: Termux not found or cannot handle command\n", errorColor), errorColor)
-                }
-            }
-            return if (ok) "Info: trmx forwarded" else "Error: trmx failed"
-        }
-
-        val inputToken = command.split("\\s+".toRegex()).firstOrNull()?.lowercase() ?: ""
-
         // ==== NEW: act command (launch activity of any exported app) ====
         if (inputToken == "act") {
             val parts = command.split("\\s+".toRegex()).filter { it.isNotEmpty() }
@@ -798,7 +749,7 @@ class MainActivity : AppCompatActivity() {
             }
             var question = parts[0]
             if (question.lowercase().startsWith("echo:")) {
-                question = question.substringAfter(":").trim()
+                question = question.substringAfter(":", "").trim()
             }
             // parse options: label=command
             val opts = parts.drop(1).mapNotNull { p ->
