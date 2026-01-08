@@ -24,7 +24,7 @@ class FormulhMainActivity : AppCompatActivity() {
         "100 / 25 = 4",
         "pi ≈ 3.14159",
         "e^1 = 2.71828",
-        " (a + b)^2 = a^2 + 2ab + b^2 ",
+        "(a + b)^2 = a^2 + 2ab + b^2",
         "F = m * a",
         "Area = π * r^2",
         "log10(1000) = 3",
@@ -44,44 +44,41 @@ class FormulhMainActivity : AppCompatActivity() {
         val container = findViewById<LinearLayout>(R.id.formulh_container)
 
         // Заполняем контейнер текстовыми элементами формул
-        formulas.forEachIndexed { index, text ->
+        formulas.forEach { text ->
             val tv = TextView(this).apply {
                 id = View.generateViewId()
                 this.text = text
                 textSize = 18f
-                // neon green monospace on black
-                setTextColor(android.graphics.Color.parseColor("#00FF66"))
+
+                // === NEON PINK TEXT ===
+                setTextColor(0xFFFF00B8.toInt())
+
                 typeface = Typeface.MONOSPACE
                 setPadding(18, 18, 18, 18)
-                // фон прозрачный по умолчанию
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
-                // === Разрешаем выделение и копирование текста ===
-                // Поддерживается на API 11+
+                // Разрешаем выделение и копирование
                 isLongClickable = true
                 setTextIsSelectable(true)
-                // не перехватываем long click — оставляем стандартное поведение копирования
                 setOnLongClickListener { false }
             }
 
-            // небольшой разделитель
             val wrapper = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 addView(tv)
             }
+
             container.addView(wrapper)
         }
 
-        // Вспомогательная нормализация: lowercase + оставить только буквы и цифры
+        // Нормализация: lowercase + только буквы и цифры
         fun normalize(s: String): String {
-            return s.lowercase()
-                .filter { it.isLetterOrDigit() } // удаляем пробелы и пунктуацию
+            return s.lowercase().filter { it.isLetterOrDigit() }
         }
 
         fun clearHighlight() {
             highlightedView?.let { v ->
                 v.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                // если внутри был TextView, вернём прозрачный фон
                 if (v is LinearLayout && v.childCount > 0) {
                     v.getChildAt(0).setBackgroundColor(android.graphics.Color.TRANSPARENT)
                 }
@@ -90,23 +87,22 @@ class FormulhMainActivity : AppCompatActivity() {
         }
 
         fun highlightAndScroll(targetView: View) {
-            // Снимаем предыдущую подсветку
             clearHighlight()
-            // Подсветка: neon зелёный фоновый прямоугольник
-            targetView.setBackgroundColor(android.graphics.Color.parseColor("#003300")) // тёмный оттенок
-            // добавим тонкую яркую рамку (через padding + другой цвет бэкграунда у вложенного TextView)
+
+            // Фон подсветки (тёмный, чтобы розовый текст светился)
+            targetView.setBackgroundColor(android.graphics.Color.parseColor("#2A001C"))
+
             if (targetView is LinearLayout && targetView.childCount > 0) {
                 val child = targetView.getChildAt(0)
-                child.setBackgroundColor(android.graphics.Color.parseColor("#001A00"))
+                child.setBackgroundColor(android.graphics.Color.parseColor("#1A0011"))
                 child.setPadding(20, 20, 20, 20)
             }
+
             highlightedView = targetView
 
-            // Скроллим к позиции (отложенно, чтобы layout успел измериться)
-            val scrollView = findViewById<ScrollView>(R.id.formulh_scroll)
-            scrollView.post {
-                val y = targetView.top - 40 // немного отступ сверху
-                scrollView.smoothScrollTo(0, if (y < 0) 0 else y)
+            scroll.post {
+                val y = targetView.top - 40
+                scroll.smoothScrollTo(0, if (y < 0) 0 else y)
             }
         }
 
@@ -117,13 +113,12 @@ class FormulhMainActivity : AppCompatActivity() {
                 return
             }
 
-            // Ищем первое совпадение
             var found = false
             for (i in 0 until container.childCount) {
-                val wrapper = container.getChildAt(i)
-                // child 0 is TextView with formula
-                val tv = (wrapper as LinearLayout).getChildAt(0) as TextView
+                val wrapper = container.getChildAt(i) as LinearLayout
+                val tv = wrapper.getChildAt(0) as TextView
                 val tnorm = normalize(tv.text.toString())
+
                 if (tnorm.contains(qnorm)) {
                     highlightAndScroll(wrapper)
                     found = true
@@ -137,20 +132,21 @@ class FormulhMainActivity : AppCompatActivity() {
             }
         }
 
-        // Кнопка поиска
         searchButton.setOnClickListener {
             doSearch(searchInput.text.toString())
         }
 
-        // По нажатию Done/Search на клавиатуре
         searchInput.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                actionId == EditorInfo.IME_ACTION_DONE
+            ) {
                 doSearch(searchInput.text.toString())
                 true
-            } else false
+            } else {
+                false
+            }
         }
 
-        // Настройка поля поиска: моноширинный текст, neon hint, dark background
         searchInput.inputType = InputType.TYPE_CLASS_TEXT
         searchInput.imeOptions = EditorInfo.IME_ACTION_SEARCH
     }
