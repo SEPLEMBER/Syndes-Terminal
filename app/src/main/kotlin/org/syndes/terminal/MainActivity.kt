@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.util.ArrayDeque
 import kotlin.coroutines.coroutineContext
 
@@ -695,6 +696,220 @@ class MainActivity : AppCompatActivity() {
                 return "Error: runsyd failed"
             }
         }
+
+        // ==== NEW: sydcheck command (scan script for potentially dangerous commands) ====
+        if (inputToken == "sydcheck") {
+            val parts = command.split("\\s+".toRegex()).filter { it.isNotEmpty() }
+            if (parts.size < 2) {
+                withContext(Dispatchers.Main) {
+                    appendToTerminal(colorize("Usage: sydcheck <name>  (looks for name.syd in scripts folder and scans for rm/pm/cat)\n", errorColor), errorColor)
+                }
+                return "Error: sydcheck usage"
+            }
+            val name = parts[1].trim()
+            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val safRoot = prefs.getString("work_dir_uri", null) ?: prefs.getString("current_dir_uri", null)
+            if (safRoot.isNullOrBlank()) {
+                withContext(Dispatchers.Main) {
+                    appendToTerminal(colorize("Error: SAF root not configured. Set scripts folder in settings (work_dir_uri/current_dir_uri).\n", errorColor), errorColor)
+                }
+                return "Error: saf not configured"
+            }
+            try {
+                val tree = DocumentFile.fromTreeUri(this, Uri.parse(safRoot))
+                if (tree == null || !tree.isDirectory) {
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("Error: cannot access SAF root (invalid URI)\n", errorColor), errorColor)
+                    }
+                    return "Error: saf root invalid"
+                }
+                val scriptsDir = tree.findFile("scripts")?.takeIf { it.isDirectory }
+                if (scriptsDir == null) {
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("Error: 'scripts' folder not found under SAF root\n", errorColor), errorColor)
+                    }
+                    return "Error: scripts folder missing"
+                }
+                val candidates = if (name.contains('.')) {
+                    listOf(name)
+                } else {
+                    listOf("$name.syd", "$name.sh", "$name.txt")
+                }
+                var found: DocumentFile? = null
+                for (c in candidates) {
+                    val f = scriptsDir.findFile(c)
+                    if (f != null && f.isFile) {
+                        found = f
+                        break
+                    }
+                }
+                if (found == null) {
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("Error: script not found: tried ${candidates.joinToString(", ")}\n", errorColor), errorColor)
+                    }
+                    return "Error: scripts not found"
+                }
+                // Read file text
+                val uri = found.uri
+                val sb = StringBuilder()
+                contentResolver.openInputStream(uri)?.use { ins ->
+                    BufferedReader(InputStreamReader(ins)).use { br ->
+                        var line: String?
+                        while (br.readLine().also { line = it } != null) {
+                            sb.append(line).append('\n')
+                        }
+                    }
+                } ?: run {
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("Error: cannot open script file\n", errorColor), errorColor)
+                    }
+                    return "Error: cannot open"
+                }
+                val content = sb.toString().trimEnd()
+                // Parse commands using existing parser to be consistent
+                val items = parseInputToCommandItems(content)
+                val suspiciousPrefixes = setOf("rm", "pm", "encrypt", "runsyd", "sydc")
+                val matches = mutableListOf<String>()
+                // We'll enumerate with index for readability
+                var idx = 0
+                for (it in items) {
+                    when (it) {
+                        is CommandItem.Single -> {
+                            idx++
+                            val firstTok = it.command.trim().split("\\s+".toRegex()).firstOrNull()?.lowercase() ?: ""
+                            if (suspiciousPrefixes.any { p -> firstTok.startsWith(p) }) {
+                                matches.add("[$idx] ${it.command}")
+                            }
+                        }
+                        is CommandItem.Parallel -> {
+                            // Each command inside parallel group gets its own index entry
+                            for (c in it.commands) {
+                                idx++
+                                val firstTok = c.trim().split("\\s+".toRegex()).firstOrNull()?.lowercase() ?: ""
+                                if (suspiciousPrefixes.any { p -> firstTok.startsWith(p) }) {
+                                    matches.add("[$idx] (parallel) $c")
+                                }
+                            }
+                        }
+                    }
+                }
+                withContext(Dispatchers.Main) {
+                    if (matches.isEmpty()) {
+                        appendToTerminal(colorize("sydcheck: no commands starting with rm, pm, or cat found in '${found.name}'\n", infoColor), infoColor)
+                    } else {
+                        appendToTerminal(colorize("sydcheck: suspicious commands found in '${found.name}':\n", errorColor), errorColor)
+                        for (m in matches) {
+                            appendToTerminal(colorize("  $m\n", errorColor), errorColor)
+                        }
+                        appendToTerminal(colorize("Warning: these commands may be destructive or sensitive. Review before running.\n", errorColor), errorColor)
+                    }
+                }
+                return "Info: sydcheck completed"
+            } catch (t: Throwable) {
+                withContext(Dispatchers.Main) {
+                    appendToTerminal(colorize("Error: sydcheck failed: ${t.message}\n", errorColor), errorColor)
+                }
+                return "Error: sydcheck failed"
+            }
+        }
+
+        // ==== NEW: sydc command (create a script file under /scripts with provided content) ====
+        if (inputToken == "sydc") {
+            // syntax: sydc <filename> <text...>
+            // filename should include extension, e.g. myscript.syd
+            val parts = command.split("\\s+".toRegex()).filter { it.isNotEmpty() }
+            if (parts.size < 3) {
+                withContext(Dispatchers.Main) {
+                    appendToTerminal(colorize("Usage: sydc <filename> <text>\nExample: sydc example.syd echo Hello && sleep 1s\n", errorColor), errorColor)
+                }
+                return "Error: sydc usage"
+            }
+            val filename = parts[1].trim()
+            // content is the rest of the command after the first two tokens
+            val prefix = parts[0] + " " + parts[1]
+            val content = command.substringAfter(prefix, "").trim()
+            if (content.isEmpty()) {
+                withContext(Dispatchers.Main) {
+                    appendToTerminal(colorize("Error: sydc: empty content\n", errorColor), errorColor)
+                }
+                return "Error: sydc empty content"
+            }
+            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val safRoot = prefs.getString("work_dir_uri", null) ?: prefs.getString("current_dir_uri", null)
+            if (safRoot.isNullOrBlank()) {
+                withContext(Dispatchers.Main) {
+                    appendToTerminal(colorize("Error: SAF root not configured. Set scripts folder in settings (work_dir_uri/current_dir_uri).\n", errorColor), errorColor)
+                }
+                return "Error: saf not configured"
+            }
+            try {
+                val tree = DocumentFile.fromTreeUri(this, Uri.parse(safRoot))
+                if (tree == null || !tree.isDirectory) {
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("Error: cannot access SAF root (invalid URI)\n", errorColor), errorColor)
+                    }
+                    return "Error: saf root invalid"
+                }
+                // Ensure scripts dir exists (create if missing)
+                var scriptsDir = tree.findFile("scripts")?.takeIf { it.isDirectory }
+                if (scriptsDir == null) {
+                    scriptsDir = try {
+                        tree.createDirectory("scripts")
+                    } catch (_: Throwable) {
+                        null
+                    }
+                }
+                if (scriptsDir == null) {
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("Error: cannot create or access 'scripts' folder under SAF root\n", errorColor), errorColor)
+                    }
+                    return "Error: scripts folder missing"
+                }
+                // If file exists — delete and recreate (overwrite)
+                val existing = scriptsDir.findFile(filename)
+                if (existing != null && existing.isFile) {
+                    try {
+                        existing.delete()
+                    } catch (_: Throwable) { /* ignore delete failures, will try to create anyway */ }
+                }
+                val newFile = scriptsDir.createFile("text/plain", filename)
+                if (newFile == null) {
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("Error: cannot create file '$filename' in scripts folder\n", errorColor), errorColor)
+                    }
+                    return "Error: cannot create file"
+                }
+                // write content
+                try {
+                    contentResolver.openOutputStream(newFile.uri)?.use { out ->
+                        OutputStreamWriter(out, Charsets.UTF_8).use { ow ->
+                            ow.write(content)
+                            ow.flush()
+                        }
+                    } ?: run {
+                        withContext(Dispatchers.Main) {
+                            appendToTerminal(colorize("Error: cannot open output stream to write file\n", errorColor), errorColor)
+                        }
+                        return "Error: cannot open output"
+                    }
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("sydc: created '${newFile.name}' in scripts folder\n", infoColor), infoColor)
+                    }
+                    return "Info: sydc created ${newFile.name}"
+                } catch (t: Throwable) {
+                    withContext(Dispatchers.Main) {
+                        appendToTerminal(colorize("Error: failed to write file: ${t.message}\n", errorColor), errorColor)
+                    }
+                    return "Error: write failed"
+                }
+            } catch (t: Throwable) {
+                withContext(Dispatchers.Main) {
+                    appendToTerminal(colorize("Error: sydc failed: ${t.message}\n", errorColor), errorColor)
+                }
+                return "Error: sydc failed"
+            }
+        }
+
         // ==== NEW: random {cmd1-cmd2-cmd3} command ====
         if (inputToken == "random") {
             // syntax: random {cmd1-cmd2-cmd3}
