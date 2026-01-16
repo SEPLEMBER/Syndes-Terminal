@@ -663,8 +663,10 @@ class MainActivity : AppCompatActivity() {
                     }
                     return "Error: scripts not found"
                 }
+                // make safe local val for closure usage
+                val foundFile = found
                 // Read file text
-                val uri = found.uri
+                val uri = foundFile.uri
                 val sb = StringBuilder()
                 contentResolver.openInputStream(uri)?.use { ins ->
                     BufferedReader(InputStreamReader(ins)).use { br ->
@@ -684,11 +686,11 @@ class MainActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     inputField.setText(content)
                     inputField.setSelection(inputField.text.length)
-                    appendToTerminal(colorize("Loaded script '${found.name}' — injecting commands...\n", infoColor), infoColor)
+                    appendToTerminal(colorize("Loaded script '${foundFile.name}' — injecting commands...\n", infoColor), infoColor)
                     // call sendCommand to enqueue commands from file (this will add commands while we're processing)
                     sendCommand()
                 }
-                return "Info: runsyd loaded ${found.name}"
+                return "Info: runsyd loaded ${foundFile.name}"
             } catch (t: Throwable) {
                 withContext(Dispatchers.Main) {
                     appendToTerminal(colorize("Error: failed to read script: ${t.message}\n", errorColor), errorColor)
@@ -749,8 +751,10 @@ class MainActivity : AppCompatActivity() {
                     }
                     return "Error: scripts not found"
                 }
+                // make safe local val for closure usage
+                val foundFile = found
                 // Read file text
-                val uri = found.uri
+                val uri = foundFile.uri
                 val sb = StringBuilder()
                 contentResolver.openInputStream(uri)?.use { ins ->
                     BufferedReader(InputStreamReader(ins)).use { br ->
@@ -768,7 +772,7 @@ class MainActivity : AppCompatActivity() {
                 val content = sb.toString().trimEnd()
                 // Parse commands using existing parser to be consistent
                 val items = parseInputToCommandItems(content)
-                val suspiciousPrefixes = setOf("rm", "pm", "encrypt", "runsyd", "sydc")
+                val suspiciousPrefixes = setOf("rm", "pm", "cat")
                 val matches = mutableListOf<String>()
                 // We'll enumerate with index for readability
                 var idx = 0
@@ -795,9 +799,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 withContext(Dispatchers.Main) {
                     if (matches.isEmpty()) {
-                        appendToTerminal(colorize("sydcheck: no commands starting with rm, pm, or cat found in '${found.name}'\n", infoColor), infoColor)
+                        appendToTerminal(colorize("sydcheck: no commands starting with rm, pm, or cat found in '${foundFile.name}'\n", infoColor), infoColor)
                     } else {
-                        appendToTerminal(colorize("sydcheck: suspicious commands found in '${found.name}':\n", errorColor), errorColor)
+                        appendToTerminal(colorize("sydcheck: suspicious commands found in '${foundFile.name}':\n", errorColor), errorColor)
                         for (m in matches) {
                             appendToTerminal(colorize("  $m\n", errorColor), errorColor)
                         }
@@ -865,14 +869,16 @@ class MainActivity : AppCompatActivity() {
                     }
                     return "Error: scripts folder missing"
                 }
+                // create a final val for closure usage
+                val scriptsDirFinal = scriptsDir
                 // If file exists — delete and recreate (overwrite)
-                val existing = scriptsDir.findFile(filename)
+                val existing = scriptsDirFinal.findFile(filename)
                 if (existing != null && existing.isFile) {
                     try {
                         existing.delete()
                     } catch (_: Throwable) { /* ignore delete failures, will try to create anyway */ }
                 }
-                val newFile = scriptsDir.createFile("text/plain", filename)
+                val newFile = scriptsDirFinal.createFile("text/plain", filename)
                 if (newFile == null) {
                     withContext(Dispatchers.Main) {
                         appendToTerminal(colorize("Error: cannot create file '$filename' in scripts folder\n", errorColor), errorColor)
