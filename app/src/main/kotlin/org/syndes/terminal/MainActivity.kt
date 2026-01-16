@@ -704,7 +704,7 @@ class MainActivity : AppCompatActivity() {
             val parts = command.split("\\s+".toRegex()).filter { it.isNotEmpty() }
             if (parts.size < 2) {
                 withContext(Dispatchers.Main) {
-                    appendToTerminal(colorize("Usage: sydcheck <name>  (looks for name.syd in scripts folder and scans for rm/pm/cat)\n", errorColor), errorColor)
+                    appendToTerminal(colorize("Usage: sydcheck <name>  (looks for name.syd in scripts folder and scans for PUP commands)\n", errorColor), errorColor)
                 }
                 return "Error: sydcheck usage"
             }
@@ -772,7 +772,7 @@ class MainActivity : AppCompatActivity() {
                 val content = sb.toString().trimEnd()
                 // Parse commands using existing parser to be consistent
                 val items = parseInputToCommandItems(content)
-                val suspiciousPrefixes = setOf("rm", "pm", "cat")
+                val suspiciousPrefixes = setOf("rm", "pm", "encrypt", "runsyd")
                 val matches = mutableListOf<String>()
                 // We'll enumerate with index for readability
                 var idx = 0
