@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/sy_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000"
+    android:padding="18dp">
+
+    <TextView
+        android:id="@+id/sy_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SyInstall"
+        android:textSize="34sp"
+        android:fontFamily="monospace"
+        android:textStyle="bold"
+        android:textColor="#FF00B8"
+        android:letterSpacing="0.06"
+        android:contentDescription="SyInstall — required apps" />
+
+    <TextView
+        android:id="@+id/sy_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quick access to required apps"
+        android:textSize="12sp"
+        android:textColor="#CCCCCC"
+        android:layout_marginTop="6dp"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="12dp">
+
+        <LinearLayout
+            android:id="@+id/sy_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </ScrollView>
+
+</LinearLayout>
