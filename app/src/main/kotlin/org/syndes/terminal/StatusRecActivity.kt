@@ -198,8 +198,8 @@ class StatusRecActivity : AppCompatActivity() {
         val nemesisInstalled = isPackageInstalled("com.nemesis.complex")
         list.add(
             "SECURITY" to
-                    if (nemesisInstalled) "PROTECTION ENABLED"
-                    else "SECURITY SYSTEM WEAKENED"
+                    if (nemesisInstalled) "ALL PROTECTION ENABLED"
+                    else "SECURITY SYSTEM NORMAL"
         )
 
         return list
