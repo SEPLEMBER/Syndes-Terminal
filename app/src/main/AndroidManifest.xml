@@ -112,7 +112,7 @@
                                         <activity
     android:name=".SyInstallActivity"
     android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
+    android:exported="true" />
 
         
         <!-- foreground-service for watchdog -->
