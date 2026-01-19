@@ -121,12 +121,13 @@ replace <old> <new> <path> - заменить текст в файлах
 replacetool          - утилита пакетной замены текста (syndes component)
 rev <file> [--inplace] - обратить порядок строк
 rm [-r] <path>       - удалить файл или директорию
-runsyd <name>        - загрузить и выполнить скрипт из SAF/scripts
+runsyd <name>        - загрузить и выполнить syd скрипт из SAF/scripts
 rust                 - текстовый редактор rust
 search <query>       - поиск в интернете
 sec                  - открыть безопасность / детали приложения
 shortc               - создать ярлык команды терминала
 sleep <min>/<ms>/<sec> - задержка выполнения
+sydcheck <name>      - поиск подозрительных команд в syd-скриптах
 sms [number] [text]  - открыть SMS-приложение
 snd                  - открыть настройки звука
 sort-lines <file> [--unique] [--reverse] [--inplace] - сортировка строк
