@@ -37,148 +37,132 @@ class TutorialActivity : AppCompatActivity() {
         val raw = """
 Available commands:
 
-==A: Apps & Package manager==
-  about                - show app information and version
-  alias <name>=<cmd>   - define alias (alias names cannot contain spaces)
-  alias list           - list defined aliases
-  alias run <name>     - run alias by name
-  apps                 - open application settings screen
-  launch <app>         - launch an app by name (alias of open for apps)
-  pm install <apk>     - install APK from current work directory (SAF paths supported)
-  pm launch <pkg|app>  - launch package or app by package name or visible app name
-  pm list [user|system]- list installed packages; optional filter 'user' or 'system'
-  pm uninstall <pkg>   - uninstall package (starts system uninstall flow)
-  pminfo|pkginfo <pkg> - show package information (package or app visible name)
-  pkgof|findpkg <app>  - find package name(s) by visible app name
-  runsyd <name>        - load and inject script from SAF root 'scripts' folder (tries .syd, .sh, .txt)
-
-==B: Files & File system operations==
-  apm                  - open airplane mode settings (shortcut)
-  cat <file>           - display file contents (supports SAF/relative paths)
-  checksum <file> [md5|sha256] - compute file hash (default sha256)
-  cmp <f1> <f2>        - compare two text files (line-by-line)
-  cp <src> <dst>       - copy file or directory (supports relative paths)
-  cd - change directory
-  cut -d<delim> -f<fields> <file> - extract fields from file by delimiter
-  du <file|dir>        - show size in bytes (recursive for directories)
-  encrypt <password> <path> - encrypt files (recursively if directory)
-  decrypt <password> <path> - decrypt files (recursively if directory)
-  filekey|apkkey <apk> - show APK signatures/certificates
-  find <name>          - find files by name in current directory (non-recursive by default)
-  head <file> [n]      - show first n lines (default 10)
-  join|merge <file1> <file2> [sep] - join files line-by-line
-  ln <src> <link>      - create pseudo-link (copy) of file
-  ls|dir               - list files in current directory
-  mkdir <name>         - create directory (supports paths)
-  mv <src> <dst>       - move file or directory (supports relative paths)
-  preview <path> [lines] - preview file content (text or image metadata)
-  replace <old> <new> <path> - replace text in files or recursively in dirs
-  rename <old> <new> <path> - rename filenames in directory (substring replace; supports { } counter)
-  rev <file> [--inplace] - reverse line order in file
-  rm [-r] <path>       - remove file or directory (-r for recursive)
-  rmdir (use rm)       - (note) prefer rm for recursive removes
-  split <file> <lines_per_file> [prefix] - split file into parts by lines
-  stat <path>          - show file/directory stats (size, type, modified)
-  stash/trash <path>   - move file/dir to trash (.syndes_trash)
-  cleartrash           - clear trash directory
-  touch <name>         - create empty file (supports paths)
-  trash <path>         - move file/dir to trash (.syndes_trash)
-  unzip <archive> [dest] - extract ZIP archive
-  zip <source> <archive> - create ZIP archive
-
-==C: System & Information==
-  date                 - show current date and time
-  device               - show device information (model, brand, etc.)
-  mem [pkg]            - show memory usage info (system or specific package)
-  ps|top               - show running processes (ps) or top-like summary
-  sha256|md5 <path>    - compute file hash (shortcut)
-  sysclipboard get|set <text> - get or set system clipboard contents
-  uname                - show system name/version information
-  uptime               - show system uptime
-  sleep <min>/<ms>/<sec> - wait before run command
-  wait <sec> - block commands for given seconds (persist until timeout)
-  whoami               - show current user (or environment identity)
-
-==D: Utilities & Text tools==
-  backup|snapshot <path> - create backup of file/dir with SydBack (if available)
-  batchren <dir> <pattern> - batch rename files in directory
-  batchedit <old> <new> <dir> [--dry] - batch replace text in files
-  calc                 - open calculator app
-  cat                  - (see Files) display file contents
-  cmp                  - (see Files) compare files
-  diff [-u] [-c <n>] [-i] <f1> <f2> - show textual differences with options (unified/context/ignore-case)
-  grep [-r] [-i] [-l] [-n] <pattern> <path> - search text in files (recursive, ignore case, names only, show line numbers)
-  head                 - (see Files) 
-  hash utilities       - use checksum/sha256/md5 commands for hashing
-  rev                  - reverse file lines
-  sort-lines <file> [--unique] [--reverse] [--inplace] - sort lines in file
-  split                - (see Files)
-  tail <file> [n]      - show last n lines (default 10)
-  wc <file>            - word count: lines, words, chars
-
-==E: Settings, Shortcuts & Apps shortcuts==
-act                  - launch an Activity of the specified app (if exported=true)
-shortc               - create a home screen shortcut that runs a terminal command
-bootshell            - open BootShell (UI for autostart / boot command management)
-kbd                  - open keyboard settings
-aband                - open About phone / device information
-accs                 - open accessibility settings
-priv                 - open privacy settings
-lang                 - open language settings
-home                 - open home screen / launcher settings
-zen                  - open Do Not Disturb settings
-night                - open night light / blue light filter settings
-apse <app|pkg>       - open settings for the specified application (app details)
-wifi                 - open Wi-Fi settings
-bts                  - open Bluetooth settings
-data                 - open mobile data settings
-apm                  - open airplane mode settings
-snd                  - open sound settings
-dsp                  - open display / screen settings
-apps                 - open the general application settings screen
-stg                  - open storage / internal memory settings
-sec                  - open security / application details
-loc                  - open location (GPS) settings
-nfc                  - open NFC settings
-cam                  - open the camera (ACTION_IMAGE_CAPTURE)
-clk                  - open date & time settings
-notif                - open application notification settings
+about                - show application information and version
+aband                - open “About phone” / device information
 acc                  - open accounts / sync settings
+accs                 - open accessibility settings
+act                  - launch an Activity of the specified app (if exported=true)
+alarm                - open the alarm application
+alias <name>=<cmd>   - define an alias (shortcut). Alias names must not contain spaces
+alias list           - show list of defined aliases
+alias run <name>     - execute alias by name
+apm                  - open airplane mode settings
+apkkey|filekey <apk> - show APK signatures / certificates
+apps                 - open application settings screen
+appscheck            - utility to check application package names (syndes component)
+appmanager           - shell application manager utility
+apse <app|pkg>       - open application details for specified app
+backup|snapshot <path> - create a backup of a file/folder using SydBack (if available)
+batchren             - batch file renaming utility (syndes component)
+batchedit <old> <new> <dir> [--dry] - batch text replacement in files
+bootshell            - open BootShell (UI for autostart / auto-command editing)
+browser [url]        - open browser (optionally with URL)
+bts                  - open Bluetooth settings
+btss                 - open battery / power saving settings
+calc                 - open calculator application
+call <number>        - open dialer with specified number
+cam                  - open camera (ACTION_IMAGE_CAPTURE)
+cat <file>           - show file contents (SAF/relative paths supported)
+cd                   - change working directory
+checksum <file> [md5|sha256] - calculate file hash (default: sha256)
+clear                - clear terminal output
+cleartrash           - empty trash
+clk                  - open date/time settings
+cmp <f1> <f2>        - compare two text files
+contacts             - open contacts application
+console/settings     - terminal settings
+cp <src> <dst>       - copy file or directory
+cut -d<delim> -f<fields> <file> - extract fields from file using delimiter
+data                 - open mobile data settings
+date                 - show current date and time
+decrypt <password> <path> - decrypt files (recursively)
 dev                  - open developer options
-alarm                - open the alarm clock application
-btss                 - open battery saving / power management settings
-contacts             - open the contacts application
+device               - show device information
+diff [-u] [-c <n>] [-i] <f1> <f2> - show text differences
+dsp                  - open display settings
+du <file|dir>        - show size in bytes
+email [addr] [subj] [body] - open email composer
+encrypt <password> <path> - encrypt files (recursively)
+echo <text>          - print text
+exit                 - exit application
+find <name>          - find files by name
+findpkg|pkgof <app>  - find package name(s) by visible app name
+grep [-r] [-i] [-l] [-n] <pattern> <path> - search text in files
+hash utilities       - use checksum/sha256/md5
+head <file> [n]      - show first n lines
+help                 - show this help
+history              - show input history
+home                 - open launcher settings
+join|merge <file1> <file2> [sep] - merge files line by line
+kbd                  - open keyboard settings
+lang                 - open language settings
+launch <app>         - launch app by visible name
+ln <src> <link>      - create file pseudo-link
+loc                  - open location settings
+ls|dir               - list files
+md5|sha256 <path>    - calculate file hash
+mem [pkg]            - show memory usage
+mkdir <name>         - create directory
+mv <src> <dst>       - move file or directory
+nfc                  - open NFC settings
+night                - open night mode settings
+notif                - open notification settings
+notify -t <title> -m <message> - send system notification
+pm install <apk>     - install APK
+pm launch <pkg|app>  - launch package or app
+pm list [user|system]- list installed packages
+pm uninstall <pkg>   - uninstall package
+pminfo|pkginfo <pkg> - show package information
+preview <path> [lines] - preview file
+priv                 - open privacy settings
+ps|top               - show running processes
+rename <old> <new> <path> - rename files
+replace <old> <new> <path> - replace text in files
+replacetool          - batch text replacement utility (syndes component)
+rev <file> [--inplace] - reverse line order
+rm [-r] <path>       - delete file or directory
+runsyd <name>        - load and execute script from SAF/scripts
+rust                 - rust text editor
+search <query>       - internet search
+sec                  - open security / app security details
+shortc               - create terminal command shortcut
+sleep <min>/<ms>/<sec> - execution delay
+sms [number] [text]  - open SMS application
+snd                  - open sound settings
+sort-lines <file> [--unique] [--reverse] [--inplace] - sort lines
+split <file> <lines_per_file> [prefix] - split file
+stg                  - open storage settings
+stat <path>          - file/directory statistics
+status               - system information utility
+stash|trash <path>   - move to trash
+sysclipboard get|set <text> - system clipboard access
+tail <file> [n]      - show last lines of file
+touch <name>         - create empty file
+uname                - show system name
+unzip <archive> [dest] - extract ZIP archive
+uptime               - system uptime
 vpns                 - open VPN settings
-browser [url]        - open the browser (optional URL)
-call <number>        - open the dialer with the specified phone number
-email [addr] [subj] [body]
-                     - open the email composer (address/subject/body optional)
-notify -t <title> -m <message>
-                     - send a system notification
-search <query>       - perform an internet search (opens the browser)
-sms [number] [text]  - open the SMS app with optional number and text
+wait <sec>           - block execution
+watchdog             - same as sleep
+wc <file>            - count lines/words/characters
+wifi                 - open Wi-Fi settings
+whoami               - show current user
+zip <source> <archive> - create ZIP archive
 
-==F: Shell control, aliases & app flow==
-  clear                - clear terminal output (internal)
-  exit                 - shut down the application
-  history              - show input history
-  help                 - show this help / tutorial
-  alias                - (see A: alias commands)
-  unalias <name>       - remove alias
 
 ==G: Misc / Notes & Warnings==
-  !!! WARNING (ENCRYPT): encrypting large folders is CPU-intensive.
-  Please encrypt small folders or specific directories one-by-one.
-  Iterations = 1000 (LOW). This provides only limited KDF hardness.
-  Use a strong password — recommendation: minimum 8 different characters.
-  (Encryption is a convenience feature; responsibility for secure passwords lies with the user.)
+  !!! WARNING (ENCRYPT): Encrypting large folders requires high CPU load.
+Please encrypt small folders or individual directories sequentially.
+Iterations = 75,000. This provides limited KDF strength.
+Use a strong password — at least 8 different characters recommended.
+Algorithm: AES-256-GCM.
 
 Notes:
   - runsyd reads scripts from SAF root → 'scripts' directory (tries name.syd, name.sh, name.txt). Supports both specifying the file extension and omitting it — e.g. you can run "runsyd scriptname" or "runsyd scriptname.syd".
   - pm uninstall starts system uninstall flow (user must confirm each uninstall dialog).
   - resetup opens UI that iterates package list and launches system uninstall dialogs one-by-one.
   - many file operations support SAF paths or relative paths from the configured work directory.
-  - aliases are local to the app and do not affect the system shell.
+  - aliases are local to the app and do not affect the Android shell.
   - Command sequences are supported: commands of the form 'cmd1; cmd2; cmd3' run sequentially. Groups prefixed with 'parallel:' such as 'parallel: cmd1; cmd2; cmd3' run concurrently. Commands that include '&' (for example 'cmd1 & cmd2; cmd3') behave as backgrounded or non-blocking tasks — useful when, for example, you need to start an Activity without stopping the rest of the chain.
   - Supports the 'button' command: 'button (Question text - Option1=cmd1 - Option2=cmd2 - ...)', using '-' as the separator between parts. If a 'button(...)' appears in a command chain (for example 'button(...); othercommand'), the following commands will be paused until the user selects one of the options. After a choice is made the chain resumes, and the command associated with the chosen option is appended to the chain (executed as if the user had entered it by pressing the button).
   - Supports the 'random {cmd1-cmd2-cmd3}' command. This runs a randomly selected command from the provided list.
@@ -212,7 +196,7 @@ Notes:
         val essenceTargets = listOf(
             "encrypting large folders is CPU-intensive.",
             "Please encrypt small folders or specific directories one-by-one.",
-            "Iterations = 1000 (LOW). This provides only limited KDF hardness."
+            "AES-GCM-256"
         )
         essenceTargets.forEach { t ->
             val idx = raw.indexOf(t, ignoreCase = true)
