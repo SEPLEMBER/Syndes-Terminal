@@ -121,12 +121,13 @@ replace <old> <new> <path> - replace text in files
 replacetool          - batch text replacement utility (syndes component)
 rev <file> [--inplace] - reverse line order
 rm [-r] <path>       - delete file or directory
-runsyd <name>        - load and execute script from SAF/scripts
+runsyd <name>        - load and execute a syd script from SAF/scripts
 rust                 - rust text editor
 search <query>       - internet search
-sec                  - open security / app security details
-shortc               - create terminal command shortcut
+sec                  - open security / application security details
+shortc               - create a terminal command shortcut
 sleep <min>/<ms>/<sec> - execution delay
+sydcheck <name>      - scan syd scripts for suspicious commands
 sms [number] [text]  - open SMS application
 snd                  - open sound settings
 sort-lines <file> [--unique] [--reverse] [--inplace] - sort lines
