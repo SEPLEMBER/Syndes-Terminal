@@ -344,7 +344,7 @@ Hello!   \__/'---'\__/
                     "Info: decrypted $processed file(s)"
                 }
   
-                          "batchren" -> {
+                          "old batchren" -> {
     if (args.size < 2) return "Usage: batchren <dir> <newPattern>"
     val dirPath = args[0]
     val pattern = args.drop(1).joinToString(" ")
@@ -1632,15 +1632,156 @@ Hello!   \__/'---'\__/
                     "Info: opening account settings"
                 }
 
-                "rust" -> {
+
+"rust" -> {
     val pm = ctx.packageManager
-    val intent = pm.getLaunchIntentForPackage("org.syndes.rust")
+    val packageName = "org.syndes.kotlincomponents"
+    val activityClass = "org.syndes.kotlincomponents.RustStartActivity"
+    val component = ComponentName(packageName, activityClass)
+
+    try {
+        val ai = pm.getActivityInfo(component, PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            
+            "Error: RustStartActivity is not exported"
+        } else {
+            val intent = Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening rust"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"replacetool" -> {
+    val pm = ctx.packageManager
+    val packageName = "org.syndes.kotlincomponents"
+    val activityClass = "org.syndes.kotlincomponents.ReplaceToolActivity"
+    val component = ComponentName(packageName, activityClass)
+
+    try {
+        val ai = pm.getActivityInfo(component, PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            
+            "Error: activity not exported"
+        } else {
+            val intent = Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening text replace tool"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"batchren" -> {
+    val pm = ctx.packageManager
+    val packageName = "org.syndes.kotlincomponents"
+    val activityClass = "org.syndes.kotlincomponents.BatchRenActivity"
+    val component = ComponentName(packageName, activityClass)
+
+    try {
+        val ai = pm.getActivityInfo(component, PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            
+            "Error: activity not exported"
+        } else {
+            val intent = Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening batch rename tool"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"appscheck" -> {
+    val pm = ctx.packageManager
+    val packageName = "org.syndes.kotlincomponents"
+    val activityClass = "org.syndes.kotlincomponents.AppCheckActivity"
+    val component = ComponentName(packageName, activityClass)
+
+    try {
+        val ai = pm.getActivityInfo(component, PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            
+            "Error: activity not exported"
+        } else {
+            val intent = Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening batch rename tool"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"zeroless" -> {
+    val pm = ctx.packageManager
+    val packageName = "com.syndes.javacomponents"
+    val activityClass = "com.syndes.javacomponents.ZLSActivity"
+    val component = ComponentName(packageName, activityClass)
+
+    try {
+        val ai = pm.getActivityInfo(component, PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            
+            "Error: activity not exported"
+        } else {
+            val intent = Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening zeroless"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+                "termux" -> {
+    val pm = ctx.packageManager
+    val intent = pm.getLaunchIntentForPackage("com.termux")
     if (intent != null) {
         if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         ctx.startActivity(intent)
         "Info: opening Rust app"
     } else {
-        "Error: Rust not installed"
+        "Error: termux not installed"
     }
 }
 
