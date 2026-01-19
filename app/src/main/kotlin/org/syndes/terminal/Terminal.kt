@@ -134,6 +134,41 @@ Hello!   \__/'---'\__/
                     }
                 }
 
+"color echo" -> {
+    if (args.isEmpty()) return "Error: no color specified"
+    val colorKey = args[0].lowercase()
+    val textArgs = if (args.size > 1) args.subList(1, args.size) else emptyList<String>()
+
+    val rgb = when (colorKey) {
+        "g", "green", "neon", "neongreen", "neon green" -> Triple(57, 255, 20)    // neon green #39FF14
+        "r", "red" -> Triple(255, 0, 0)                                           // red #FF0000
+        "y", "yellow" -> Triple(255, 255, 0)                                      // yellow #FFFF00
+        "b", "blue", "holo", "holoblue", "holo blue" -> Triple(51, 181, 229)     // holo blue #33B5E5
+        else -> null
+    } ?: return "Error: unknown color '$colorKey' (use g, r, y, b)"
+
+    // Поведение перенаправления почти как в echo: если встречается ">", пишем plain text в файл.
+    if (textArgs.contains(">")) {
+        val index = textArgs.indexOf(">")
+        if (index == -1 || index == textArgs.size - 1) return "Error: invalid redirect"
+        val text = textArgs.subList(0, index).joinToString(" ")
+        val filePath = textArgs[index + 1]
+        val (parent, fileName) = resolvePath(ctx, filePath, createDirs = true) ?: return "Error: invalid path"
+        val file = parent.findFile(fileName) ?: parent.createFile("text/plain", fileName)
+            ?: return "Error: cannot create file"
+        val out = ctx.contentResolver.openOutputStream(file.uri, "wt")
+            ?: return "Error: cannot open file for writing"
+        out.use { it.write(text.toByteArray()) }
+        "Info: wrote to $filePath"
+    } else {
+        val plain = textArgs.joinToString(" ")
+        val (r, g, b) = rgb
+        val ansi = "\u001B[38;2;${r};${g};${b}m" // 24-bit ANSI color
+        val reset = "\u001B[0m"
+        "$ansi$plain$reset"
+    }
+}
+
                 "open" -> {
                     if (args.isEmpty()) return "Error: specify app name or file path, e.g. open Minecraft or open file.txt"
                     val target = args.joinToString(" ")
