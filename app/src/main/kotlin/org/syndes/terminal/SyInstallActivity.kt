@@ -19,8 +19,8 @@ class SyInstallActivity : AppCompatActivity() {
     data class AppInfo(val displayName: String, val packageName: String, val url: String)
 
     private val apps = listOf(
-        AppInfo("Terminal", "org.syndes.terminal", "https://example.com"),
-        AppInfo("Syndes components", "org.syndes.kotlincomponents", "https://example.com"),
+        AppInfo("Terminal", "org.syndes.terminal", "https://github.com/SEPLEMBER/Syndes-Terminal/releases"),
+        AppInfo("Syndes components", "org.syndes.kotlincomponents", "https://github.com/SEPLEMBER/Syndes_Kotlin_Components/releases"),
         AppInfo("Material files", "me.zhanghai.android.files", "https://f-droid.org/en/packages/me.zhanghai.android.files/"),
         AppInfo("KISS Launcher", "fr.neamar.kiss", "https://f-droid.org/en/packages/fr.neamar.kiss/"),
         AppInfo("Automations", "com.jens.automation2", "https://f-droid.org/en/packages/com.jens.automation2/"),
