@@ -255,7 +255,7 @@ Hello!   \__/'---'\__/
                     }
 
                     "appmanager", "environmentsettings" -> {
-                        val intent = Intent(ctx, KanjiMapperActivity::class.java) // TODO: switch to KanjiMapperActivity when available
+                        val intent = Intent(ctx, SyInstallActivity::class.java) // TODO: switch to KanjiMapperActivity when available
                         if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         ctx.startActivity(intent)
                         null
