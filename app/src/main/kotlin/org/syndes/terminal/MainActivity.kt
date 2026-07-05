@@ -60,14 +60,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private var progressJob: Job? = null
     private val terminal = Terminal()
+    private val terminal2 = Terminal2() // <-- Добавлен второй терминал
     private val PREFS_NAME = "terminal_prefs"
-    // For controlling glow specifically on the terminal output
-    private var terminalGlowEnabled = true
-    private var terminalGlowColor = Color.parseColor("#00FFF7")
-    private var terminalGlowRadius = 6f
+    
     // список "тяжёлых" команд, которые нужно выполнять в IO
     private val heavyCommands = setOf(
-        "rm", "cp", "mv", "replace", "encrypt", "decrypt", "cmp", "diff",
+        "rm", "cp", "mv", "replace", "cmp", "diff",
         "rename", "backup", "snapshot", "trash", "cleartrash",
         "sha256", "grep", "batchrename", "md5", "delete all y"
     )
@@ -77,7 +75,6 @@ class MainActivity : AppCompatActivity() {
             try {
                 val cmd = intent?.getStringExtra("cmd") ?: return
                 val result = intent.getStringExtra("result") ?: ""
-                // use appendToTerminal which handles glow disabling for errors
                 val infoColor = ContextCompat.getColor(this@MainActivity, R.color.color_info)
                 appendToTerminal(colorize("\n[watchdog:$cmd] $result\n", infoColor), infoColor)
             } catch (t: Throwable) {
@@ -133,19 +130,7 @@ class MainActivity : AppCompatActivity() {
         val embeddedYellow = Color.parseColor("#03A9F4")
         sendButton.setTextColor(embeddedYellow)
         sendButton.setBackgroundColor(Color.TRANSPARENT)
-        // --- Apply subtle neon/glow effects (safe presets) ---
-        // terminal output: cyan-ish glow (subtle) - save values for later toggling
-        terminalGlowColor = Color.parseColor("#00FFF7")
-        terminalGlowRadius = 6f
-        terminalGlowEnabled = true
-        applyNeon(terminalOutput, terminalGlowColor, radius = terminalGlowRadius)
-        // progress text: warm yellow glow
-        applyNeon(progressText, embeddedYellow, radius = 5f)
-        // send button: keep its yellow text and add small glow
-        applyNeon(sendButton, embeddedYellow, radius = 6f)
-        // input field: small subtle greenish glow so caret/text pop
-        val subtleGreen = Color.parseColor("#39FF14")
-        applyNeon(inputField, subtleGreen, radius = 3f)
+        
         // Добавляем кнопку "STOP QUEUE" программно (без изменения XML)
         addStopQueueButton()
         // Сделаем inputField явно фокусируемым в touch-mode (предотвращает потерю ввода)
@@ -304,8 +289,6 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener { stopQueue() }
                 visibility = View.GONE // hidden by default
             }
-            // add neon glow to the created button (safe preset)
-            applyNeon(btn, Color.parseColor("#FF5F1F"), radius = 6f)
             stopQueueButton = btn
             // Try to add before sendButton so STOP is left, RUN is right
             val parent = sendButton.parent
@@ -772,7 +755,7 @@ class MainActivity : AppCompatActivity() {
                 val content = sb.toString().trimEnd()
                 // Parse commands using existing parser to be consistent
                 val items = parseInputToCommandItems(content)
-                val suspiciousPrefixes = setOf("rm", "pm", "encrypt", "runsyd")
+                val suspiciousPrefixes = setOf("rm", "pm", "runsyd")
                 val matches = mutableListOf<String>()
                 // We'll enumerate with index for readability
                 var idx = 0
@@ -1043,8 +1026,6 @@ class MainActivity : AppCompatActivity() {
                                 try { root.removeView(overlay) } catch (_: Throwable) { }
                             }
                         }
-                        // keep neon on buttons if desired (does not affect terminal glow)
-                        try { applyNeon(b, Color.parseColor("#00FFF7"), radius = 4f) } catch (_: Throwable) {}
                         val blp = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -1202,7 +1183,9 @@ class MainActivity : AppCompatActivity() {
                 terminalOutput.text = ""
             }
             val maybe = try {
-                withContext(Dispatchers.Main) { terminal.execute(command, this@MainActivity) }
+                withContext(Dispatchers.Main) { 
+                    terminal.execute(command, this@MainActivity) ?: terminal2.execute(command, this@MainActivity) 
+                }
             } catch (_: Throwable) {
                 null
             }
@@ -1293,7 +1276,7 @@ class MainActivity : AppCompatActivity() {
             val result = try {
                 withContext(Dispatchers.IO) {
                     try {
-                        terminal.execute(command, this@MainActivity)
+                        terminal.execute(command, this@MainActivity) ?: terminal2.execute(command, this@MainActivity)
                     } catch (t: Throwable) {
                         "Error: ${t.message ?: "execution failed"}"
                     }
@@ -1308,7 +1291,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             val result = try {
                 withContext(Dispatchers.Main) {
-                    terminal.execute(command, this@MainActivity)
+                    terminal.execute(command, this@MainActivity) ?: terminal2.execute(command, this@MainActivity)
                 }
             } catch (t: Throwable) {
                 "Error: command execution failed"
@@ -1473,44 +1456,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Append text to terminalOutput, but ensure that if the color equals the error color,
-     * terminal glow is temporarily disabled for that append. This enforces "no glow for red text".
+     * Append text to terminalOutput.
      */
     private fun appendToTerminal(sp: SpannableStringBuilder, color: Int) {
-        val errorColor = ContextCompat.getColor(this@MainActivity, R.color.color_error)
-        val needDisableGlow = (color == errorColor)
         // run on UI thread (safe to call from any thread)
         runOnUiThread {
-            val prevGlow = terminalGlowEnabled
-            if (needDisableGlow && prevGlow) {
-                // temporarily disable glow
-                setTerminalGlowEnabled(false)
-            }
-            try {
-                terminalOutput.append(sp)
-            } finally {
-                if (needDisableGlow && prevGlow) {
-                    // restore glow
-                    setTerminalGlowEnabled(true)
-                }
-            }
+            terminalOutput.append(sp)
             scrollToBottom()
         }
-    }
-
-    // Устанавливает глобально свечение для terminalOutput (в UI-потоке)
-    private fun setTerminalGlowEnabled(enabled: Boolean) {
-        try {
-            if (enabled) {
-                // restore glow
-                terminalOutput.setShadowLayer(terminalGlowRadius, 0f, 0f, terminalGlowColor)
-                terminalGlowEnabled = true
-            } else {
-                // disable glow
-                terminalOutput.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
-                terminalGlowEnabled = false
-            }
-        } catch (_: Throwable) { /* ignore */ }
     }
 
     // <--- secure screenshots: apply FLAG_SECURE according to prefs
@@ -1536,16 +1489,6 @@ class MainActivity : AppCompatActivity() {
             val layout = terminalOutput.layout ?: return@post
             val scrollAmount = layout.getLineTop(terminalOutput.lineCount) - terminalOutput.height
             if (scrollAmount > 0) terminalOutput.scrollTo(0, scrollAmount) else terminalOutput.scrollTo(0, 0)
-        }
-    }
-
-    // Helper: apply a subtle neon glow using setShadowLayer (safe defaults chosen)
-    private fun applyNeon(view: TextView, color: Int, radius: Float = 6f, dx: Float = 0f, dy: Float = 0f) {
-        try {
-            view.setShadowLayer(radius, dx, dy, color)
-            // do not override text color here; caller already sets text color where needed
-        } catch (_: Throwable) {
-            // ignore devices that might fail; setShadowLayer is widely supported but be defensive
         }
     }
 
