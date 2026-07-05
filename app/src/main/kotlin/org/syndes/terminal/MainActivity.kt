@@ -414,6 +414,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Вспомогательная функция: сначала пробуем terminal, если он вернул null или "Unknown command",
+     * то пробуем terminal2.
+     */
+    private fun executeWithFallback(command: String, context: Context): String? {
+        val result1 = terminal.execute(command, context)
+        // Если первый терминал вернул null или ошибку "Unknown command", пробуем второй
+        if (result1 == null || result1.startsWith("Unknown command", ignoreCase = true)) {
+            return terminal2.execute(command, context)
+        }
+        return result1
+    }
+
+    /**
      * Выполнение одной команды. Возвращает строковый результат (или сообщение об ошибке).
      * Функция сама пишет в терминал (progress, info), но также возвращает результат для условной логики.
      */
@@ -1184,7 +1197,7 @@ class MainActivity : AppCompatActivity() {
             }
             val maybe = try {
                 withContext(Dispatchers.Main) { 
-                    terminal.execute(command, this@MainActivity) ?: terminal2.execute(command, this@MainActivity) 
+                    executeWithFallback(command, this@MainActivity)
                 }
             } catch (_: Throwable) {
                 null
@@ -1276,7 +1289,7 @@ class MainActivity : AppCompatActivity() {
             val result = try {
                 withContext(Dispatchers.IO) {
                     try {
-                        terminal.execute(command, this@MainActivity) ?: terminal2.execute(command, this@MainActivity)
+                        executeWithFallback(command, this@MainActivity)
                     } catch (t: Throwable) {
                         "Error: ${t.message ?: "execution failed"}"
                     }
@@ -1291,7 +1304,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             val result = try {
                 withContext(Dispatchers.Main) {
-                    terminal.execute(command, this@MainActivity) ?: terminal2.execute(command, this@MainActivity)
+                    executeWithFallback(command, this@MainActivity)
                 }
             } catch (t: Throwable) {
                 "Error: command execution failed"
