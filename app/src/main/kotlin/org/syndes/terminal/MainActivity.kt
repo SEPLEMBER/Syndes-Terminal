@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
     
     // список "тяжёлых" команд, которые нужно выполнять в IO
     private val heavyCommands = setOf(
-        "rm", "cp", "mv", "replace", "cmp", "diff",
+        "rm", "cp", "mv", "replace", "encrypt", "decrypt", "cmp", "diff",
         "rename", "backup", "snapshot", "trash", "cleartrash",
         "sha256", "grep", "batchrename", "md5", "delete all y"
     )
@@ -768,7 +768,7 @@ class MainActivity : AppCompatActivity() {
                 val content = sb.toString().trimEnd()
                 // Parse commands using existing parser to be consistent
                 val items = parseInputToCommandItems(content)
-                val suspiciousPrefixes = setOf("rm", "pm", "runsyd")
+               val suspiciousPrefixes = setOf("rm", "pm", "encrypt", "runsyd")
                 val matches = mutableListOf<String>()
                 // We'll enumerate with index for readability
                 var idx = 0
