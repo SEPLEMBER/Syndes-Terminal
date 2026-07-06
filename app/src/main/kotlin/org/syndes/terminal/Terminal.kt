@@ -327,15 +327,6 @@ Hello!   \__/'---'\__/
 "Info: component created"
 }
 
-"rexled en" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".RLSplashActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-"Info: component created"
-}
-
 "xlr-8" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
