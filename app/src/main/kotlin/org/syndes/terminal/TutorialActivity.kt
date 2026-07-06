@@ -147,6 +147,11 @@ wc <file>            - count lines/words/characters
 wifi                 - open Wi-Fi settings
 whoami               - show current user
 zip <source> <archive> - create ZIP archive
+
+NOTES:
+
+  - runsyd reads scripts from SAF root → 'scripts' directory (tries name.syd, name.sh, name.txt). Supports both specifying the file extension and omitting it — e.g. you can run "runsyd scriptname" or "runsyd scriptname.syd".
+  - pm uninstall starts system uninstall flow (user must confirm each uninstall dialog).
   - resetup opens UI that iterates package list and launches system uninstall dialogs one-by-one.
   - many file operations support SAF paths or relative paths from the configured work directory.
   - aliases are local to the app and do not affect the Android shell.
