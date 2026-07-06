@@ -288,7 +288,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".RLSplashActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-
+"Info: component created"
 }
 
 "rexled" -> {
@@ -297,7 +297,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".RLSplashRuActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-
+"Info: component created"
 }
 
 "clipshred" -> {
@@ -306,7 +306,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".ShredActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-
+"Info: component created"
 }
 
 "lua" -> {
@@ -315,7 +315,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".InterpreterActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-
+"Info: component created"
 }
 
 "forth" -> {
@@ -324,7 +324,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".ForthActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-
+"Info: component created"
 }
 
 "rexled en" -> {
@@ -333,7 +333,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".RLSplashActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-
+"Info: component created"
 }
 
 "xlr-8" -> {
@@ -342,7 +342,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".EvmActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-
+"Info: component created"
 }
 
 "phrasescript" -> {
@@ -351,7 +351,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".RLSplashActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-
+"Info: component created"
 }
 
 "aspernet" -> {
@@ -360,6 +360,7 @@ Hello!   \__/'---'\__/
     val activityClass = ".AspernetActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
+    "Info: component created"
 }
 
 "status"  -> {
