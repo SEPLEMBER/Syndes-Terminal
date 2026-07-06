@@ -289,7 +289,7 @@ Hello!   \__/'---'\__/
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
 
-"rexled -> {
+"rexled" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
     val activityClass = ".RLSplashRuActivity"
