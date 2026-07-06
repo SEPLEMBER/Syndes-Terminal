@@ -282,12 +282,69 @@ Hello!   \__/'---'\__/
                         null
                     }
 
-"rexled"  -> {
-                        val intent = Intent(ctx, RexLedMainActivity::class.java) // TODO: switch to KanjiMapperActivity when available
-                        if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        ctx.startActivity(intent)
-                        null
-                    }
+"rexled en" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".RLSplashActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+"rexled -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".RLSplashRuActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+
+"clipshred" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".ShredActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+"lua" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".InterpreterActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+"forth" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".ForthActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+"rexled en" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".RLSplashActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+"xlr-8" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".EvmActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+"phrasescript" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".RLSplashActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+"aspernet" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".AspernetActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
 
 "status"  -> {
                         val intent = Intent(ctx, StatusRecActivity::class.java) // TODO: switch to KanjiMapperActivity when available
