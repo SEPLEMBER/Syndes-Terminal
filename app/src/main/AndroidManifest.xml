@@ -52,6 +52,11 @@
             android:exported="false"
             android:theme="@style/AppTheme.Transparent" />
 
+                            <activity
+            android:name=".ScriptIdeActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme.Transparent" />
+
                     <activity
             android:name=".ResetupActivity"
             android:exported="false"
