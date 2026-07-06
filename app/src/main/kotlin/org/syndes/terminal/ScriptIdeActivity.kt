@@ -14,6 +14,7 @@ import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
@@ -38,11 +39,20 @@ class ScriptIdeActivity : AppCompatActivity() {
         val TEXT_LIGHT = Color.parseColor("#E0E0E0")
         val TEXT_DIM = Color.parseColor("#888888")
 
-        // Список команд для автодополнения (можно расширять)
+        // Список команд для автодополнения (обновленный полный список)
         val COMMANDS = listOf(
-            "echo", "sleep", "cat", "ls", "cd", "mkdir", "rm", "cp", "mv", "grep", "find", 
-            "pm", "edit", "tree", "seq", "base64", "xxd", "strings", "printf", "alias", 
-            "runsyd", "wifi", "bts", "backup", "checksum", "diff", "head", "tail", "wc"
+            "about", "aband", "acc", "accs", "act", "alarm", "alias", "apm", "apkkey", "filekey",
+            "apps", "appscheck", "appmanager", "apse", "backup", "snapshot", "batchren", "batchedit",
+            "bootshell", "browser", "bts", "btss", "calc", "call", "cam", "cat", "cd", "checksum",
+            "clear", "cleartrash", "clk", "cmp", "contacts", "console", "settings", "cp", "cut",
+            "data", "date", "dev", "device", "diff", "dsp", "du", "email", "echo", "exit", "find",
+            "findpkg", "pkgof", "grep", "hash", "head", "help", "history", "home", "join", "merge",
+            "kbd", "lang", "launch", "ln", "loc", "ls", "dir", "md5", "sha256", "mem", "mkdir", "mv",
+            "nfc", "night", "notif", "notify", "pm", "pminfo", "pkginfo", "preview", "priv", "ps", "top",
+            "rename", "replace", "replacetool", "rev", "rm", "runsyd", "rust", "search", "sec", "shortc",
+            "sleep", "sydcheck", "sms", "snd", "sort-lines", "split", "stg", "stat", "status", "stash",
+            "trash", "sysclipboard", "tail", "touch", "uname", "unzip", "uptime", "vpns", "wait",
+            "watchdog", "wc", "wifi", "whoami", "zip", "edit", "tree", "seq", "base64", "xxd", "strings", "printf"
         )
     }
 
@@ -69,6 +79,12 @@ class ScriptIdeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // 1. Применяем FLAG_SECURE, если включено в настройках
+        val prefs = getSharedPreferences("terminal_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("secure_screenshots", false)) {
+            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        }
+
         fileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: "untitled.txt"
         fileUri = intent.getParcelableExtra(EXTRA_FILE_URI)
 
@@ -302,7 +318,8 @@ class ScriptIdeActivity : AppCompatActivity() {
         val currentWord = text.substring(start, cursor)
         
         if (currentWord.length >= 2) {
-            val suggestions = COMMANDS.filter { it.startsWith(currentWord, ignoreCase = true) && it != currentWord }
+            // 2. Фильтруем команды и берем только первые 10 самых релевантных
+            val suggestions = COMMANDS.filter { it.startsWith(currentWord, ignoreCase = true) && it != currentWord }.take(10)
             if (suggestions.isNotEmpty()) {
                 showAutocompletePopup(suggestions, start, cursor)
             } else {
@@ -456,12 +473,13 @@ class ScriptIdeActivity : AppCompatActivity() {
         return if (dotIndex > 0) name.substring(dotIndex).lowercase() else ""
     }
 
+    // 3. Папки теперь создаются в нижнем регистре
     private fun getTargetFolder(extension: String): String {
         return when (extension) {
-            ".syd" -> "Scripts"
-            ".lua" -> "MoonlightScripts"
-            ".ft" -> "ForthScripts"
-            else -> "Scripts"
+            ".syd" -> "scripts"
+            ".lua" -> "moonlightscripts"
+            ".ft" -> "forthscripts"
+            else -> "scripts"
         }
     }
 
