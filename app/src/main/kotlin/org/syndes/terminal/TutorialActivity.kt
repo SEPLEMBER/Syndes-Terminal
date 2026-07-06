@@ -75,14 +75,12 @@ cp <src> <dst>       - copy file or directory
 cut -d<delim> -f<fields> <file> - extract fields from file using delimiter
 data                 - open mobile data settings
 date                 - show current date and time
-decrypt <password> <path> - decrypt files (recursively)
 dev                  - open developer options
 device               - show device information
 diff [-u] [-c <n>] [-i] <f1> <f2> - show text differences
 dsp                  - open display settings
 du <file|dir>        - show size in bytes
 email [addr] [subj] [body] - open email composer
-encrypt <password> <path> - encrypt files (recursively)
 echo <text>          - print text
 exit                 - exit application
 find <name>          - find files by name
@@ -149,18 +147,6 @@ wc <file>            - count lines/words/characters
 wifi                 - open Wi-Fi settings
 whoami               - show current user
 zip <source> <archive> - create ZIP archive
-
-
-==G: Misc / Notes & Warnings==
-  !!! WARNING (ENCRYPT): Encrypting large folders requires high CPU load.
-Please encrypt small folders or individual directories sequentially.
-Iterations = 75,000. This provides limited KDF strength.
-Use a strong password — at least 8 different characters recommended.
-Algorithm: AES-256-GCM.
-
-Notes:
-  - runsyd reads scripts from SAF root → 'scripts' directory (tries name.syd, name.sh, name.txt). Supports both specifying the file extension and omitting it — e.g. you can run "runsyd scriptname" or "runsyd scriptname.syd".
-  - pm uninstall starts system uninstall flow (user must confirm each uninstall dialog).
   - resetup opens UI that iterates package list and launches system uninstall dialogs one-by-one.
   - many file operations support SAF paths or relative paths from the configured work directory.
   - aliases are local to the app and do not affect the Android shell.
