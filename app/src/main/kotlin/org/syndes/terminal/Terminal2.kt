@@ -6,6 +6,9 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import android.hardware.camera2.CameraAccessException
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 
 class Terminal2 {
     
@@ -46,6 +49,11 @@ class Terminal2 {
                 
                 // НОВЫЙ РЕДАКТОР
                 "neopad" -> cmdNeopad(context, args)
+                
+                // ФОНАРИК (поддержка: flashlight 1/0 и 1/0 flashlight)
+                "flashlight" -> cmdFlashlight(context, args)
+                "1" -> if (args.firstOrNull()?.lowercase() == "flashlight") cmdFlashlight(context, listOf("1")) else null
+                "0" -> if (args.firstOrNull()?.lowercase() == "flashlight") cmdFlashlight(context, listOf("0")) else null
                 
                 else -> null // Команда не найдена, возвращаем null
             }
@@ -305,6 +313,48 @@ class Terminal2 {
             "⚡ Opening NeonPad for '$fileName'..."
         } catch (e: Exception) {
             "Error launching NeonPad: ${e.message}"
+        }
+    }
+
+    // =====================================================================
+    // УПРАВЛЕНИЕ ФОНАРИКОМ (БЕЗОПАСНОЕ ДЛЯ ПЛАНШЕТОВ)
+    // =====================================================================
+
+    /**
+     * flashlight 1 / flashlight 0 (или 1 flashlight / 0 flashlight)
+     * Безопасно обрабатывает отсутствие камеры или вспышки (например, на планшетах).
+     */
+    private fun cmdFlashlight(context: Context, args: List<String>): String {
+        val state = args.firstOrNull()
+        if (state != "1" && state != "0") {
+            return "Usage: flashlight <1|0> or <1|0> flashlight (1 = ON, 0 = OFF)"
+        }
+        
+        return try {
+            val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager 
+                ?: return "Error: Camera service not available on this device"
+            
+            val cameraId = cameraManager.cameraIdList.firstOrNull() 
+                ?: return "Error: No camera found (common on tablets)"
+            
+            val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val hasFlash = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) ?: false
+            
+            if (!hasFlash) {
+                return "Error: This device does not have a flashlight"
+            }
+            
+            val turnOn = state == "1"
+            cameraManager.setTorchMode(cameraId, turnOn)
+            
+            if (turnOn) "Flashlight turned ON" else "Flashlight turned OFF"
+            
+        } catch (e: CameraAccessException) {
+            "Error: Camera access issue - ${e.message}"
+        } catch (e: SecurityException) {
+            "Error: Permission denied for flashlight/camera"
+        } catch (e: Exception) {
+            "Error: Flashlight operation failed - ${e.message}"
         }
     }
 }
