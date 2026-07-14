@@ -2,10 +2,7 @@ package org.syndes.terminal
 
 import android.content.Context
 import android.content.Intent
-import android.hardware.camera2.CameraManager
 import android.net.Uri
-import android.os.Build
-import android.os.SystemClock
 import androidx.documentfile.provider.DocumentFile
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -17,11 +14,15 @@ class Terminal2 {
      * Возвращает строку-результат или null, если команда не найдена.
      */
     fun execute(command: String, context: Context): String? {
+        // Используем умный парсер, который понимает кавычки (нужно для neopad "file name.syd")
         val (cmdName, args) = parseCommand(command)
         if (cmdName.isEmpty()) return null
         
         return try {
             when (cmdName.lowercase()) {
+                // -------------------------
+                // Заглушка: "привет мир" -> "hello world"
+                // -------------------------
                 "привет" -> {
                     if (args.isEmpty() || args.joinToString(" ").lowercase() == "мир") {
                         "hello world"
@@ -30,13 +31,9 @@ class Terminal2 {
                     }
                 }
 
-                // НОВЫЕ КОМАНДЫ
-                "flashlight" -> cmdFlashlight(context, args)
-                "1" -> if (args.firstOrNull()?.uppercase() == "FLASHLIGHT") cmdFlashlight(context, listOf("1")) else null
-                "0" -> if (args.firstOrNull()?.uppercase() == "FLASHLIGHT") cmdFlashlight(context, listOf("0")) else null
-                "neoraven" -> cmdNeoraven(context, args)
-
-                // СТАРЫЕ КОМАНДЫ
+                // -------------------------
+                // КОМАНДЫ
+                // -------------------------
                 "tree" -> cmdTree(context, args)
                 "basename" -> cmdBasename(args)
                 "dirname" -> cmdDirname(args)
@@ -46,9 +43,11 @@ class Terminal2 {
                 "base64" -> cmdBase64(context, args)
                 "xxd" -> cmdXxd(context, args)
                 "strings" -> cmdStrings(context, args)
+                
+                // НОВЫЙ РЕДАКТОР
                 "neopad" -> cmdNeopad(context, args)
                 
-                else -> null
+                else -> null // Команда не найдена, возвращаем null
             }
         } catch (e: Exception) {
             "Error: ${e.message}"
@@ -133,86 +132,7 @@ class Terminal2 {
     }
 
     // =====================================================================
-    // РЕАЛИЗАЦИЯ НОВЫХ КОМАНД
-    // =====================================================================
-
-    private fun cmdFlashlight(context: Context, args: List<String>): String {
-        val state = args.firstOrNull()
-        if (state != "1" && state != "0") {
-            return "Usage: flashlight 1 (on) or 0 (off)\nAlternatively: 1 FLASHLIGHT or 0 FLASHLIGHT"
-        }
-
-        return try {
-            val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return "\u001B[31m[ERROR]\u001B[0m No camera found"
-            
-            if (state == "1") {
-                cameraManager.setTorchMode(cameraId, true)
-                "\u001B[32m[SUCCESS]\u001B[0m Flashlight turned ON"
-            } else {
-                cameraManager.setTorchMode(cameraId, false)
-                "\u001B[33m[INFO]\u001B[0m Flashlight turned OFF"
-            }
-        } catch (e: SecurityException) {
-            "\u001B[31m[ERROR]\u001B[0m Permission denied. Please grant CAMERA permission in Android settings."
-        } catch (e: Exception) {
-            "\u001B[31m[ERROR]\u001B[0m Failed to control flashlight: ${e.message}"
-        }
-    }
-
-    private fun cmdNeoraven(context: Context, args: List<String>): String {
-        val prefs = context.getSharedPreferences("terminal_prefs", Context.MODE_PRIVATE)
-        val workDir = prefs.getString("work_dir_uri", null)
-        val secure = prefs.getBoolean("secure_screenshots", false)
-        
-        val fsConnect = if (!workDir.isNullOrEmpty()) "\u001B[32mTRUE\u001B[0m" else "\u001B[31mFALSE\u001B[0m"
-        val flSecure = if (secure) "\u001B[32mTRUE\u001B[0m" else "\u001B[31mFALSE\u001B[0m"
-        
-        val androidVer = Build.VERSION.RELEASE ?: "Unknown"
-        
-        val uptimeMs = SystemClock.elapsedRealtime()
-        val days = uptimeMs / (1000 * 60 * 60 * 24)
-        val hours = (uptimeMs / (1000 * 60 * 60)) % 24
-        val minutes = (uptimeMs / (1000 * 60)) % 60
-        val seconds = (uptimeMs / 1000) % 60
-        
-        val uptimeStr = if (days > 0) {
-            "\u001B[33m${days}d ${hours}h ${minutes}m\u001B[0m"
-        } else {
-            "\u001B[33m${hours}h ${minutes}m ${seconds}s\u001B[0m"
-        }
-
-        // Абсолютно надёжный способ работы с ANSI (избегает багов парсинга \u001B в Kotlin)
-        val ESC = Char(27).toString()
-        val ANSI_REGEX = Regex("$ESC\\[[0-9;]*[a-zA-Z]")
-        val BLUE = "${ESC}[34m"
-        val RESET = "${ESC}[0m"
-
-        // Функция для идеального выравнивания с учётом скрытых ANSI-кодов
-        fun makeRow(content: String, width: Int = 40): String {
-            val clean = content.replace(ANSI_REGEX, "")
-            val padLen = maxOf(0, width - clean.length)
-            val padding = " ".repeat(padLen)
-            return "${BLUE}│${RESET}$content$padding${BLUE}│${RESET}"
-        }
-
-        val top = "${BLUE}╭${"─".repeat(40)}╮${RESET}"
-        val bottom = "${BLUE}╰${"─".repeat(40)}╯${RESET}"
-        val divider = "${BLUE}├${"─".repeat(40)}┤${RESET}"
-
-        val line1 = makeRow("  \u001B[31mS\u001B[32mY\u001B[33mN\u001B[34mD\u001B[35mE\u001B[36mS\u001B[0m \u001B[37mTERMINAL\u001B[0m")
-        val line2 = makeRow("  \u001B[36mOS      :\u001B[0m Android \u001B[31m$androidVer\u001B[0m")
-        val line3 = makeRow("  \u001B[36mKERNEL  :\u001B[0m ANDROID KERNEL: \u001B[31m$androidVer\u001B[0m")
-        val line4 = makeRow("  \u001B[36mUPTIME  :\u001B[0m $uptimeStr")
-        val line5 = makeRow("  \u001B[36mFS_CONN :\u001B[0m $fsConnect")
-        val line6 = makeRow("  \u001B[36mFL_SEC  :\u001B[0m $flSecure")
-        val line7 = makeRow("  \u001B[36mNEORAVEN:\u001B[0m \u001B[35mTRUE\u001B[0m")
-
-        return "$top\n$line1\n$divider\n$line2\n$line3\n$line4\n$line5\n$line6\n$line7\n$bottom"
-    }
-
-    // =====================================================================
-    // РЕАЛИЗАЦИЯ СТАРЫХ КОМАНД (без изменений)
+    // РЕАЛИЗАЦИЯ КОМАНД
     // =====================================================================
 
     private fun cmdTree(context: Context, args: List<String>): String {
@@ -354,21 +274,29 @@ class Terminal2 {
     // ЗАПУСК NEONPAD
     // =====================================================================
 
+    /**
+     * neopad <filename> - открывает файл в NeonPad (ScriptIdeActivity).
+     * Если файл уже существует, передает его URI для загрузки контента.
+     * Если не существует, передает только имя, и Activity создаст его с шаблоном.
+     */
     private fun cmdNeopad(context: Context, args: List<String>): String {
         if (args.isEmpty()) {
             return "Usage: neopad <filename.syd|lua|ft>"
         }
         
         val fileName = args[0]
+        // Пытаемся найти файл, чтобы понять, редактируем мы его или создаем новый
         val existingFile = resolveFile(context, fileName)
         
         val intent = Intent(context, ScriptIdeActivity::class.java).apply {
             putExtra(ScriptIdeActivity.EXTRA_FILE_NAME, fileName)
             
+            // Если файл найден и это именно файл (а не папка), передаем его URI
             if (existingFile != null && existingFile.isFile && existingFile.uri != null) {
                 putExtra(ScriptIdeActivity.EXTRA_FILE_URI, existingFile.uri.toString())
             }
             
+            // Обязательный флаг, так как context может быть ApplicationContext
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         
