@@ -394,7 +394,7 @@ Hello!   \__/'---'\__/
     }
 }
 
-"cacheshred" -> {
+"clipshred" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
     val activityClass = ".ShredActivity"
@@ -410,7 +410,7 @@ Hello!   \__/'---'\__/
             if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             try {
                 ctx.startActivity(intent)
-                "Info: opening cache shredder"
+                "Info: opening ClipShred"
             } catch (e: android.content.ActivityNotFoundException) {
                 "Error: activity not found or cannot be started: ${e.message}"
             } catch (e: SecurityException) {
