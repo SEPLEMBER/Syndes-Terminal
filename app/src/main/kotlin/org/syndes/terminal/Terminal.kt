@@ -310,6 +310,62 @@ Hello!   \__/'---'\__/
     }
 }
 
+"tesseract" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".TesseractActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: Tesseract is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening TESSERACT DSL"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"apksign" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.es.apksigngenerator"
+    val activityClass = ".MainActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: ApkSign is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening ApkSignKey"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
 "rexled" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
