@@ -288,7 +288,26 @@ Hello!   \__/'---'\__/
     val activityClass = ".RLSplashActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-"Info: component created"
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: RLSplashActivity is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening Rexled English"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
 }
 
 "rexled" -> {
@@ -297,16 +316,54 @@ Hello!   \__/'---'\__/
     val activityClass = ".RLSplashRuActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-"Info: component created"
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: RLSplashRuActivity is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening Rexled Russian"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
 }
 
-"clipshred" -> {
+"cacheshred" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
     val activityClass = ".ShredActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-"Info: component created"
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: ShredActivity is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening cache shredder"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
 }
 
 "lua" -> {
@@ -315,7 +372,26 @@ Hello!   \__/'---'\__/
     val activityClass = ".InterpreterActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-"Info: component created"
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: InterpreterActivity is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening Lua interpreter"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
 }
 
 "forth" -> {
@@ -324,7 +400,26 @@ Hello!   \__/'---'\__/
     val activityClass = ".ForthActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-"Info: component created"
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: ForthActivity is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening Forth interpreter"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
 }
 
 "xlr-8" -> {
@@ -333,7 +428,26 @@ Hello!   \__/'---'\__/
     val activityClass = ".EvmActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-"Info: component created"
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: EvmActivity is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening XLR-8 EVM"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
 }
 
 "phrasescript" -> {
@@ -342,7 +456,26 @@ Hello!   \__/'---'\__/
     val activityClass = ".RLSplashActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-"Info: component created"
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: RLSplashActivity is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening PhraseScript"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
 }
 
 "aspernet" -> {
@@ -351,7 +484,26 @@ Hello!   \__/'---'\__/
     val activityClass = ".AspernetActivity"
     val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
     val component = android.content.ComponentName(packageName, fullActivity)
-    "Info: component created"
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: AspernetActivity is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening Aspernet"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
 }
 
 "status"  -> {
