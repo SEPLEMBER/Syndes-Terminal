@@ -17,15 +17,11 @@ class Terminal2 {
      * Возвращает строку-результат или null, если команда не найдена.
      */
     fun execute(command: String, context: Context): String? {
-        // Используем умный парсер, который понимает кавычки (нужно для neopad "file name.syd")
         val (cmdName, args) = parseCommand(command)
         if (cmdName.isEmpty()) return null
         
         return try {
             when (cmdName.lowercase()) {
-                // -------------------------
-                // Заглушка: "привет мир" -> "hello world"
-                // -------------------------
                 "привет" -> {
                     if (args.isEmpty() || args.joinToString(" ").lowercase() == "мир") {
                         "hello world"
@@ -34,18 +30,13 @@ class Terminal2 {
                     }
                 }
 
-                // -------------------------
                 // НОВЫЕ КОМАНДЫ
-                // -------------------------
                 "flashlight" -> cmdFlashlight(context, args)
-                // Поддержка синтаксиса "1 FLASHLIGHT" и "0 FLASHLIGHT"
                 "1" -> if (args.firstOrNull()?.uppercase() == "FLASHLIGHT") cmdFlashlight(context, listOf("1")) else null
                 "0" -> if (args.firstOrNull()?.uppercase() == "FLASHLIGHT") cmdFlashlight(context, listOf("0")) else null
                 "neoraven" -> cmdNeoraven(context, args)
 
-                // -------------------------
                 // СТАРЫЕ КОМАНДЫ
-                // -------------------------
                 "tree" -> cmdTree(context, args)
                 "basename" -> cmdBasename(args)
                 "dirname" -> cmdDirname(args)
@@ -55,11 +46,9 @@ class Terminal2 {
                 "base64" -> cmdBase64(context, args)
                 "xxd" -> cmdXxd(context, args)
                 "strings" -> cmdStrings(context, args)
-                
-                // НОВЫЙ РЕДАКТОР
                 "neopad" -> cmdNeopad(context, args)
                 
-                else -> null // Команда не найдена, возвращаем null
+                else -> null
             }
         } catch (e: Exception) {
             "Error: ${e.message}"
@@ -179,9 +168,8 @@ class Terminal2 {
         val fsConnect = if (!workDir.isNullOrEmpty()) "\u001B[32mTRUE\u001B[0m" else "\u001B[31mFALSE\u001B[0m"
         val flSecure = if (secure) "\u001B[32mTRUE\u001B[0m" else "\u001B[31mFALSE\u001B[0m"
         
-        val androidVer = Build.VERSION.RELEASE
+        val androidVer = Build.VERSION.RELEASE ?: "Unknown"
         
-        // Читаемый формат Uptime
         val uptimeMs = SystemClock.elapsedRealtime()
         val days = uptimeMs / (1000 * 60 * 60 * 24)
         val hours = (uptimeMs / (1000 * 60 * 60)) % 24
@@ -194,28 +182,33 @@ class Terminal2 {
             "\u001B[33m${hours}h ${minutes}m ${seconds}s\u001B[0m"
         }
 
-        val c = "\u001B[34m" // Синяя рамка
-        val r = "\u001B[0m"  // Сброс цвета
-        
-        // Функция для выравнивания текста внутри рамки до 40 видимых символов
-        fun row(content: String): String {
-            val clean = content.replace(Regex("\u001B\\[[0-9;]*m"), "") // Убираем ANSI-коды для подсчета длины
-            val padding = " ".repeat(40 - clean.length)
-            return "${c}│${r}$content$padding${c}│${r}"
+        // Абсолютно надёжный способ работы с ANSI (избегает багов парсинга \u001B в Kotlin)
+        val ESC = Char(27).toString()
+        val ANSI_REGEX = Regex("$ESC\\[[0-9;]*[a-zA-Z]")
+        val BLUE = "${ESC}[34m"
+        val RESET = "${ESC}[0m"
+
+        // Функция для идеального выравнивания с учётом скрытых ANSI-кодов
+        fun makeRow(content: String, width: Int = 40): String {
+            val clean = content.replace(ANSI_REGEX, "")
+            val padLen = maxOf(0, width - clean.length)
+            val padding = " ".repeat(padLen)
+            return "${BLUE}│${RESET}$content$padding${BLUE}│${RESET}"
         }
 
-        return """
-            ${c}╭────────────────────────────────────────╮${r}
-            ${row("  \u001B[31mS\u001B[32mY\u001B[33mN\u001B[34mD\u001B[35mE\u001B[36mS\u001B[0m \u001B[37mTERMINAL\u001B[0m")}
-            ${c}├────────────────────────────────────────┤${r}
-            ${row("  \u001B[36mOS      :\u001B[0m Android \u001B[31m$androidVer\u001B[0m")}
-            ${row("  \u001B[36mKERNEL  :\u001B[0m ANDROID KERNEL: \u001B[31m$androidVer\u001B[0m")}
-            ${row("  \u001B[36mUPTIME  :\u001B[0m $uptimeStr")}
-            ${row("  \u001B[36mFS_CONN :\u001B[0m $fsConnect")}
-            ${row("  \u001B[36mFL_SEC  :\u001B[0m $flSecure")}
-            ${row("  \u001B[36mNEORAVEN:\u001B[0m \u001B[35mTRUE\u001B[0m")}
-            ${c}╰────────────────────────────────────────╯${r}
-        """.trimIndent()
+        val top = "${BLUE}╭${"─".repeat(40)}╮${RESET}"
+        val bottom = "${BLUE}╰${"─".repeat(40)}╯${RESET}"
+        val divider = "${BLUE}├${"─".repeat(40)}┤${RESET}"
+
+        val line1 = makeRow("  \u001B[31mS\u001B[32mY\u001B[33mN\u001B[34mD\u001B[35mE\u001B[36mS\u001B[0m \u001B[37mTERMINAL\u001B[0m")
+        val line2 = makeRow("  \u001B[36mOS      :\u001B[0m Android \u001B[31m$androidVer\u001B[0m")
+        val line3 = makeRow("  \u001B[36mKERNEL  :\u001B[0m ANDROID KERNEL: \u001B[31m$androidVer\u001B[0m")
+        val line4 = makeRow("  \u001B[36mUPTIME  :\u001B[0m $uptimeStr")
+        val line5 = makeRow("  \u001B[36mFS_CONN :\u001B[0m $fsConnect")
+        val line6 = makeRow("  \u001B[36mFL_SEC  :\u001B[0m $flSecure")
+        val line7 = makeRow("  \u001B[36mNEORAVEN:\u001B[0m \u001B[35mTRUE\u001B[0m")
+
+        return "$top\n$line1\n$divider\n$line2\n$line3\n$line4\n$line5\n$line6\n$line7\n$bottom"
     }
 
     // =====================================================================
