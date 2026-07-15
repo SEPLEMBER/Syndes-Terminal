@@ -421,15 +421,27 @@ class ScriptIdeActivity : AppCompatActivity() {
         }
 
         try {
+            // ИСПРАВЛЕНИЕ: заменяем расширение .syd на .txt, чтобы SAF не добавлял .txt в конец (получая .syd.txt)
+            val safeFileName = if (fileName.lowercase().endsWith(".syd")) {
+                fileName.substring(0, fileName.length - 4) + ".txt"
+            } else {
+                fileName
+            }
+
             val treeDoc = DocumentFile.fromTreeUri(this, workDirUri) ?: throw Exception("Cannot open work dir")
-            val targetFolderName = getTargetFolder(getExtension(fileName))
+            val targetFolderName = getTargetFolder(getExtension(safeFileName))
             var targetDir = treeDoc.findFile(targetFolderName)
             if (targetDir == null || !targetDir.isDirectory) targetDir = treeDoc.createDirectory(targetFolderName)
             if (targetDir == null) throw Exception("Cannot create folder $targetFolderName")
 
-            var fileDoc = targetDir.findFile(fileName)
-            if (fileDoc == null) fileDoc = targetDir.createFile("text/plain", fileName)
-            if (fileDoc == null) throw Exception("Cannot create file $fileName")
+            // Если файл уже открыт по URI, используем его, иначе ищем или создаем новый с безопасным именем
+            val fileDoc = if (fileUri != null) {
+                DocumentFile.fromSingleUri(this, fileUri!!)
+            } else {
+                targetDir.findFile(safeFileName) ?: targetDir.createFile("text/plain", safeFileName)
+            }
+
+            if (fileDoc == null) throw Exception("Cannot create or find file $safeFileName")
 
             val content = editor.text.toString()
             contentResolver.openOutputStream(fileDoc.uri, "wt")?.use { out ->
@@ -439,6 +451,9 @@ class ScriptIdeActivity : AppCompatActivity() {
             fileUri = fileDoc.uri
             isModified = false
             originalText = content
+            
+            // Синхронизируем имя файла в памяти и интерфейсе с реальным именем
+            fileName = fileDoc.name ?: safeFileName
             Toast.makeText(this, "✅ Сохранено в $targetFolderName/$fileName", Toast.LENGTH_SHORT).show()
             titleView.text = "⚡ NeonPad: $fileName (Saved)"
 
@@ -473,10 +488,10 @@ class ScriptIdeActivity : AppCompatActivity() {
         return if (dotIndex > 0) name.substring(dotIndex).lowercase() else ""
     }
 
-    // 3. Папки теперь создаются в нижнем регистре
+    // Папки создаются в зависимости от расширения
     private fun getTargetFolder(extension: String): String {
         return when (extension) {
-            ".syd" -> "scripts"
+            ".syd", ".txt" -> "scripts" // .txt теперь тоже попадает в scripts
             ".lua" -> "moonlightscripts"
             ".ft" -> "forthscripts"
             else -> "scripts"
