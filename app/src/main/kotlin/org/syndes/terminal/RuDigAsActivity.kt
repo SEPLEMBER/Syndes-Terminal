@@ -49,13 +49,11 @@ class RuDigAsActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
 
-        val prefs = getSharedPreferences("PawsTribePrefs", MODE_PRIVATE)
-        if (prefs.getBoolean("disableScreenshots", false)) {
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_SECURE,
-                WindowManager.LayoutParams.FLAG_SECURE
-            )
-        }
+        // FLAG_SECURE по умолчанию для защиты от скриншотов и записи экрана
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
 
         setContentView(R.layout.activity_ru_dig_as)
 
