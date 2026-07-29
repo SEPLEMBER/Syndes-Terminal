@@ -520,4 +520,4 @@ class ScriptIdeActivity : AppCompatActivity() {
             .setNeutralButton("Отмена", null)
             .show()
     }
-}
+} 
