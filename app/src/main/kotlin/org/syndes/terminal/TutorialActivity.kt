@@ -175,8 +175,8 @@ NOTES:
 
         val sb = SpannableStringBuilder(raw)
 
-        // 1) highlight the "!!! WARNING (ENCRYPT):" header in red
-        val warningHeader = "!!! WARNING (ENCRYPT):"
+        // 1) highlight the "!!! WARNING :" header in red
+        val warningHeader = "!!! WARNING :"
         val whIndex = raw.indexOf(warningHeader)
         if (whIndex >= 0) {
             val start = whIndex
@@ -184,11 +184,11 @@ NOTES:
             sb.setSpan(ForegroundColorSpan(colorWarning), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
-        // 2) highlight the essence of the warning (look for sentence containing "encrypting large folders")
+        // 2) highlight the essence of the warning (look for sentence containing "large folders")
         val essenceTargets = listOf(
-            "encrypting large folders is CPU-intensive.",
-            "Please encrypt small folders or specific directories one-by-one.",
-            "AES-GCM-256"
+            " large folders is CPU-intensive.",
+            "use small folders or specific directories one-by-one.",
+            "please"
         )
         essenceTargets.forEach { t ->
             val idx = raw.indexOf(t, ignoreCase = true)
