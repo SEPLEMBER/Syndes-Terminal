@@ -270,3 +270,4 @@ class StatusRecActivity : AppCompatActivity() {
         }
     }
 }
+ 
