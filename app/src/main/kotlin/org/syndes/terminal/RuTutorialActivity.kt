@@ -183,9 +183,9 @@ zip <source> <archive> - создать ZIP-архив
 
         // 2) highlight the essence of the warning (Russian phrases)
         val essenceTargets = listOf(
-            "шифрование больших папок требует большой CPU-нагрузки.",
-            "Пожалуйста, шифруйте небольшие папки или отдельные директории по очереди.",
-            "Итерации = 1000 (НИЗКО). Это даёт ограниченную стойкость KDF."
+            "test1.",
+            "test2.",
+            "test3."
         )
         essenceTargets.forEach { t ->
             val idx = raw.indexOf(t, ignoreCase = true)
