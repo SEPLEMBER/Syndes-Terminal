@@ -284,4 +284,4 @@ NOTES:
             // defensive: some devices could behave differently; ignore failure
         }
     }
-}
+} 
