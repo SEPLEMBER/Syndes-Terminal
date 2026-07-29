@@ -176,4 +176,4 @@ class SyInstallActivity : AppCompatActivity() {
             Toast.makeText(this, "No browser to open link.", Toast.LENGTH_SHORT).show()
         }
     }
-}
+} 
