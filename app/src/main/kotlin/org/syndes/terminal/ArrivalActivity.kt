@@ -157,4 +157,4 @@ class ArrivalActivity : AppCompatActivity() {
         messagesContainer.addView(tv)
         scrollView.post { scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
     }
-}
+} 
