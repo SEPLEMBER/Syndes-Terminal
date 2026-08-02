@@ -2,11 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.syndes.terminal">
 
+    <!-- Разрешения для работы команд uninstall/install (остались, так как используются в коде) -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <queries>
         <intent>
@@ -42,91 +40,82 @@
             android:exported="false"
             android:theme="@style/AppTheme.Transparent" />
 
-            <activity
+        <activity
             android:name=".TutorialActivity"
             android:exported="false"
             android:theme="@style/AppTheme.Transparent" />
 
-                    <activity
+        <activity
             android:name=".RuTutorialActivity"
             android:exported="false"
             android:theme="@style/AppTheme.Transparent" />
 
-                            <activity
+        <activity
             android:name=".ScriptIdeActivity"
             android:exported="true"
             android:theme="@style/AppTheme.Transparent" />
 
-                    <activity
+        <activity
             android:name=".ResetupActivity"
             android:exported="false"
             android:theme="@style/AppTheme" />
 
-                            <activity
+        <activity
             android:name=".SyPLComActivity"
             android:exported="false"
             android:theme="@style/AppTheme" />
 
+        <activity
+            android:name=".KanjiMapperActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
 
         <activity
-    android:name=".KanjiMapperActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
+            android:name=".RexLedMainActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
 
+        <activity
+            android:name=".FormulhMainActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
 
-                <activity
-    android:name=".RexLedMainActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
+        <activity
+            android:name=".MGActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
 
-                <activity
-    android:name=".FormulhMainActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
-
-                <activity
-    android:name=".MGActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
-
-                        <activity
-    android:name=".RuFinAsActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
+        <activity
+            android:name=".RuFinAsActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
         
-                                <activity
-    android:name=".RuPhysAsActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
+        <activity
+            android:name=".RuPhysAsActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
 
-                        <activity
-    android:name=".RuDigAsActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
+        <activity
+            android:name=".RuDigAsActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
 
-                        <activity
-    android:name=".ArrivalActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
+        <activity
+            android:name=".ArrivalActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
 
-                                <activity
-    android:name=".StatusRecActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="false" />
+        <activity
+            android:name=".StatusRecActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
 
-                                        <activity
-    android:name=".SyInstallActivity"
-    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-    android:exported="true" />
-
+        <activity
+            android:name=".SyInstallActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="true" />
         
-        <!-- foreground-service for watchdog -->
-        <service
-            android:name=".WatchdogService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
+        <!-- WatchdogService полностью удален отсюда -->
 
     </application>
-
 </manifest>
