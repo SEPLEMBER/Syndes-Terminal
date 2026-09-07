@@ -2,8 +2,9 @@ package org.syndes.terminal
 
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.ArrayAdapter
-import android.widget.Toast
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import org.syndes.terminal.databinding.ActivityInterestCalculatorBinding
 import java.text.NumberFormat
@@ -31,6 +32,13 @@ class InterestCalculatorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // FLAG_SECURE: Запрет скриншотов, записи экрана и скрытие из меню "Недавние приложения"
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         _binding = ActivityInterestCalculatorBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -47,63 +55,57 @@ class InterestCalculatorActivity : AppCompatActivity() {
 
         val capAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, capitalizationOptions)
         binding.spinnerCapitalization.adapter = capAdapter
-        // По умолчанию выбираем "Ежемесячно" как самый частый банковский вариант
-        binding.spinnerCapitalization.setSelection(1) 
+        binding.spinnerCapitalization.setSelection(1) // По умолчанию: Ежемесячно
     }
 
     private fun calculateInterest() {
-        // Сброс ошибок
         hideErrors()
 
         val amountStr = binding.etAmount.text.toString()
         val rateStr = binding.etRate.text.toString()
         val periodStr = binding.etPeriod.text.toString()
-        val monthlyDepositStr = binding.etMonthlyDeposit.text.toString().takeIf { it.isNotEmpty() } ?: "0"
-        val inflationStr = binding.etInflation.text.toString().takeIf { it.isNotEmpty() } ?: "0"
+        val monthlyDepositStr = binding.etMonthlyDeposit.text.toString()
+        val inflationStr = binding.etInflation.text.toString()
 
+        // 1. Строгая валидация с ранним возвратом (гарантирует, что дальше переменные НЕ null)
         val principal = amountStr.toDoubleOrNull()
-        val rate = rateStr.toDoubleOrNull()
-        val periodValue = periodStr.toIntOrNull()
-        val monthlyDeposit = monthlyDepositStr.toDoubleOrNull() ?: 0.0
-        val inflation = inflationStr.toDoubleOrNull() ?: 0.0
-
-        // Валидация
-        var hasError = false
         if (principal == null || principal <= 0) {
             showError(binding.errAmount, "Введите корректную сумму > 0")
-            hasError = true
-        }
-        if (rate == null || rate < 0) {
-            showError(binding.errRate, "Введите корректную ставку")
-            hasError = true
-        }
-        if (periodValue == null || periodValue <= 0) {
-            showError(binding.errPeriod, "Введите срок > 0")
-            hasError = true
-        }
-
-        if (hasError) {
-            Toast.makeText(this, "Проверьте правильность заполнения полей", Toast.LENGTH_SHORT).show()
             return
         }
+
+        val rate = rateStr.toDoubleOrNull()
+        if (rate == null || rate < 0) {
+            showError(binding.errRate, "Введите корректную ставку >= 0")
+            return
+        }
+
+        val periodValue = periodStr.toIntOrNull()
+        if (periodValue == null || periodValue <= 0) {
+            showError(binding.errPeriod, "Введите срок > 0")
+            return
+        }
+
+        // Эти значения могут быть пустыми, по умолчанию 0.0 (уже не null)
+        val monthlyDeposit = monthlyDepositStr.toDoubleOrNull() ?: 0.0
+        val inflation = inflationStr.toDoubleOrNull() ?: 0.0
 
         val selectedUnit = binding.spinnerPeriodUnit.selectedItem.toString()
         val capitalization = binding.spinnerCapitalization.selectedItem.toString()
 
-        // Приведение срока к месяцам для точного помесячного расчёта
+        // 2. Профессиональный банковский расчёт (помесячный цикл)
         val totalMonths = if (selectedUnit == "Годы") periodValue * 12 else periodValue
         val years = totalMonths / 12.0
 
-        // --- ПРОФЕССИОНАЛЬНЫЙ БАНКОВСКИЙ РАСЧЁТ (помесячный цикл) ---
-        var balance = principal
-        var totalInvested = principal
+        var balance: Double = principal
+        var totalInvested: Double = principal
 
         for (month in 1..totalMonths) {
-            // 1. Пополнение в начале месяца
+            // Пополнение в начале месяца
             balance += monthlyDeposit
             totalInvested += monthlyDeposit
 
-            // 2. Начисление процентов согласно выбранной капитализации
+            // Начисление процентов согласно выбранной капитализации
             when (capitalization) {
                 "Ежемесячно" -> {
                     balance += balance * (rate / 100.0 / 12.0)
@@ -119,7 +121,7 @@ class InterestCalculatorActivity : AppCompatActivity() {
                     }
                 }
                 "В конце срока (простые)" -> {
-                    // Проценты не добавляются к телу вклада до самого конца
+                    // Проценты не добавляются к телу вклада до самого конца цикла
                 }
             }
         }
@@ -128,7 +130,6 @@ class InterestCalculatorActivity : AppCompatActivity() {
         if (capitalization == "В конце срока (простые)") {
             val interestOnPrincipal = principal * (rate / 100.0) * years
             
-            // Проценты на каждое пополнение (пропорционально оставшимся месяцам)
             var interestOnDeposits = 0.0
             for (month in 1..totalMonths) {
                 val remainingMonths = totalMonths - month + 1
@@ -139,12 +140,11 @@ class InterestCalculatorActivity : AppCompatActivity() {
 
         val totalProfit = balance - totalInvested
 
-        // --- РАСЧЁТ ИНФЛЯЦИИ ---
-        // Реальная стоимость денег с учётом обесценивания
+        // 3. Расчёт инфляции (реальная покупательная способность)
         val realValue = balance / (1.0 + inflation / 100.0).pow(years)
         val realProfit = realValue - totalInvested
 
-        // --- ФОРМИРОВАНИЕ ВЫВОДА ---
+        // 4. Формирование вывода
         val resultText = buildString {
             appendLine("= ${if (capitalization == "В конце срока (простые)") "Простые" else "Сложные"} проценты:")
             appendLine("= Начальная сумма: ${currencyFormat.format(principal)}")
@@ -174,7 +174,7 @@ class InterestCalculatorActivity : AppCompatActivity() {
         binding.tvResult.text = resultText.trimEnd()
     }
 
-    private fun showError(errorView: android.widget.TextView, message: String) {
+    private fun showError(errorView: TextView, message: String) {
         errorView.text = message
         errorView.visibility = View.VISIBLE
     }
@@ -210,4 +210,4 @@ class InterestCalculatorActivity : AppCompatActivity() {
         super.onDestroy()
         _binding = null
     }
-}
+}               appendLine("= Реальная прибыль: ${currencyFormat.format(realProfit)}")
