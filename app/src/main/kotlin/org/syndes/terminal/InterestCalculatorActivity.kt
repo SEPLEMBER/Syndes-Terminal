@@ -13,14 +13,12 @@ import kotlin.math.pow
 
 class InterestCalculatorActivity : AppCompatActivity() {
 
-    // Паттерн для предотвращения утечек памяти (Memory Leak) с ViewBinding
     private var _binding: ActivityInterestCalculatorBinding? = null
     private val binding get() = _binding!!
 
-    private val periodUnits = arrayOf("Годы", "Месяцы")
+    private val periodUnits = arrayOf("Годы", "Месяцы", "Дни") // Вернул "Дни" для полноты
     private val capitalizationOptions = arrayOf("В конце срока (простые)", "Ежемесячно", "Ежеквартально", "Ежегодно")
     
-    // Профессиональное форматирование чисел для РФ (пробелы между разрядами, запятая для копеек)
     private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).apply {
         maximumFractionDigits = 2
         minimumFractionDigits = 2
@@ -33,7 +31,6 @@ class InterestCalculatorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // FLAG_SECURE: Запрет скриншотов, записи экрана и скрытие из меню "Недавние приложения"
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -55,7 +52,9 @@ class InterestCalculatorActivity : AppCompatActivity() {
 
         val capAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, capitalizationOptions)
         binding.spinnerCapitalization.adapter = capAdapter
-        binding.spinnerCapitalization.setSelection(1) // По умолчанию: Ежемесячно
+        
+        // ИСПРАВЛЕНИЕ 1: По умолчанию ставим "Простые проценты", как в вашем исходном примере
+        binding.spinnerCapitalization.setSelection(0) 
     }
 
     private fun calculateInterest() {
@@ -67,7 +66,6 @@ class InterestCalculatorActivity : AppCompatActivity() {
         val monthlyDepositStr = binding.etMonthlyDeposit.text.toString()
         val inflationStr = binding.etInflation.text.toString()
 
-        // 1. Строгая валидация с ранним возвратом (гарантирует, что дальше переменные НЕ null)
         val principal = amountStr.toDoubleOrNull()
         if (principal == null || principal <= 0) {
             showError(binding.errAmount, "Введите корректную сумму > 0")
@@ -86,50 +84,38 @@ class InterestCalculatorActivity : AppCompatActivity() {
             return
         }
 
-        // Эти значения могут быть пустыми, по умолчанию 0.0 (уже не null)
         val monthlyDeposit = monthlyDepositStr.toDoubleOrNull() ?: 0.0
         val inflation = inflationStr.toDoubleOrNull() ?: 0.0
 
         val selectedUnit = binding.spinnerPeriodUnit.selectedItem.toString()
         val capitalization = binding.spinnerCapitalization.selectedItem.toString()
 
-        // 2. Профессиональный банковский расчёт (помесячный цикл)
-        val totalMonths = if (selectedUnit == "Годы") periodValue * 12 else periodValue
+        val totalMonths = when (selectedUnit) {
+            "Годы" -> periodValue * 12
+            "Месяцы" -> periodValue
+            "Дни" -> (periodValue / 30.4375).toInt().coerceAtLeast(1)
+            else -> periodValue * 12
+        }
+        
         val years = totalMonths / 12.0
 
         var balance: Double = principal
         var totalInvested: Double = principal
 
         for (month in 1..totalMonths) {
-            // Пополнение в начале месяца
             balance += monthlyDeposit
             totalInvested += monthlyDeposit
 
-            // Начисление процентов согласно выбранной капитализации
             when (capitalization) {
-                "Ежемесячно" -> {
-                    balance += balance * (rate / 100.0 / 12.0)
-                }
-                "Ежеквартально" -> {
-                    if (month % 3 == 0) {
-                        balance += balance * (rate / 100.0 / 4.0)
-                    }
-                }
-                "Ежегодно" -> {
-                    if (month % 12 == 0) {
-                        balance += balance * (rate / 100.0)
-                    }
-                }
-                "В конце срока (простые)" -> {
-                    // Проценты не добавляются к телу вклада до самого конца цикла
-                }
+                "Ежемесячно" -> balance += balance * (rate / 100.0 / 12.0)
+                "Ежеквартально" -> if (month % 3 == 0) balance += balance * (rate / 100.0 / 4.0)
+                "Ежегодно" -> if (month % 12 == 0) balance += balance * (rate / 100.0)
+                "В конце срока (простые)" -> { }
             }
         }
 
-        // Если капитализация в конце срока, считаем простые проценты одним разом
         if (capitalization == "В конце срока (простые)") {
             val interestOnPrincipal = principal * (rate / 100.0) * years
-            
             var interestOnDeposits = 0.0
             for (month in 1..totalMonths) {
                 val remainingMonths = totalMonths - month + 1
@@ -139,36 +125,31 @@ class InterestCalculatorActivity : AppCompatActivity() {
         }
 
         val totalProfit = balance - totalInvested
-
-        // 3. Расчёт инфляции (реальная покупательная способность)
         val realValue = balance / (1.0 + inflation / 100.0).pow(years)
         val realProfit = realValue - totalInvested
 
-        // 4. Формирование вывода
+        // ИСПРАВЛЕНИЕ 2: Возвращаем формат, максимально близкий к вашему исходному запросу + строку "В час"
         val resultText = buildString {
             appendLine("= ${if (capitalization == "В конце срока (простые)") "Простые" else "Сложные"} проценты:")
-            appendLine("= Начальная сумма: ${currencyFormat.format(principal)}")
+            appendLine("= Сумма: ${currencyFormat.format(principal)}")
             appendLine("= Ставка: ${percentFormat.format(rate)}% годовых")
-            appendLine("= Срок: $periodValue ${getPluralizedUnit(periodValue, selectedUnit)}")
-            if (monthlyDeposit > 0) {
-                appendLine("= Пополнения: ${currencyFormat.format(monthlyDeposit)} / мес.")
-            }
-            appendLine("= Всего вложено: ${currencyFormat.format(totalInvested)}")
-            appendLine("= Итоговая сумма: ${currencyFormat.format(balance)}")
-            appendLine("= Начислено процентов: ${currencyFormat.format(totalProfit)}")
+            appendLine("= Период: $periodValue ${getPluralizedUnit(periodValue, selectedUnit)}")
+            if (monthlyDeposit > 0) appendLine("= Пополнение: ${currencyFormat.format(monthlyDeposit)} / мес.")
             
-            if (inflation > 0) {
-                appendLine("----------------------------------------")
-                appendLine("= Учёт инфляции (${percentFormat.format(inflation)}%):")
-                appendLine("= Реальная ценность: ${currencyFormat.format(realValue)}")
-                appendLine("= Реальная прибыль: ${currencyFormat.format(realProfit)}")
-            }
+            appendLine("= Итого: ${currencyFormat.format(balance)} (прибыль ${currencyFormat.format(totalProfit)})")
             
-            appendLine("----------------------------------------")
-            appendLine("= Средний доход:")
             appendLine("= В год: ${currencyFormat.format(totalProfit / years)}")
             appendLine("= В месяц: ${currencyFormat.format(totalProfit / totalMonths)}")
             appendLine("= В день: ${currencyFormat.format(totalProfit / (totalMonths * 30.4375))}")
+            // ИСПРАВЛЕНИЕ 3: Добавляем расчёт в час (день / 24)
+            appendLine("= В час: ${currencyFormat.format(totalProfit / (totalMonths * 30.4375 * 24))}")
+
+            if (inflation > 0) {
+                appendLine("----------------------------------------")
+                appendLine("= Инфляция (${percentFormat.format(inflation)}%):")
+                appendLine("= Реальная ценность: ${currencyFormat.format(realValue)}")
+                appendLine("= Реальная прибыль: ${currencyFormat.format(realProfit)}")
+            }
         }
 
         binding.tvResult.text = resultText.trimEnd()
@@ -201,11 +182,16 @@ class InterestCalculatorActivity : AppCompatActivity() {
                 mod10 in 2..4 -> "месяца"
                 else -> "месяцев"
             }
+            "Дни" -> when {
+                mod100 in 11..14 -> "дней"
+                mod10 == 1 -> "день"
+                mod10 in 2..4 -> "дня"
+                else -> "дней"
+            }
             else -> unit.lowercase()
         }
     }
 
-    // Очистка binding для предотвращения утечек памяти (Memory Leak)
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
