@@ -210,4 +210,4 @@ class InterestCalculatorActivity : AppCompatActivity() {
         super.onDestroy()
         _binding = null
     }
-}               appendLine("= Реальная прибыль: ${currencyFormat.format(realProfit)}")
+}
