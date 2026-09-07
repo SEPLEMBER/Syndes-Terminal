@@ -3,7 +3,7 @@
 A small, handy terminal for Android. Unlike Termux, it doesn’t run a virtual system — everything works directly with Android itself.  
 
 ## What it can do
-
+ 
 - A variety of familiar Linux-style commands.
 - Support for simple scripts and batch operations.
 - Experimental background mode (`watchdog`).
