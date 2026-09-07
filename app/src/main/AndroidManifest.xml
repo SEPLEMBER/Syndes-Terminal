@@ -83,7 +83,7 @@
                 <activity
             android:name=".InterestCalculatorActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name=".MGActivity"
