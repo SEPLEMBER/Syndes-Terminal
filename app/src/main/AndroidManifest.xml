@@ -80,6 +80,11 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="false" />
 
+                <activity
+            android:name=".InterestCalculatorActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="false" />
+
         <activity
             android:name=".MGActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
