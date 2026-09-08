@@ -115,18 +115,11 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="true" />
 
-                                <activity
+        
+                        <activity
             android:name=".NTRActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="true" />
-
-        <activity android:name=".InterestCalculatorActivity" android:exported="true" />    
-<activity android:name=".FinBudgetActivity" android:exported="true" />    
-<activity android:name=".TaxCalculatorActivity" android:exported="true" />    
-<activity android:name=".IpTaxCalculatorActivity" android:exported="true" />    
-<activity android:name=".NetTrafficActivity" android:exported="true" />    
-<activity android:name=".FinIncomeActivity" android:exported="true" />    
-<activity android:name=".TravelTimeActivity" android:exported="true" />    
 
         <activity
             android:name=".MGActivity"
