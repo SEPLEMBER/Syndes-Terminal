@@ -3,6 +3,7 @@ package org.syndes.terminal
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -22,7 +23,7 @@ class NTRActivity : AppCompatActivity() {
 
     private fun setupInputListener() {
         binding.etCommandInput.setOnEditorActionListener { _, actionId, _ ->
-            // Ловим Go, Done и обычный Enter (Unspecified) для максимальной совместимости с разными клавиатурами
+            // Ловим Go, Done и обычный Enter (Unspecified) для максимальной совместимости
             if (actionId == EditorInfo.IME_ACTION_GO || 
                 actionId == EditorInfo.IME_ACTION_DONE || 
                 actionId == EditorInfo.IME_ACTION_UNSPECIFIED) {
@@ -107,13 +108,12 @@ class NTRActivity : AppCompatActivity() {
 
     private fun appendToTerminal(text: String) {
         val currentText = binding.tvTerminalOutput.text.toString()
-        // Заменяем последний курсор на текст и добавляем новый
         val cleanText = currentText.removeSuffix("> ОЖИДАНИЕ ВВОДА_")
         binding.tvTerminalOutput.text = "$cleanText$text\n> ОЖИДАНИЕ ВВОДА_"
         
-        // Самый надежный способ автопрокрутки TextView вниз на всех устройствах
-        binding.tvTerminalOutput.post {
-            binding.tvTerminalOutput.setSelection(binding.tvTerminalOutput.text.length)
+        // Надёжная прокрутка ScrollView в самый низ
+        binding.scrollView.post {
+            binding.scrollView.fullScroll(View.FOCUS_DOWN)
         }
     }
 
