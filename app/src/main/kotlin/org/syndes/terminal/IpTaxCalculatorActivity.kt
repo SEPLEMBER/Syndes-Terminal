@@ -30,7 +30,7 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
     private val ID_INSURANCE_PREMIUM = View.generateViewId()
     private val ID_POTENTIAL_INCOME = View.generateViewId()
     
-    // НОВЫЕ ID для редактируемых параметров
+    // ID для редактируемых параметров
     private val ID_USN_RATE_6 = View.generateViewId()
     private val ID_USN_RATE_15 = View.generateViewId()
     private val ID_PATENT_RATE = View.generateViewId()
@@ -135,7 +135,6 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         etCustomRate.visibility = View.GONE
         binding.layoutDynamicFields.addView(etCustomRate)
 
-        // НОВОЕ: Редактируемые ставки УСН
         addLabel("Ставка УСН 6% (%):")
         binding.layoutDynamicFields.addView(
             addEditText(DEFAULT_USN_RATE_6.toString(), ID_USN_RATE_6, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
@@ -155,7 +154,6 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         val hasEmployeesOptions = arrayOf("Нет (можно уменьшить налог на 100% взносов)", "Да (максимум 50% от налога)")
         binding.layoutDynamicFields.addView(addSpinner(hasEmployeesOptions, ID_HAS_EMPLOYEES))
 
-        // Динамическое управление видимостью полей
         val spinnerMode = binding.layoutDynamicFields.findViewById<Spinner>(ID_USN_MODE)
         spinnerMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -173,7 +171,6 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
             addEditText("1000000", ID_POTENTIAL_INCOME, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
         )
 
-        // НОВОЕ: Редактируемая ставка патента
         addLabel("Ставка патента (%):")
         binding.layoutDynamicFields.addView(
             addEditText(DEFAULT_PATENT_RATE.toString(), ID_PATENT_RATE, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
@@ -189,7 +186,6 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         binding.layoutDynamicFields.addView(addSpinner(hasEmployeesOptions, ID_HAS_EMPLOYEES))
     }
 
-    // --- Вспомогательные функции UI ---
     private fun addLabel(text: String) {
         val label = TextView(this).apply {
             this.text = text
@@ -220,7 +216,13 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         }
     }
 
-    // --- ЛОГИКА РАСЧЁТОВ ---
+    // Вспомогательная функция для безопасного получения значения с дефолтом
+    private fun getDoubleValue(id: Int, defaultValue: Double): Double {
+        val editText = binding.layoutDynamicFields.findViewById<EditText>(id)
+        val value = editText.text.toString().toDoubleOrNull()
+        return value ?: defaultValue
+    }
+
     private fun calculate() {
         when (binding.spinnerCalcType.selectedItem.toString()) {
             "Страховые взносы ИП" -> calculateInsurance()
@@ -234,10 +236,10 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         if (income == null || income < 0) return showError("Введите корректный доход >= 0")
 
         // Читаем редактируемые параметры
-        val fixedPremium = binding.layoutDynamicFields.findViewById<EditText>(ID_FIXED_PREMIUM).text.toString().toDoubleOrNull() ?: DEFAULT_FIXED_PREMIUM
-        val additionalPercent = binding.layoutDynamicFields.findViewById<EditText>(ID_ADDITIONAL_PERCENT).text.toString().toDoubleOrNull() ?: DEFAULT_ADDITIONAL_PERCENT
-        val premiumThreshold = binding.layoutDynamicFields.findViewById<EditText>(ID_PREMIUM_THRESHOLD).text.toString().toDoubleOrNull() ?: DEFAULT_PREMIUM_THRESHOLD
-        val additionalLimit = binding.layoutDynamicFields.findViewById<EditText>(ID_ADDITIONAL_LIMIT).text.toString().toDoubleOrNull() ?: DEFAULT_ADDITIONAL_LIMIT
+        val fixedPremium = getDoubleValue(ID_FIXED_PREMIUM, DEFAULT_FIXED_PREMIUM)
+        val additionalPercent = getDoubleValue(ID_ADDITIONAL_PERCENT, DEFAULT_ADDITIONAL_PERCENT)
+        val premiumThreshold = getDoubleValue(ID_PREMIUM_THRESHOLD, DEFAULT_PREMIUM_THRESHOLD)
+        val additionalLimit = getDoubleValue(ID_ADDITIONAL_LIMIT, DEFAULT_ADDITIONAL_LIMIT)
 
         val additionalPremium = if (income > premiumThreshold) {
             val calculated = (income - premiumThreshold) * (additionalPercent / 100.0)
@@ -251,10 +253,19 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
             appendLine("= Страховые взносы ИП:")
             appendLine("= Годовой доход: ${currencyFormat.format(income)}")
             appendLine("----------------------------------------")
+            appendLine("= Используемые параметры:")
+            appendLine("  Фикс. взносы: ${currencyFormat.format(fixedPremium)}")
+            appendLine("  Порог доп. взноса: ${currencyFormat.format(premiumThreshold)}")
+            appendLine("  Доп. взнос: ${additionalPercent}%")
+            appendLine("  Макс. доп. взнос: ${currencyFormat.format(additionalLimit)}")
+            appendLine("----------------------------------------")
             appendLine("= Фиксированные взносы: ${currencyFormat.format(fixedPremium)}")
             if (income > premiumThreshold) {
                 appendLine("= Доп. взнос (${additionalPercent}% с превышения): ${currencyFormat.format(additionalPremium)}")
                 appendLine("=   (с суммы ${currencyFormat.format(income - premiumThreshold)})")
+                if (additionalPremium >= additionalLimit) {
+                    appendLine("=   (достигнут максимум ${currencyFormat.format(additionalLimit)})")
+                }
             } else {
                 appendLine("= Доп. взнос: 0 ₽ (доход ≤ ${currencyFormat.format(premiumThreshold)})")
             }
@@ -271,12 +282,11 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         if (income == null || income <= 0) return showError("Введите корректный доход > 0")
 
         val mode = binding.layoutDynamicFields.findViewById<Spinner>(ID_USN_MODE).selectedItem.toString()
-        val insurancePremium = binding.layoutDynamicFields.findViewById<EditText>(ID_INSURANCE_PREMIUM).text.toString().toDoubleOrNull() ?: 0.0
+        val insurancePremium = getDoubleValue(ID_INSURANCE_PREMIUM, 49_500.0)
         val hasEmployees = binding.layoutDynamicFields.findViewById<Spinner>(ID_HAS_EMPLOYEES).selectedItem.toString().contains("Да")
 
-        // Читаем редактируемые ставки
-        val usnRate6 = binding.layoutDynamicFields.findViewById<EditText>(ID_USN_RATE_6).text.toString().toDoubleOrNull() ?: DEFAULT_USN_RATE_6
-        val usnRate15 = binding.layoutDynamicFields.findViewById<EditText>(ID_USN_RATE_15).text.toString().toDoubleOrNull() ?: DEFAULT_USN_RATE_15
+        val usnRate6 = getDoubleValue(ID_USN_RATE_6, DEFAULT_USN_RATE_6)
+        val usnRate15 = getDoubleValue(ID_USN_RATE_15, DEFAULT_USN_RATE_15)
 
         var tax = 0.0
         var description = ""
@@ -289,12 +299,11 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
             }
             mode.contains("15%") -> {
                 description = "УСН ${usnRate15}% (Доходы - Расходы)"
-                expenses = binding.layoutDynamicFields.findViewById<EditText>(ID_EXPENSES).text.toString().toDoubleOrNull() ?: 0.0
+                expenses = getDoubleValue(ID_EXPENSES, 0.0)
                 if (expenses < 0) return showError("Расходы не могут быть отрицательными")
                 val profit = income - expenses
                 if (profit <= 0) return showError("Расходы превышают доходы")
                 tax = profit * (usnRate15 / 100.0)
-                // Минимальный налог 1% с доходов
                 val minTax = income * 0.01
                 if (tax < minTax) {
                     tax = minTax
@@ -309,7 +318,6 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
             }
         }
 
-        // Уменьшение налога на страховые взносы
         val maxDeduction = if (hasEmployees) tax * 0.5 else tax
         val deduction = minOf(insurancePremium, maxDeduction)
         val taxToPay = tax - deduction
@@ -341,15 +349,12 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         val potentialIncome = binding.layoutDynamicFields.findViewById<EditText>(ID_POTENTIAL_INCOME).text.toString().toDoubleOrNull()
         if (potentialIncome == null || potentialIncome <= 0) return showError("Введите корректный потенциальный доход > 0")
 
-        val insurancePremium = binding.layoutDynamicFields.findViewById<EditText>(ID_INSURANCE_PREMIUM).text.toString().toDoubleOrNull() ?: 0.0
+        val insurancePremium = getDoubleValue(ID_INSURANCE_PREMIUM, 49_500.0)
         val hasEmployees = binding.layoutDynamicFields.findViewById<Spinner>(ID_HAS_EMPLOYEES).selectedItem.toString().contains("Да")
-
-        // Читаем редактируемую ставку патента
-        val patentRate = binding.layoutDynamicFields.findViewById<EditText>(ID_PATENT_RATE).text.toString().toDoubleOrNull() ?: DEFAULT_PATENT_RATE
+        val patentRate = getDoubleValue(ID_PATENT_RATE, DEFAULT_PATENT_RATE)
 
         val patentCost = potentialIncome * (patentRate / 100.0)
 
-        // Уменьшение на страховые взносы
         val maxDeduction = if (hasEmployees) patentCost * 0.5 else patentCost
         val deduction = minOf(insurancePremium, maxDeduction)
         val patentToPay = patentCost - deduction
@@ -380,4 +385,4 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         super.onDestroy()
         _binding = null
     }
-}
+} 
