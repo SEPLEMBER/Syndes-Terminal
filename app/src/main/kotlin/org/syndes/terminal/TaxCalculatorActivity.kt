@@ -9,17 +9,24 @@ import org.syndes.terminal.databinding.ActivityTaxCalculatorBinding
 import java.text.NumberFormat
 import java.util.Locale
 
-class TaxCalculatorActivity : AppCompatActivity() { // <-- ИСПРАВЛЕНО: добавлена '{'
+class TaxCalculatorActivity : AppCompatActivity() {
 
     private var _binding: ActivityTaxCalculatorBinding? = null
     private val binding get() = _binding!!
 
-    private val taxTypes = arrayOf("НДС", "НДФЛ (резидент РФ)", "НДФЛ (нерезидент)", "Иные доходы")
+    private val taxTypes = arrayOf("НДС", "НДФЛ (доход)", "Иные доходы")
     
     private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).apply {
         maximumFractionDigits = 2
         minimumFractionDigits = 2
     }
+
+    // Уникальные ID для динамических View (гарантия отсутствия ошибок ClassCastException)
+    private val ID_AMOUNT = View.generateViewId()
+    private val ID_RATE_SPINNER = View.generateViewId()
+    private val ID_CUSTOM_RATE = View.generateViewId()
+    private val ID_OPERATION_SPINNER = View.generateViewId()
+    private val ID_INCOME_TYPE_SPINNER = View.generateViewId()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,260 +54,209 @@ class TaxCalculatorActivity : AppCompatActivity() { // <-- ИСПРАВЛЕНО:
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 setupDynamicFields(taxTypes[position])
             }
-
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         })
     }
 
     private fun setupDynamicFields(taxType: String) {
         binding.layoutDynamicFields.removeAllViews()
-
         when (taxType) {
             "НДС" -> setupNdsFields()
-            "НДФЛ (резидент РФ)" -> setupNdfFields(isResident = true)
-            "НДФЛ (нерезидент)" -> setupNdfFields(isResident = false)
+            "НДФЛ (доход)" -> setupNdfFields()
             "Иные доходы" -> setupOtherIncomeFields()
         }
     }
 
     private fun setupNdsFields() {
         addLabel("Сумма (₽):")
-        val etAmount = addEditText("100000", android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
-        etAmount.id = View.generateViewId()
-        binding.layoutDynamicFields.addView(etAmount)
+        binding.layoutDynamicFields.addView(addEditText("100000", ID_AMOUNT, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL))
 
         addLabel("Ставка НДС:")
-        val spinnerRate = Spinner(this)
-        val rates = arrayOf("20% (основная)", "10% (льготная)", "0% (экспорт)")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, rates)
-        spinnerRate.adapter = adapter
-        spinnerRate.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FFFF.toInt())
+        val rates = arrayOf("20% (основная)", "10% (льготная)", "0% (экспорт)", "Своя ставка (%)")
+        val spinnerRate = addSpinner(rates, ID_RATE_SPINNER)
         binding.layoutDynamicFields.addView(spinnerRate)
 
+        // Поле для своей ставки (скрыто по умолчанию)
+        val etCustomRate = addEditText("Например, 5", ID_CUSTOM_RATE, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        etCustomRate.visibility = View.GONE
+        binding.layoutDynamicFields.addView(etCustomRate)
+
+        spinnerRate.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                etCustomRate.visibility = if (rates[position] == "Своя ставка (%)") View.VISIBLE else View.GONE
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
         addLabel("Операция:")
-        val spinnerOperation = Spinner(this)
         val operations = arrayOf("Выделить НДС из суммы", "Начислить НДС на сумму")
-        val adapterOp = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, operations)
-        spinnerOperation.adapter = adapterOp
-        spinnerOperation.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FFFF.toInt())
-        binding.layoutDynamicFields.addView(spinnerOperation)
+        binding.layoutDynamicFields.addView(addSpinner(operations, ID_OPERATION_SPINNER))
     }
 
-    private fun setupNdfFields(isResident: Boolean) {
+    private fun setupNdfFields() {
         addLabel("Годовой доход до налогообложения (₽):")
-        val etIncome = addEditText("2400000", android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
-        etIncome.id = View.generateViewId()
-        binding.layoutDynamicFields.addView(etIncome)
+        binding.layoutDynamicFields.addView(addEditText("2400000", ID_AMOUNT, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL))
 
-        if (!isResident) {
-            addLabel("Примечание: Для нерезидентов ставка 30% (кроме дивидендов)")
+        addLabel("Режим расчёта:")
+        val modes = arrayOf("Прогрессивная шкала (2024: 13%-22%)", "Своя ставка (%) (напр. 4%, 6%, 13%, 30%)")
+        val spinnerMode = addSpinner(modes, ID_RATE_SPINNER)
+        binding.layoutDynamicFields.addView(spinnerMode)
+
+        val etCustomRate = addEditText("Например, 13", ID_CUSTOM_RATE, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        etCustomRate.visibility = View.GONE
+        binding.layoutDynamicFields.addView(etCustomRate)
+
+        spinnerMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                etCustomRate.visibility = if (modes[position] == "Своя ставка (%) (напр. 4%, 6%, 13%, 30%)") View.VISIBLE else View.GONE
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
     private fun setupOtherIncomeFields() {
         addLabel("Тип дохода:")
-        val spinnerIncomeType = Spinner(this)
-        val incomeTypes = arrayOf("Дивиденды (резидент)", "Дивиденды (нерезидент)", "Выигрыш (реклама/конкурс)", "Продажа имущества")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, incomeTypes)
-        spinnerIncomeType.adapter = adapter
-        spinnerIncomeType.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FFFF.toInt())
-        binding.layoutDynamicFields.addView(spinnerIncomeType)
+        val types = arrayOf("Дивиденды (резидент, 13%)", "Дивиденды (нерезидент, 15%)", "Выигрыш (35%)", "Продажа имущества (13%)", "Своя ставка (%)")
+        binding.layoutDynamicFields.addView(addSpinner(types, ID_INCOME_TYPE_SPINNER))
 
         addLabel("Сумма дохода (₽):")
-        val etAmount = addEditText("100000", android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
-        etAmount.id = View.generateViewId()
-        binding.layoutDynamicFields.addView(etAmount)
+        binding.layoutDynamicFields.addView(addEditText("100000", ID_AMOUNT, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL))
+        
+        val etCustomRate = addEditText("Ваша ставка (%)", ID_CUSTOM_RATE, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        etCustomRate.visibility = View.GONE
+        binding.layoutDynamicFields.addView(etCustomRate)
+
+        val spinnerType = binding.layoutDynamicFields.findViewById<Spinner>(ID_INCOME_TYPE_SPINNER)
+        spinnerType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                etCustomRate.visibility = if (types[position] == "Своя ставка (%)") View.VISIBLE else View.GONE
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
+    // --- Вспомогательные функции для создания UI ---
     private fun addLabel(text: String) {
-        val label = TextView(this)
-        label.text = text
-        label.setTextColor(0xFF00FFFF.toInt())
-        label.textSize = 16f
-        label.setPadding(0, 8, 0, 4)
+        val label = TextView(this).apply {
+            this.text = text
+            setTextColor(0xFF00FFFF.toInt())
+            textSize = 16f
+            setPadding(0, 16, 0, 4)
+        }
         binding.layoutDynamicFields.addView(label)
     }
 
-    private fun addEditText(hint: String, inputType: Int): EditText {
-        val editText = EditText(this)
-        editText.hint = hint
-        editText.inputType = inputType
-        editText.setTextColor(0xFF00FFFF.toInt())
-        editText.setHintTextColor(0xFF008B8B.toInt())
-        editText.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FFFF.toInt())
-        editText.setPadding(0, 8, 0, 8)
-        return editText
+    private fun addEditText(hint: String, id: Int, inputType: Int): EditText {
+        return EditText(this).apply {
+            this.id = id
+            this.hint = hint
+            this.inputType = inputType
+            setTextColor(0xFF00FFFF.toInt())
+            setHintTextColor(0xFF008B8B.toInt())
+            backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FFFF.toInt())
+            setPadding(0, 8, 0, 8)
+        }
     }
 
-    private fun calculateTax() {
-        val selectedTaxType = binding.spinnerTaxType.selectedItem.toString()
+    private fun addSpinner(items: Array<String>, id: Int): Spinner {
+        return Spinner(this).apply {
+            this.id = id
+            adapter = ArrayAdapter(this@TaxCalculatorActivity, android.R.layout.simple_spinner_dropdown_item, items)
+            backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FFFF.toInt())
+        }
+    }
 
-        when (selectedTaxType) {
+    // --- ЛОГИКА РАСЧЁТОВ ---
+    private fun calculateTax() {
+        when (binding.spinnerTaxType.selectedItem.toString()) {
             "НДС" -> calculateNds()
-            "НДФЛ (резидент РФ)" -> calculateNdfResident()
-            "НДФЛ (нерезидент)" -> calculateNdfNonResident()
+            "НДФЛ (доход)" -> calculateNdf()
             "Иные доходы" -> calculateOtherIncome()
         }
     }
 
     private fun calculateNds() {
-        val views = binding.layoutDynamicFields
-        
-        val etAmount = views.getChildAt(1) as EditText
-        val spinnerRate = views.getChildAt(3) as Spinner
-        val spinnerOperation = views.getChildAt(5) as Spinner
+        val amount = binding.layoutDynamicFields.findViewById<EditText>(ID_AMOUNT).text.toString().toDoubleOrNull()
+        if (amount == null || amount <= 0) return showError("Введите корректную сумму > 0")
 
-        val amountStr = etAmount.text.toString()
-        val amount = amountStr.toDoubleOrNull()
+        val rateSpinner = binding.layoutDynamicFields.findViewById<Spinner>(ID_RATE_SPINNER)
+        val rateStr = rateSpinner.selectedItem.toString()
         
-        if (amount == null || amount <= 0) {
-            showError("Введите корректную сумму > 0")
-            return
+        val rate = if (rateStr == "Своя ставка (%)") {
+            val custom = binding.layoutDynamicFields.findViewById<EditText>(ID_CUSTOM_RATE).text.toString().toDoubleOrNull()
+            if (custom == null || custom < 0 || custom > 100) return showError("Введите ставку от 0 до 100")
+            custom
+        } else {
+            rateStr.substringBefore("%").toDouble()
         }
 
-        val rateStr = spinnerRate.selectedItem.toString()
-        val rate = when {
-            rateStr.startsWith("20%") -> 20.0
-            rateStr.startsWith("10%") -> 10.0
-            else -> 0.0
-        }
-
-        val operation = spinnerOperation.selectedItem.toString()
+        val operation = binding.layoutDynamicFields.findViewById<Spinner>(ID_OPERATION_SPINNER).selectedItem.toString()
         
         val resultText = if (operation.contains("Выделить")) {
             val nds = amount * rate / (100 + rate)
-            val amountWithoutNds = amount - nds
-            buildString {
-                appendLine("= НДС ${rate.toInt()}%:")
-                appendLine("= Сумма с НДС: ${currencyFormat.format(amount)}")
-                appendLine("= Сумма без НДС: ${currencyFormat.format(amountWithoutNds)}")
-                appendLine("= Выделенный НДС: ${currencyFormat.format(nds)}")
-            }
+            val withoutNds = amount - nds
+            "= НДС ${rate}%:\n= Сумма с НДС: ${currencyFormat.format(amount)}\n= Сумма без НДС: ${currencyFormat.format(withoutNds)}\n= Выделенный НДС: ${currencyFormat.format(nds)}"
         } else {
             val nds = amount * rate / 100
-            val totalWithNds = amount + nds
-            buildString {
-                appendLine("= НДС ${rate.toInt()}%:")
-                appendLine("= Сумма без НДС: ${currencyFormat.format(amount)}")
-                appendLine("= Начисленный НДС: ${currencyFormat.format(nds)}")
-                appendLine("= Итого с НДС: ${currencyFormat.format(totalWithNds)}")
-            }
+            val total = amount + nds
+            "= НДС ${rate}%:\n= Сумма без НДС: ${currencyFormat.format(amount)}\n= Начисленный НДС: ${currencyFormat.format(nds)}\n= Итого с НДС: ${currencyFormat.format(total)}"
         }
-
-        binding.tvResult.text = resultText.trimEnd()
+        binding.tvResult.text = resultText
     }
 
-    private fun calculateNdfResident() {
-        val views = binding.layoutDynamicFields
-        val etIncome = views.getChildAt(1) as EditText
-        val incomeStr = etIncome.text.toString()
-        val income = incomeStr.toDoubleOrNull()
+    private fun calculateNdf() {
+        val income = binding.layoutDynamicFields.findViewById<EditText>(ID_AMOUNT).text.toString().toDoubleOrNull()
+        if (income == null || income <= 0) return showError("Введите корректный доход > 0")
 
-        if (income == null || income <= 0) {
-            showError("Введите корректный доход > 0")
-            return
-        }
-
+        val mode = binding.layoutDynamicFields.findViewById<Spinner>(ID_RATE_SPINNER).selectedItem.toString()
         var tax = 0.0
-        var remaining = income
+        var description = ""
 
-        val bracket1 = minOf(remaining, 2_400_000.0)
-        tax += bracket1 * 0.13
-        remaining -= bracket1
-
-        if (remaining > 0) {
-            val bracket2 = minOf(remaining, 2_600_000.0)
-            tax += bracket2 * 0.15
-            remaining -= bracket2
-        }
-
-        if (remaining > 0) {
-            val bracket3 = minOf(remaining, 15_000_000.0)
-            tax += bracket3 * 0.18
-            remaining -= bracket3
-        }
-
-        if (remaining > 0) {
-            val bracket4 = minOf(remaining, 30_000_000.0)
-            tax += bracket4 * 0.20
-            remaining -= bracket4
-        }
-
-        if (remaining > 0) {
-            tax += remaining * 0.22
+        if (mode == "Своя ставка (%) (напр. 4%, 6%, 13%, 30%)") {
+            val custom = binding.layoutDynamicFields.findViewById<EditText>(ID_CUSTOM_RATE).text.toString().toDoubleOrNull()
+            if (custom == null || custom < 0 || custom > 100) return showError("Введите ставку от 0 до 100")
+            tax = income * (custom / 100.0)
+            description = "НДФЛ (Своя ставка ${custom}%)"
+        } else {
+            description = "НДФЛ (Прогрессивная шкала 2024)"
+            var remaining = income
+            val b1 = minOf(remaining, 2_400_000.0); tax += b1 * 0.13; remaining -= b1
+            if (remaining > 0) { val b2 = minOf(remaining, 2_600_000.0); tax += b2 * 0.15; remaining -= b2 }
+            if (remaining > 0) { val b3 = minOf(remaining, 15_000_000.0); tax += b3 * 0.18; remaining -= b3 }
+            if (remaining > 0) { val b4 = minOf(remaining, 30_000_000.0); tax += b4 * 0.20; remaining -= b4 }
+            if (remaining > 0) { tax += remaining * 0.22 }
         }
 
         val afterTax = income - tax
         val effectiveRate = (tax / income) * 100
 
-        val resultText = buildString {
-            appendLine("= НДФЛ (резидент РФ):")
-            appendLine("= Доход: ${currencyFormat.format(income)}")
-            appendLine("= Налог: ${currencyFormat.format(tax)}")
-            appendLine("= На руки: ${currencyFormat.format(afterTax)}")
-            appendLine("= Эффективная ставка: ${String.format("%.2f", effectiveRate)}%")
-        }
-
-        binding.tvResult.text = resultText.trimEnd()
-    }
-
-    private fun calculateNdfNonResident() {
-        val views = binding.layoutDynamicFields
-        val etIncome = views.getChildAt(1) as EditText
-        val incomeStr = etIncome.text.toString()
-        val income = incomeStr.toDoubleOrNull()
-
-        if (income == null || income <= 0) {
-            showError("Введите корректный доход > 0")
-            return
-        }
-
-        val tax = income * 0.30
-        val afterTax = income - tax
-
-        val resultText = buildString {
-            appendLine("= НДФЛ (нерезидент):")
-            appendLine("= Доход: ${currencyFormat.format(income)}")
-            appendLine("= Налог (30%): ${currencyFormat.format(tax)}")
-            appendLine("= На руки: ${currencyFormat.format(afterTax)}")
-        }
-
-        binding.tvResult.text = resultText.trimEnd()
+        binding.tvResult.text = "= $description:\n= Доход: ${currencyFormat.format(income)}\n= Налог: ${currencyFormat.format(tax)}\n= На руки: ${currencyFormat.format(afterTax)}\n= Эффективная ставка: ${String.format(Locale.US, "%.2f", effectiveRate)}%"
     }
 
     private fun calculateOtherIncome() {
-        val views = binding.layoutDynamicFields
-        val spinnerIncomeType = views.getChildAt(1) as Spinner
-        val etAmount = views.getChildAt(3) as EditText
+        val amount = binding.layoutDynamicFields.findViewById<EditText>(ID_AMOUNT).text.toString().toDoubleOrNull()
+        if (amount == null || amount <= 0) return showError("Введите корректную сумму > 0")
 
-        val amountStr = etAmount.text.toString()
-        val amount = amountStr.toDoubleOrNull()
-
-        if (amount == null || amount <= 0) {
-            showError("Введите корректную сумму > 0")
-            return
+        val type = binding.layoutDynamicFields.findViewById<Spinner>(ID_INCOME_TYPE_SPINNER).selectedItem.toString()
+        
+        val (rate, desc) = if (type == "Своя ставка (%)") {
+            val custom = binding.layoutDynamicFields.findViewById<EditText>(ID_CUSTOM_RATE).text.toString().toDoubleOrNull()
+            if (custom == null || custom < 0 || custom > 100) return showError("Введите ставку от 0 до 100")
+            custom to "Иной доход (Своя ставка ${custom}%)"
+        } else {
+            when (type) {
+                "Дивиденды (резидент, 13%)" -> 13.0 to "Дивиденды (резидент)"
+                "Дивиденды (нерезидент, 15%)" -> 15.0 to "Дивиденды (нерезидент)"
+                "Выигрыш (35%)" -> 35.0 to "Выигрыш (реклама/конкурс)"
+                "Продажа имущества (13%)" -> 13.0 to "Продажа имущества"
+                else -> 13.0 to "Прочее"
+            }
         }
 
-        val incomeType = spinnerIncomeType.selectedItem.toString()
-        val (rate, description) = when (incomeType) {
-            "Дивиденды (резидент)" -> 0.13 to "Дивиденды (резидент РФ)"
-            "Дивиденды (нерезидент)" -> 0.15 to "Дивиденды (нерезидент)"
-            "Выигрыш (реклама/конкурс)" -> 0.35 to "Выигрыш (реклама/конкурс)"
-            "Продажа имущества" -> 0.13 to "Продажа имущества"
-            else -> 0.13 to "Прочее"
-        }
-
-        val tax = amount * rate
+        val tax = amount * (rate / 100.0)
         val afterTax = amount - tax
 
-        val resultText = buildString {
-            appendLine("= $description:")
-            appendLine("= Доход: ${currencyFormat.format(amount)}")
-            appendLine("= Налог (${(rate * 100).toInt()}%): ${currencyFormat.format(tax)}")
-            appendLine("= На руки: ${currencyFormat.format(afterTax)}")
-        }
-
-        binding.tvResult.text = resultText.trimEnd()
+        binding.tvResult.text = "= $desc:\n= Доход: ${currencyFormat.format(amount)}\n= Налог: ${currencyFormat.format(tax)}\n= На руки: ${currencyFormat.format(afterTax)}"
     }
 
     private fun showError(message: String) {
