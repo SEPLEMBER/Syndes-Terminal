@@ -1,6 +1,6 @@
 package org.syndes.terminal
 
-import android.app.PendingIntent // <-- ВЕРНУТ (нужен для шорткатов)
+import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -46,7 +46,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.util.ArrayDeque
-import kotlin.coroutines.coroutineContext // <-- ВЕРНУТ (для гарантии в sleep)
+import kotlin.coroutines.coroutineContext
 
 class MainActivity : AppCompatActivity() {
     private lateinit var terminalOutput: TextView
@@ -57,13 +57,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     
     private var progressJob: Job? = null
-    private var watchdogJob: Job? = null // <-- Управление таймером watchdog
+    private var watchdogJob: Job? = null 
     
     private val terminal = Terminal()
     private val terminal2 = Terminal2()
     private val PREFS_NAME = "terminal_prefs"
     
-    // Флаг видимости приложения (учитывает сворачивание, выключение экрана и т.д.)
     private var isAppVisible = false
 
     private val heavyCommands = setOf(
@@ -145,19 +144,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        isAppVisible = true // <-- Приложение на экране
+        isAppVisible = true 
         applySecureFlagFromPrefs()
     }
 
     override fun onPause() {
         super.onPause()
-        isAppVisible = false // <-- Приложение ушло в фон или экран погашен
+        isAppVisible = false 
     }
 
     override fun onDestroy() {
         super.onDestroy()
         hideProgress()
-        watchdogJob?.cancel() // <-- Гарантированная очистка таймера при закрытии
+        watchdogJob?.cancel() 
         backgroundJobs.forEach { it.cancel() }
         backgroundJobs.clear()
         processingJob?.cancel()
@@ -192,14 +191,32 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Throwable) { /* ignore */ }
     }
 
+    // =========================================================================
+    // ИСПРАВЛЕННЫЙ МЕТОД sendCommand()
+    // =========================================================================
     private fun sendCommand() {
         val rawInput = inputField.text.toString()
         if (rawInput.isBlank()) {
             focusAndShowKeyboard()
             return
         }
+
+        // 1. Разрешаем алиас (например, "mcpe" -> "am start ...")
+        val resolvedInput = AliasManager.resolve(this, rawInput)
+
+        // 2. Выводим уведомление, если команда была заменена
+        if (rawInput != resolvedInput) {   
+            appendToTerminal(
+                colorize(" [alias resolved: $resolvedInput]\n", ContextCompat.getColor(this, R.color.color_info)), 
+                ContextCompat.getColor(this, R.color.color_info)
+            ) 
+        }      
+
         val inputColor = ContextCompat.getColor(this, R.color.color_command)
-        val items = parseInputToCommandItems(rawInput)
+        
+        // 3. ВАЖНО: Парсим именно resolvedInput, чтобы выполнилась подмененная команда!
+        val items = parseInputToCommandItems(resolvedInput)
+        
         for (item in items) {
             when (item) {
                 is CommandItem.Single -> {
@@ -216,6 +233,7 @@ class MainActivity : AppCompatActivity() {
         focusAndShowKeyboard()
         if (!processingQueue) processCommandQueue()
     }
+    // =========================================================================
 
     private fun addStopQueueButton() {
         try {
@@ -333,7 +351,6 @@ class MainActivity : AppCompatActivity() {
         val errorColor = ContextCompat.getColor(this, R.color.color_error)
         val systemYellow = Color.parseColor("#FFD54F")
 
-        // ==== WATCHDOG: Полностью внутри приложения, без Service ====
         if (inputToken == "watchdog") {
             val parts = command.split("\\s+".toRegex()).filter { it.isNotEmpty() }
             if (parts.size < 3) {
@@ -378,7 +395,6 @@ class MainActivity : AppCompatActivity() {
                             progressText.text = "watchdog timer: executing..."
                         }
                         
-                        // ГЛАВНОЕ УСЛОВИЕ: Ждём, пока приложение не станет видимым на экране
                         while (!isAppVisible && isActive) {
                             delay(200L)
                         }
