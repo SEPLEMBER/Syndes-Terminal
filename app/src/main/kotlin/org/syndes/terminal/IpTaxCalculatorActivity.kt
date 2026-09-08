@@ -38,6 +38,9 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
     private val ID_ADDITIONAL_PERCENT = View.generateViewId()
     private val ID_ADDITIONAL_LIMIT = View.generateViewId()
     private val ID_PREMIUM_THRESHOLD = View.generateViewId()
+    
+    // НОВОЕ: ID для лимита уменьшения налога при сотрудниках
+    private val ID_EMPLOYEE_DEDUCTION_LIMIT = View.generateViewId()
 
     // Дефолтные значения 2024 года
     private val DEFAULT_FIXED_PREMIUM = 49_500.0
@@ -47,6 +50,7 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
     private val DEFAULT_USN_RATE_6 = 6.0
     private val DEFAULT_USN_RATE_15 = 15.0
     private val DEFAULT_PATENT_RATE = 6.0
+    private val DEFAULT_EMPLOYEE_DEDUCTION_LIMIT = 50.0 // НОВОЕ: 50% по умолчанию
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -151,8 +155,14 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         )
 
         addLabel("Есть наёмные сотрудники?")
-        val hasEmployeesOptions = arrayOf("Нет (можно уменьшить налог на 100% взносов)", "Да (максимум 50% от налога)")
+        val hasEmployeesOptions = arrayOf("Нет (можно уменьшить налог на 100% взносов)", "Да (лимит см. ниже)")
         binding.layoutDynamicFields.addView(addSpinner(hasEmployeesOptions, ID_HAS_EMPLOYEES))
+
+        // НОВОЕ: Редактируемый лимит для сотрудников
+        addLabel("Лимит уменьшения налога при сотрудниках (%):")
+        binding.layoutDynamicFields.addView(
+            addEditText(DEFAULT_EMPLOYEE_DEDUCTION_LIMIT.toString(), ID_EMPLOYEE_DEDUCTION_LIMIT, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        )
 
         val spinnerMode = binding.layoutDynamicFields.findViewById<Spinner>(ID_USN_MODE)
         spinnerMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -182,8 +192,14 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         )
 
         addLabel("Есть наёмные сотрудники?")
-        val hasEmployeesOptions = arrayOf("Нет (можно уменьшить налог на 100% взносов)", "Да (максимум 50% от налога)")
+        val hasEmployeesOptions = arrayOf("Нет (можно уменьшить налог на 100% взносов)", "Да (лимит см. ниже)")
         binding.layoutDynamicFields.addView(addSpinner(hasEmployeesOptions, ID_HAS_EMPLOYEES))
+
+        // НОВОЕ: Редактируемый лимит для сотрудников
+        addLabel("Лимит уменьшения налога при сотрудниках (%):")
+        binding.layoutDynamicFields.addView(
+            addEditText(DEFAULT_EMPLOYEE_DEDUCTION_LIMIT.toString(), ID_EMPLOYEE_DEDUCTION_LIMIT, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        )
     }
 
     private fun addLabel(text: String) {
@@ -216,7 +232,6 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         }
     }
 
-    // Вспомогательная функция для безопасного получения значения с дефолтом
     private fun getDoubleValue(id: Int, defaultValue: Double): Double {
         val editText = binding.layoutDynamicFields.findViewById<EditText>(id)
         val value = editText.text.toString().toDoubleOrNull()
@@ -235,7 +250,6 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         val income = binding.layoutDynamicFields.findViewById<EditText>(ID_INCOME).text.toString().toDoubleOrNull()
         if (income == null || income < 0) return showError("Введите корректный доход >= 0")
 
-        // Читаем редактируемые параметры
         val fixedPremium = getDoubleValue(ID_FIXED_PREMIUM, DEFAULT_FIXED_PREMIUM)
         val additionalPercent = getDoubleValue(ID_ADDITIONAL_PERCENT, DEFAULT_ADDITIONAL_PERCENT)
         val premiumThreshold = getDoubleValue(ID_PREMIUM_THRESHOLD, DEFAULT_PREMIUM_THRESHOLD)
@@ -284,6 +298,9 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         val mode = binding.layoutDynamicFields.findViewById<Spinner>(ID_USN_MODE).selectedItem.toString()
         val insurancePremium = getDoubleValue(ID_INSURANCE_PREMIUM, 49_500.0)
         val hasEmployees = binding.layoutDynamicFields.findViewById<Spinner>(ID_HAS_EMPLOYEES).selectedItem.toString().contains("Да")
+        
+        // НОВОЕ: Читаем редактируемый лимит
+        val employeeDeductionLimit = getDoubleValue(ID_EMPLOYEE_DEDUCTION_LIMIT, DEFAULT_EMPLOYEE_DEDUCTION_LIMIT)
 
         val usnRate6 = getDoubleValue(ID_USN_RATE_6, DEFAULT_USN_RATE_6)
         val usnRate15 = getDoubleValue(ID_USN_RATE_15, DEFAULT_USN_RATE_15)
@@ -318,7 +335,9 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
             }
         }
 
-        val maxDeduction = if (hasEmployees) tax * 0.5 else tax
+        // НОВОЕ: Используем редактируемый лимит вместо жёсткого 50%
+        val maxDeductionPercent = if (hasEmployees) employeeDeductionLimit / 100.0 else 1.0
+        val maxDeduction = tax * maxDeductionPercent
         val deduction = minOf(insurancePremium, maxDeduction)
         val taxToPay = tax - deduction
 
@@ -333,8 +352,8 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
             appendLine("= Начисленный налог: ${currencyFormat.format(tax)}")
             appendLine("= Страховые взносы: ${currencyFormat.format(insurancePremium)}")
             appendLine("= Уменьшение на взносы: ${currencyFormat.format(deduction)}")
-            if (hasEmployees && insurancePremium > tax * 0.5) {
-                appendLine("=   (лимит 50% из-за сотрудников)")
+            if (hasEmployees && insurancePremium > tax * maxDeductionPercent) {
+                appendLine("=   (лимит ${employeeDeductionLimit.toInt()}% из-за сотрудников)")
             }
             appendLine("----------------------------------------")
             appendLine("= ИТОГ к уплате за год: ${currencyFormat.format(taxToPay)}")
@@ -352,10 +371,15 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         val insurancePremium = getDoubleValue(ID_INSURANCE_PREMIUM, 49_500.0)
         val hasEmployees = binding.layoutDynamicFields.findViewById<Spinner>(ID_HAS_EMPLOYEES).selectedItem.toString().contains("Да")
         val patentRate = getDoubleValue(ID_PATENT_RATE, DEFAULT_PATENT_RATE)
+        
+        // НОВОЕ: Читаем редактируемый лимит
+        val employeeDeductionLimit = getDoubleValue(ID_EMPLOYEE_DEDUCTION_LIMIT, DEFAULT_EMPLOYEE_DEDUCTION_LIMIT)
 
         val patentCost = potentialIncome * (patentRate / 100.0)
 
-        val maxDeduction = if (hasEmployees) patentCost * 0.5 else patentCost
+        // НОВОЕ: Используем редактируемый лимит вместо жёсткого 50%
+        val maxDeductionPercent = if (hasEmployees) employeeDeductionLimit / 100.0 else 1.0
+        val maxDeduction = patentCost * maxDeductionPercent
         val deduction = minOf(insurancePremium, maxDeduction)
         val patentToPay = patentCost - deduction
 
@@ -366,8 +390,8 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
             appendLine("= Стоимость патента (${patentRate}%): ${currencyFormat.format(patentCost)}")
             appendLine("= Страховые взносы: ${currencyFormat.format(insurancePremium)}")
             appendLine("= Уменьшение на взносы: ${currencyFormat.format(deduction)}")
-            if (hasEmployees && insurancePremium > patentCost * 0.5) {
-                appendLine("=   (лимит 50% из-за сотрудников)")
+            if (hasEmployees && insurancePremium > patentCost * maxDeductionPercent) {
+                appendLine("=   (лимит ${employeeDeductionLimit.toInt()}% из-за сотрудников)")
             }
             appendLine("----------------------------------------")
             appendLine("= ИТОГ к уплате за год: ${currencyFormat.format(patentToPay)}")
@@ -385,4 +409,4 @@ class IpTaxCalculatorActivity : AppCompatActivity() {
         super.onDestroy()
         _binding = null
     }
-} 
+}
