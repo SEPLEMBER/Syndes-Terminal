@@ -22,13 +22,17 @@ class NTRActivity : AppCompatActivity() {
 
     private fun setupInputListener() {
         binding.etCommandInput.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_GO) {
+            // Ловим Go, Done и обычный Enter (Unspecified) для максимальной совместимости с разными клавиатурами
+            if (actionId == EditorInfo.IME_ACTION_GO || 
+                actionId == EditorInfo.IME_ACTION_DONE || 
+                actionId == EditorInfo.IME_ACTION_UNSPECIFIED) {
+                
                 val input = binding.etCommandInput.text.toString().trim()
                 if (input.isNotEmpty()) {
                     executeCommand(input)
                     binding.etCommandInput.text.clear()
                 }
-                true
+                true // Событие обработано
             } else {
                 false
             }
@@ -107,9 +111,9 @@ class NTRActivity : AppCompatActivity() {
         val cleanText = currentText.removeSuffix("> ОЖИДАНИЕ ВВОДА_")
         binding.tvTerminalOutput.text = "$cleanText$text\n> ОЖИДАНИЕ ВВОДА_"
         
-        // Автопрокрутка вниз
+        // Самый надежный способ автопрокрутки TextView вниз на всех устройствах
         binding.tvTerminalOutput.post {
-            binding.tvTerminalOutput.parent.requestChildFocus(binding.tvTerminalOutput, binding.tvTerminalOutput)
+            binding.tvTerminalOutput.setSelection(binding.tvTerminalOutput.text.length)
         }
     }
 
