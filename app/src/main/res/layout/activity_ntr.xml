@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollView"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0A0A0A"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
-    <LinearLayout
+    <!-- Область вывода: занимает всё свободное место и прокручивается -->
+    <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
         android:padding="20dp">
 
         <TextView
@@ -21,21 +23,28 @@
             android:textColor="#00FFFF"
             android:textSize="16sp"
             android:lineSpacingMultiplier="1.3" />
+    </ScrollView>
 
-        <EditText
-            android:id="@+id/etCommandInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@null"
-            android:fontFamily="monospace"
-            android:hint="Введите номер и нажмите Enter"
-            android:textColor="#00FFFF"
-            android:textColorHint="#00AAAA"
-            android:inputType="number"
-            android:maxLength="2"
-            android:imeOptions="actionGo"
-            android:importantForAutofill="no" />
+    <!-- Неоновый разделитель -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#00AAAA" />
 
-    </LinearLayout>
-</ScrollView>
+    <!-- Поле ввода: зафиксировано снизу, не уезжает при прокрутке -->
+    <EditText
+        android:id="@+id/etCommandInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:fontFamily="monospace"
+        android:hint="Введите номер и нажмите Enter"
+        android:textColor="#00FFFF"
+        android:textColorHint="#00AAAA"
+        android:inputType="number"
+        android:maxLength="2"
+        android:imeOptions="actionGo"
+        android:importantForAutofill="no"
+        android:padding="16dp" />
+
+</LinearLayout>
