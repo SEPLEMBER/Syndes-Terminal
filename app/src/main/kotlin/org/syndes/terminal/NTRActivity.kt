@@ -2,7 +2,11 @@ package org.syndes.terminal
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
@@ -14,10 +18,14 @@ class NTRActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityNtrBinding
 
+    // Цветовая палитра терминала
+    private val colorDefault = Color.parseColor("#00AAAA") // Приглушенный циан для истории
+    private val colorSuccess = Color.parseColor("#00FFFF") // Яркий неон для успеха/ввода
+    private val colorError = Color.parseColor("#FF3333")   // Терминальный красный для ошибок
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Запрет скриншотов и записи экрана (безопасность)
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -31,17 +39,18 @@ class NTRActivity : AppCompatActivity() {
 
     private fun setupInputListener() {
         binding.etCommandInput.setOnEditorActionListener { _, actionId, _ ->
-            // Ловим Go, Done и обычный Enter (Unspecified) для максимальной совместимости
             if (actionId == EditorInfo.IME_ACTION_GO || 
                 actionId == EditorInfo.IME_ACTION_DONE || 
                 actionId == EditorInfo.IME_ACTION_UNSPECIFIED) {
                 
                 val input = binding.etCommandInput.text.toString().trim()
                 if (input.isNotEmpty()) {
+                    // Легкая вибрация при нажатии Enter (тактильный отклик)
+                    binding.etCommandInput.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     executeCommand(input)
                     binding.etCommandInput.text.clear()
                 }
-                true // Событие обработано
+                true
             } else {
                 false
             }
@@ -49,13 +58,11 @@ class NTRActivity : AppCompatActivity() {
     }
 
     private fun executeCommand(command: String) {
-        // Убираем ведущие нули, если пользователь ввел "01" вместо "1"
         val cmd = command.trimStart('0')
         
-        appendToTerminal("Выполнение: $cmd...")
+        appendToTerminal("Выполнение: $cmd...", colorSuccess)
 
         when (cmd) {
-            // --- ВНУТРЕННИЕ МОДУЛИ (org.syndes.terminal) ---
             "1" -> launchInternal(InterestCalculatorActivity::class.java, "Финансовые проценты")
             "2" -> launchInternal(FinBudgetActivity::class.java, "Бюджет")
             "3" -> launchInternal(TaxCalculatorActivity::class.java, "Налоги")
@@ -64,7 +71,6 @@ class NTRActivity : AppCompatActivity() {
             "6" -> launchInternal(FinIncomeActivity::class.java, "Доход")
             "7" -> launchInternal(TravelTimeActivity::class.java, "Скорость x Расстояние")
 
-            // --- ВНЕШНИЕ МОДУЛИ (es.zelliot.epubeditor) ---
             "8" -> launchExternal("es.zelliot.epubeditor.EfficiencyActivity", "RSI, DUI")
             "9" -> launchExternal("es.zelliot.epubeditor.RushActivity", "Rush")
             "10" -> launchExternal("es.zelliot.epubeditor.PurMoneyActivity", "PurMoney")
@@ -84,7 +90,8 @@ class NTRActivity : AppCompatActivity() {
             "24" -> launchExternal("es.zelliot.epubeditor.UniversalCalcActivity", "Прочее 2")
 
             else -> {
-                appendToTerminal("ОШИБКА: Модуль '$cmd' не найден.")
+                appendToTerminal("ОШИБКА: Модуль '$cmd' не найден.", colorError)
+                binding.etCommandInput.performHapticFeedback(HapticFeedbackConstants.REJECT) // Двойная вибрация при ошибке
                 showToast("Неверная команда")
             }
         }
@@ -93,9 +100,10 @@ class NTRActivity : AppCompatActivity() {
     private fun launchInternal(activityClass: Class<*>, moduleName: String) {
         try {
             startActivity(Intent(this, activityClass))
-            appendToTerminal("УСПЕХ: Запущен внутренний модуль '$moduleName'.")
+            appendToTerminal("УСПЕХ: Запущен внутренний модуль '$moduleName'.", colorSuccess)
         } catch (e: Exception) {
-            appendToTerminal("ОШИБКА: Внутренний модуль '$moduleName' не реализован или упал.")
+            appendToTerminal("ОШИБКА: Внутренний модуль '$moduleName' не реализован или упал.", colorError)
+            binding.etCommandInput.performHapticFeedback(HapticFeedbackConstants.REJECT)
             showToast("Ошибка запуска модуля")
         }
     }
@@ -107,19 +115,35 @@ class NTRActivity : AppCompatActivity() {
 
         try {
             startActivity(intent)
-            appendToTerminal("УСПЕХ: Передан контроль внешнему модулю '$moduleName'.")
+            appendToTerminal("УСПЕХ: Передан контроль внешнему модулю '$moduleName'.", colorSuccess)
         } catch (e: ActivityNotFoundException) {
-            appendToTerminal("ОШИБКА: Внешнее приложение '$packageName' не найдено.")
+            appendToTerminal("ОШИБКА: Внешнее приложение '$packageName' не найдено.", colorError)
+            binding.etCommandInput.performHapticFeedback(HapticFeedbackConstants.REJECT)
             showToast("Приложение не установлено")
         }
     }
 
-    private fun appendToTerminal(text: String) {
+    /**
+     * Добавляет текст в терминал с заданным цветом.
+     * Старый текст становится приглушенным, новый выделяется.
+     */
+    private fun appendToTerminal(text: String, color: Int) {
         val currentText = binding.tvTerminalOutput.text.toString()
         val cleanText = currentText.removeSuffix("> ОЖИДАНИЕ ВВОДА_")
-        binding.tvTerminalOutput.text = "$cleanText$text\n> ОЖИДАНИЕ ВВОДА_"
         
-        // Надёжная прокрутка ScrollView в самый низ
+        // Создаем Spannable для раскраски новой строки
+        val newLine = "$text\n"
+        val spannable = SpannableString(newLine)
+        spannable.setSpan(ForegroundColorSpan(color), 0, newLine.length, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE)
+        
+        // Собираем итоговый текст: старый (приглушенный) + новый (цветной) + курсор
+        val finalText = SpannableString("$cleanText$spannable> ОЖИДАНИЕ ВВОДА_")
+        
+        // Делаем весь старый текст приглушенным для эффекта "уходящей в историю" консоли
+        finalText.setSpan(ForegroundColorSpan(colorDefault), 0, cleanText.length, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE)
+        
+        binding.tvTerminalOutput.text = finalText
+        
         binding.scrollView.post {
             binding.scrollView.fullScroll(View.FOCUS_DOWN)
         }
