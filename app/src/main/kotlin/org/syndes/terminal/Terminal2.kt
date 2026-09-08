@@ -55,6 +55,9 @@ class Terminal2 {
                 "1" -> if (args.firstOrNull()?.lowercase() == "flashlight") cmdFlashlight(context, listOf("1")) else null
                 "0" -> if (args.firstOrNull()?.lowercase() == "flashlight") cmdFlashlight(context, listOf("0")) else null
                 
+                // УПРАВЛЕНИЕ АЛИАСАМИ
+                "sydalias" -> cmdSydAlias(context, args)
+                
                 else -> null // Команда не найдена, возвращаем null
             }
         } catch (e: Exception) {
@@ -355,6 +358,60 @@ class Terminal2 {
             "Error: Permission denied for flashlight/camera"
         } catch (e: Exception) {
             "Error: Flashlight operation failed - ${e.message}"
+        }
+    }
+
+    // =====================================================================
+    // УПРАВЛЕНИЕ АЛИАСАМИ (НОВОЕ)
+    // =====================================================================
+
+    /**
+     * sydalias list               - показать все алиасы
+     * sydalias create NAME=CMD    - создать/обновить алиас
+     * sydalias remove NAME        - удалить алиас
+     */
+    private fun cmdSydAlias(context: Context, args: List<String>): String {
+        if (args.isEmpty()) {
+            return "Usage:\n" +
+                   "  sydalias list\n" +
+                   "  sydalias create <name>=<command>\n" +
+                   "  sydalias remove <name>"
+        }
+
+        val action = args[0].lowercase()
+        
+        return when (action) {
+            "list" -> {
+                val list = AliasManager.getFormattedList(context)
+                if (list.startsWith("No aliases")) "Info: $list" else list
+            }
+            "create" -> {
+                if (args.size < 2) return "Error: Usage: sydalias create <name>=<command>"
+                // Объединяем остаток аргументов, на случай если в команде есть пробелы
+                val assignment = args.drop(1).joinToString(" ") 
+                val parts = assignment.split("=", limit = 2)
+                
+                if (parts.size < 2) return "Error: Missing '=' in assignment. Example: mcpe=am start..."
+                
+                val name = parts[0].trim()
+                val command = parts[1].trim()
+                
+                if (AliasManager.addAlias(context, name, command)) {
+                    "Info: Alias '$name' created/updated successfully."
+                } else {
+                    "Error: Failed to save alias. Check name and command."
+                }
+            }
+            "remove", "delete" -> {
+                if (args.size < 2) return "Error: Usage: sydalias remove <name>"
+                val name = args[1].trim()
+                if (AliasManager.removeAlias(context, name)) {
+                    "Info: Alias '$name' removed."
+                } else {
+                    "Error: Alias '$name' not found."
+                }
+            }
+            else -> "Error: Unknown sydalias action. Use 'list', 'create', or 'remove'."
         }
     }
 }
