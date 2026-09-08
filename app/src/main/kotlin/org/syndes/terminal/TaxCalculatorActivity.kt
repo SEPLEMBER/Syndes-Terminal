@@ -9,7 +9,7 @@ import org.syndes.terminal.databinding.ActivityTaxCalculatorBinding
 import java.text.NumberFormat
 import java.util.Locale
 
-class TaxCalculatorActivity : AppCompatActivity() {
+class TaxCalculatorActivity : AppCompatActivity()
 
     private var _binding: ActivityTaxCalculatorBinding? = null
     private val binding get() = _binding!!
@@ -148,9 +148,18 @@ class TaxCalculatorActivity : AppCompatActivity() {
 
     private fun calculateNds() {
         val views = binding.layoutDynamicFields
+        
+        // ПРАВИЛЬНЫЕ ИНДЕКСЫ:
+        // 0: Label "Сумма (₽):"
+        // 1: EditText суммы
+        // 2: Label "Ставка НДС:"
+        // 3: Spinner ставки
+        // 4: Label "Операция:"
+        // 5: Spinner операции
+        
         val etAmount = views.getChildAt(1) as EditText
-        val spinnerRate = views.getChildAt(2) as Spinner
-        val spinnerOperation = views.getChildAt(4) as Spinner
+        val spinnerRate = views.getChildAt(3) as Spinner
+        val spinnerOperation = views.getChildAt(5) as Spinner
 
         val amountStr = etAmount.text.toString()
         val amount = amountStr.toDoubleOrNull()
@@ -194,6 +203,11 @@ class TaxCalculatorActivity : AppCompatActivity() {
 
     private fun calculateNdfResident() {
         val views = binding.layoutDynamicFields
+        
+        // ПРАВИЛЬНЫЕ ИНДЕКСЫ:
+        // 0: Label "Годовой доход..."
+        // 1: EditText дохода
+        
         val etIncome = views.getChildAt(1) as EditText
         val incomeStr = etIncome.text.toString()
         val income = incomeStr.toDoubleOrNull()
@@ -254,6 +268,12 @@ class TaxCalculatorActivity : AppCompatActivity() {
 
     private fun calculateNdfNonResident() {
         val views = binding.layoutDynamicFields
+        
+        // ПРАВИЛЬНЫЕ ИНДЕКСЫ:
+        // 0: Label "Годовой доход..."
+        // 1: EditText дохода
+        // 2: Label "Примечание..."
+        
         val etIncome = views.getChildAt(1) as EditText
         val incomeStr = etIncome.text.toString()
         val income = incomeStr.toDoubleOrNull()
@@ -278,6 +298,13 @@ class TaxCalculatorActivity : AppCompatActivity() {
 
     private fun calculateOtherIncome() {
         val views = binding.layoutDynamicFields
+        
+        // ПРАВИЛЬНЫЕ ИНДЕКСЫ:
+        // 0: Label "Тип дохода:"
+        // 1: Spinner типа дохода
+        // 2: Label "Сумма дохода (₽):"
+        // 3: EditText суммы
+        
         val spinnerIncomeType = views.getChildAt(1) as Spinner
         val etAmount = views.getChildAt(3) as EditText
 
@@ -319,4 +346,4 @@ class TaxCalculatorActivity : AppCompatActivity() {
         super.onDestroy()
         _binding = null
     }
-}
+} 
