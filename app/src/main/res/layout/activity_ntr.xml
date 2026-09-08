@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0A0A0A"
@@ -11,7 +12,6 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- Заголовок терминала -->
         <TextView
             android:id="@+id/tvTerminalOutput"
             android:layout_width="match_parent"
@@ -22,7 +22,6 @@
             android:textSize="16sp"
             android:lineSpacingMultiplier="1.3" />
 
-        <!-- Поле ввода -->
         <EditText
             android:id="@+id/etCommandInput"
             android:layout_width="match_parent"
