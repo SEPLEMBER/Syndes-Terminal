@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A0A"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Заголовок терминала -->
+        <TextView
+            android:id="@+id/tvTerminalOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="NUMTRAP v3.16\n\n[ МОДУЛИ ]\n01. Финансовые проценты\n02. Бюджет\n03. Налоги\n04. УСН, Патент, Страхование ИП\n05. Бюджет сетевого трафика\n06. Доход\n07. Скорость x Расстояние\n08. RSI, DUI (External)\n09. Rush (External)\n10. PurMoney (External)\n11. Запасы и потребление (External)\n12. Распределение ресурсов (External)\n13. Управление ресурсами (External)\n14. Динамический эффект (External)\n15. Накопительный эффект (External)\n16. Спокойствие при обретении ресурса (External)\n17. Гео (External)\n18. Даты (External)\n19. CPI + ROI (External)\n20. Покупка товара (External)\n21. Затраты времени (External)\n22. Скорость шага (External)\n23. Прочее 1 (External)\n24. Прочее 2 (External)\n\n> ОЖИДАНИЕ ВВОДА_"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:lineSpacingMultiplier="1.3" />
+
+        <!-- Поле ввода -->
+        <EditText
+            android:id="@+id/etCommandInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@null"
+            android:fontFamily="monospace"
+            android:hint="Введите номер и нажмите Enter"
+            android:textColor="#00FFFF"
+            android:textColorHint="#00AAAA"
+            android:inputType="number"
+            android:maxLength="2"
+            android:imeOptions="actionGo"
+            android:importantForAutofill="no" />
+
+    </LinearLayout>
+</ScrollView>
