@@ -23,6 +23,7 @@ class TaxCalculatorActivity : AppCompatActivity() {
 
     // Уникальные ID для динамических View (гарантия отсутствия ошибок ClassCastException)
     private val ID_AMOUNT = View.generateViewId()
+    private val ID_PERIOD = View.generateViewId()         // <-- НОВОЕ: Период (месяц/год)
     private val ID_RATE_SPINNER = View.generateViewId()
     private val ID_CUSTOM_RATE = View.generateViewId()
     private val ID_OPERATION_SPINNER = View.generateViewId()
@@ -76,7 +77,6 @@ class TaxCalculatorActivity : AppCompatActivity() {
         val spinnerRate = addSpinner(rates, ID_RATE_SPINNER)
         binding.layoutDynamicFields.addView(spinnerRate)
 
-        // Поле для своей ставки (скрыто по умолчанию)
         val etCustomRate = addEditText("Например, 5", ID_CUSTOM_RATE, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL)
         etCustomRate.visibility = View.GONE
         binding.layoutDynamicFields.addView(etCustomRate)
@@ -94,8 +94,13 @@ class TaxCalculatorActivity : AppCompatActivity() {
     }
 
     private fun setupNdfFields() {
-        addLabel("Годовой доход до налогообложения (₽):")
-        binding.layoutDynamicFields.addView(addEditText("2400000", ID_AMOUNT, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL))
+        addLabel("Сумма дохода (₽):")
+        binding.layoutDynamicFields.addView(addEditText("100000", ID_AMOUNT, android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL))
+
+        // <-- НОВОЕ: Выбор периода (по умолчанию "В месяц")
+        addLabel("Период дохода:")
+        val periods = arrayOf("В месяц", "В год")
+        binding.layoutDynamicFields.addView(addSpinner(periods, ID_PERIOD))
 
         addLabel("Режим расчёта:")
         val modes = arrayOf("Прогрессивная шкала (2024: 13%-22%)", "Своя ставка (%) (напр. 4%, 6%, 13%, 30%)")
@@ -205,32 +210,52 @@ class TaxCalculatorActivity : AppCompatActivity() {
     }
 
     private fun calculateNdf() {
-        val income = binding.layoutDynamicFields.findViewById<EditText>(ID_AMOUNT).text.toString().toDoubleOrNull()
-        if (income == null || income <= 0) return showError("Введите корректный доход > 0")
+        val incomeInput = binding.layoutDynamicFields.findViewById<EditText>(ID_AMOUNT).text.toString().toDoubleOrNull()
+        if (incomeInput == null || incomeInput <= 0) return showError("Введите корректный доход > 0")
 
+        val period = binding.layoutDynamicFields.findViewById<Spinner>(ID_PERIOD).selectedItem.toString()
         val mode = binding.layoutDynamicFields.findViewById<Spinner>(ID_RATE_SPINNER).selectedItem.toString()
-        var tax = 0.0
+
+        // Приводим всё к годовому доходу для корректного расчёта прогрессивной шкалы
+        val annualIncome = if (period == "В месяц") incomeInput * 12.0 else incomeInput
+        
+        var annualTax = 0.0
         var description = ""
 
         if (mode == "Своя ставка (%) (напр. 4%, 6%, 13%, 30%)") {
             val custom = binding.layoutDynamicFields.findViewById<EditText>(ID_CUSTOM_RATE).text.toString().toDoubleOrNull()
             if (custom == null || custom < 0 || custom > 100) return showError("Введите ставку от 0 до 100")
-            tax = income * (custom / 100.0)
+            annualTax = annualIncome * (custom / 100.0)
             description = "НДФЛ (Своя ставка ${custom}%)"
         } else {
             description = "НДФЛ (Прогрессивная шкала 2024)"
-            var remaining = income
-            val b1 = minOf(remaining, 2_400_000.0); tax += b1 * 0.13; remaining -= b1
-            if (remaining > 0) { val b2 = minOf(remaining, 2_600_000.0); tax += b2 * 0.15; remaining -= b2 }
-            if (remaining > 0) { val b3 = minOf(remaining, 15_000_000.0); tax += b3 * 0.18; remaining -= b3 }
-            if (remaining > 0) { val b4 = minOf(remaining, 30_000_000.0); tax += b4 * 0.20; remaining -= b4 }
-            if (remaining > 0) { tax += remaining * 0.22 }
+            var remaining = annualIncome
+            val b1 = minOf(remaining, 2_400_000.0); annualTax += b1 * 0.13; remaining -= b1
+            if (remaining > 0) { val b2 = minOf(remaining, 2_600_000.0); annualTax += b2 * 0.15; remaining -= b2 }
+            if (remaining > 0) { val b3 = minOf(remaining, 15_000_000.0); annualTax += b3 * 0.18; remaining -= b3 }
+            if (remaining > 0) { val b4 = minOf(remaining, 30_000_000.0); annualTax += b4 * 0.20; remaining -= b4 }
+            if (remaining > 0) { annualTax += remaining * 0.22 }
         }
 
-        val afterTax = income - tax
-        val effectiveRate = (tax / income) * 100
+        // Делим обратно на 12 для отображения месячных значений
+        val monthlyIncome = annualIncome / 12.0
+        val monthlyTax = annualTax / 12.0
+        val monthlyAfterTax = monthlyIncome - monthlyTax
+        val annualAfterTax = annualIncome - annualTax
+        val effectiveRate = (annualTax / annualIncome) * 100
 
-        binding.tvResult.text = "= $description:\n= Доход: ${currencyFormat.format(income)}\n= Налог: ${currencyFormat.format(tax)}\n= На руки: ${currencyFormat.format(afterTax)}\n= Эффективная ставка: ${String.format(Locale.US, "%.2f", effectiveRate)}%"
+        val resultText = buildString {
+            appendLine("= $description:")
+            appendLine("= Доход в месяц: ${currencyFormat.format(monthlyIncome)}")
+            appendLine("= Налог в месяц: ${currencyFormat.format(monthlyTax)}")
+            appendLine("= На руки в месяц: ${currencyFormat.format(monthlyAfterTax)}")
+            appendLine("----------------------------------------")
+            appendLine("= Доход в год: ${currencyFormat.format(annualIncome)}")
+            appendLine("= Налог в год: ${currencyFormat.format(annualTax)}")
+            appendLine("= На руки в год: ${currencyFormat.format(annualAfterTax)}")
+            appendLine("= Эффективная ставка: ${String.format(Locale.US, "%.2f", effectiveRate)}%")
+        }
+        binding.tvResult.text = resultText.trimEnd()
     }
 
     private fun calculateOtherIncome() {
