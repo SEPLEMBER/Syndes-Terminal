@@ -3,6 +3,7 @@ package org.syndes.terminal
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -13,79 +14,83 @@ import android.text.style.StyleSpan
 import android.view.Gravity
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import org.syndes.terminal.databinding.ActivityFairDistributionBinding
 
 class FairDistributionActivity : AppCompatActivity() {
 
-    private val MAX_PARTICIPANTS_FOR_UI = 500
-    private lateinit var binding: ActivityFairDistributionBinding
-    private var lastResultText: String = ""
-    
-    // Флаг для защиты от повторных нажатий без изменения свойств View
-    private var isProcessing: Boolean = false
+    private val MAX_PARTICIPANTS = 500
+    private var isProcessing = false
+    private var lastResultText = ""
+
+    private lateinit var etTotal: EditText
+    private lateinit var etParticipants: EditText
+    private lateinit var etItem: EditText
+    private lateinit var etParticipantName: EditText
+    private lateinit var btnCalc: TextView
+    private lateinit var btnCopy: TextView
+    private lateinit var container: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityFairDistributionBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_fair_distribution)
 
-        val inputBackground = createInputBackground()
-        val buttonBackground = createButtonBackground()
+        // 1. Получаем ссылки напрямую через findViewById (без ViewBinding)
+        etTotal = findViewById(R.id.etTotalAmount)
+        etParticipants = findViewById(R.id.etParticipantsCount)
+        etItem = findViewById(R.id.etItemName)
+        etParticipantName = findViewById(R.id.etParticipantName)
+        btnCalc = findViewById(R.id.btnCalculate)
+        btnCopy = findViewById(R.id.btnCopy)
+        container = findViewById(R.id.resultsContainer)
 
-        binding.etTotalAmount.background = inputBackground
-        binding.etParticipantsCount.background = inputBackground
-        binding.etItemName.background = inputBackground
-        binding.etParticipantName.background = inputBackground
+        applyStyles()
+
+        btnCalc.setOnClickListener { calculate() }
+        btnCopy.setOnClickListener { copyResult() }
+    }
+
+    private fun applyStyles() {
+        val inputBg = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(Color.parseColor("#121212"))
+            setStroke(4, Color.parseColor("#00E5FF"))
+            cornerRadius = 16f
+        }
         
-        binding.btnCalculate.background = buttonBackground
-        binding.btnCopy.background = buttonBackground
-
-        binding.btnCalculate.setOnClickListener {
-            calculateDistribution()
-        }
-
-        binding.btnCopy.setOnClickListener {
-            copyToClipboard()
-        }
-    }
-
-    private fun createInputBackground(): GradientDrawable {
-        return GradientDrawable().apply {
+        val btnBg = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            setColor(0xFF121212.toInt())
-            setStroke(4, 0xFF00E5FF.toInt())
+            setColor(Color.parseColor("#00E5FF"))
             cornerRadius = 16f
         }
+
+        etTotal.background = inputBg
+        etParticipants.background = inputBg
+        etItem.background = inputBg
+        etParticipantName.background = inputBg
+        
+        btnCalc.background = btnBg
+        btnCopy.background = btnBg
     }
 
-    private fun createButtonBackground(): GradientDrawable {
-        return GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            setColor(0xFF00E5FF.toInt())
-            cornerRadius = 16f
-        }
-    }
-
-    private fun calculateDistribution() {
-        // Если уже идёт обработка, игнорируем нажатие
+    private fun calculate() {
         if (isProcessing) return
         isProcessing = true
 
-        val totalStr = binding.etTotalAmount.text.toString().trim()
-        val participantsStr = binding.etParticipantsCount.text.toString().trim()
+        val totalStr = etTotal.text.toString().trim()
+        val partStr = etParticipants.text.toString().trim()
 
-        if (totalStr.isEmpty() || participantsStr.isEmpty()) {
+        if (totalStr.isEmpty() || partStr.isEmpty()) {
             showToast("Заполните числовые поля")
             isProcessing = false
             return
         }
 
         val total = totalStr.toLongOrNull()
-        val participants = participantsStr.toIntOrNull()
+        val parts = partStr.toIntOrNull()
 
         if (total == null || total < 0) {
             showToast("Некорректное общее количество")
@@ -93,162 +98,152 @@ class FairDistributionActivity : AppCompatActivity() {
             return
         }
 
-        if (participants == null || participants <= 0) {
+        if (parts == null || parts <= 0) {
             showToast("Количество участников должно быть > 0")
             isProcessing = false
             return
         }
 
-        if (participants > MAX_PARTICIPANTS_FOR_UI) {
-            showToast("Максимум $MAX_PARTICIPANTS_FOR_UI участников для отображения")
+        if (parts > MAX_PARTICIPANTS) {
+            showToast("Максимум $MAX_PARTICIPANTS участников")
             isProcessing = false
             return
         }
 
         hideKeyboard()
 
-        val itemName = binding.etItemName.text.toString().trim().takeIf { it.isNotEmpty() } ?: "единиц"
-        val participantName = binding.etParticipantName.text.toString().trim().takeIf { it.isNotEmpty() } ?: "участников"
-        val capParticipant = participantName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        val itemName = etItem.text.toString().trim().ifEmpty { "единиц" }
+        val pName = etParticipantName.text.toString().trim().ifEmpty { "участников" }
+        val capPName = pName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
-        val baseAmount = total / participants
-        val remainder = (total % participants).toInt()
+        val base = total / parts
+        val rem = (total % parts).toInt()
 
-        val participantsWithExtra = remainder
-        val participantsWithBase = participants - remainder
+        val fmtTotal = formatNum(total)
+        val fmtBase = formatNum(base)
+        val fmtBasePlus = formatNum(base + 1)
 
-        val fmtTotal = formatNumber(total)
-        val fmtBase = formatNumber(baseAmount)
-        val fmtBasePlus = formatNumber(baseAmount + 1)
+        container.removeAllViews()
+        
+        // 2. Блокировка кнопки через явные методы setClickable() и setAlpha()
+        // Это обходит любые баги компилятора с val/var
+        btnCalc.setClickable(false)
+        btnCalc.setAlpha(0.5f)
 
-        binding.resultsContainer.removeAllViews()
-
-        val copyBuilder = StringBuilder()
-        copyBuilder.append("РАСПРЕДЕЛЕНИЕ РЕСУРСОВ\n")
-        copyBuilder.append("Всего: $fmtTotal $itemName\n")
-        copyBuilder.append("Участников: $participants\n\n")
+        val copyText = StringBuilder()
+        copyText.append("РАСПРЕДЕЛЕНИЕ РЕСУРСОВ\n")
+        copyText.append("Всего: $fmtTotal $itemName\n")
+        copyText.append("Участников: $parts\n\n")
 
         val spannable = SpannableStringBuilder()
         
-        if (remainder == 0) {
-            spannable.append("Итого: $fmtTotal $itemName делятся абсолютно поровну между $participants $participantName.")
-            copyBuilder.append("Результат: Абсолютно поровну по $fmtBase $itemName.\n")
+        if (rem == 0) {
+            spannable.append("Итого: $fmtTotal $itemName делятся абсолютно поровну между $parts $pName.")
+            copyText.append("Результат: Абсолютно поровну по $fmtBase $itemName.\n")
         } else {
-            spannable.append("Поскольку $fmtTotal не делится нацело на $participants, образуется остаток $remainder.\n\n")
+            spannable.append("Поскольку $fmtTotal не делится нацело на $parts, образуется остаток $rem.\n\n")
             spannable.append("Для справедливого распределения:\n")
             
-            appendColoredText(spannable, "• $participantsWithExtra $participantName получат по ", "#4DD0E1")
-            appendColoredText(spannable, "$fmtBasePlus $itemName\n", "#00FFFF", true)
+            addSpan(spannable, "• $rem $pName получат по ", "#4DD0E1")
+            addSpan(spannable, "$fmtBasePlus $itemName\n", "#00FFFF", true)
             
-            appendColoredText(spannable, "• $participantsWithBase $participantName получат по ", "#4DD0E1")
-            appendColoredText(spannable, "$fmtBase $itemName", "#00FFFF", true)
+            addSpan(spannable, "• ${parts - rem} $pName получат по ", "#4DD0E1")
+            addSpan(spannable, "$fmtBase $itemName", "#00FFFF", true)
 
-            copyBuilder.append("Результат:\n")
-            copyBuilder.append("- $participantsWithExtra $participantName получат по $fmtBasePlus $itemName\n")
-            copyBuilder.append("- $participantsWithBase $participantName получат по $fmtBase $itemName\n")
+            copyText.append("Результат:\n")
+            copyText.append("- $rem $pName получат по $fmtBasePlus $itemName\n")
+            copyText.append("- ${parts - rem} $pName получат по $fmtBase $itemName\n")
         }
 
-        addResultText(spannable)
-        addSpacer(32)
-
-        val detailsTitle = TextView(this).apply {
-            text = "ДЕТАЛИЗАЦИЯ:"
-            textSize = 14f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(0xFF4DD0E1.toInt())
-            setLetterSpacing(0.1f)
-            setPadding(0, 0, 0, 16)
-            isTextSelectable = true
-        }
-        binding.resultsContainer.addView(detailsTitle)
-        copyBuilder.append("\nДЕТАЛИЗАЦИЯ:\n")
-
-        for (i in 1..participants) {
-            val amount = if (i <= remainder) baseAmount + 1 else baseAmount
-            val isExtra = i <= remainder
-            val fmtAmount = formatNumber(amount)
-
-            val rowLayout = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(32, 32, 32, 32)
-                setBackgroundColor(if (i % 2 == 0) 0xFF121212.toInt() else 0xFF0A0A0A.toInt())
-            }
-
-            val participantText = TextView(this).apply {
-                text = "$capParticipant №$i:"
-                textSize = 15f
-                setTextColor(0xFF80DEEA.toInt())
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                isTextSelectable = true
-            }
-
-            val amountText = TextView(this).apply {
-                text = "$fmtAmount $itemName"
-                textSize = 16f
-                setTypeface(null, if (isExtra) Typeface.BOLD else Typeface.NORMAL)
-                setTextColor(if (isExtra) 0xFF00FFFF.toInt() else 0xFF00E5FF.toInt())
-                gravity = Gravity.END
-                isTextSelectable = true
-            }
-
-            rowLayout.addView(participantText)
-            rowLayout.addView(amountText)
-            binding.resultsContainer.addView(rowLayout)
-
-            copyBuilder.append("$capParticipant №$i: $fmtAmount $itemName\n")
-        }
-
-        lastResultText = copyBuilder.toString()
-
-        // Снимаем флаг блокировки и показываем кнопку копирования через метод (не через присваивание)
-        isProcessing = false
-        binding.btnCopy.setVisibility(View.VISIBLE)
-        
-        binding.resultsContainer.post {
-            binding.resultsContainer.requestFocus()
-        }
-    }
-
-    private fun copyToClipboard() {
-        if (lastResultText.isEmpty()) return
-        
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("Распределение ресурсов", lastResultText)
-        clipboard.setPrimaryClip(clip)
-        
-        showToast("Результат скопирован в буфер обмена")
-    }
-
-    private fun appendColoredText(builder: SpannableStringBuilder, text: String, colorHex: String, isBold: Boolean = false) {
-        val start = builder.length
-        builder.append(text)
-        val end = builder.length
-        
-        builder.setSpan(ForegroundColorSpan(android.graphics.Color.parseColor(colorHex)), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        if (isBold) {
-            builder.setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-    }
-
-    private fun addResultText(spannable: SpannableStringBuilder) {
-        val textView = TextView(this).apply {
+        val resultTv = TextView(this).apply {
             textSize = 16f
             setLineSpacing(0f, 1.4f)
             text = spannable
             isTextSelectable = true
-            setTextIsSelectable(true)
         }
-        binding.resultsContainer.addView(textView)
+        container.addView(resultTv)
+        
+        addSpacer(32)
+
+        val titleTv = TextView(this).apply {
+            text = "ДЕТАЛИЗАЦИЯ:"
+            textSize = 14f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.parseColor("#4DD0E1"))
+            setLetterSpacing(0.1f)
+            setPadding(0, 0, 0, 16)
+            isTextSelectable = true
+        }
+        container.addView(titleTv)
+        copyText.append("\nДЕТАЛИЗАЦИЯ:\n")
+
+        for (i in 1..parts) {
+            val amount = if (i <= rem) base + 1 else base
+            val isExtra = i <= rem
+            val fmtAmt = formatNum(amount)
+
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(32, 32, 32, 32)
+                setBackgroundColor(if (i % 2 == 0) Color.parseColor("#121212") else Color.parseColor("#0A0A0A"))
+            }
+
+            val leftTv = TextView(this).apply {
+                text = "$capPName №$i:"
+                textSize = 15f
+                setTextColor(Color.parseColor("#80DEEA"))
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                isTextSelectable = true
+            }
+
+            val rightTv = TextView(this).apply {
+                text = "$fmtAmt $itemName"
+                textSize = 16f
+                setTypeface(null, if (isExtra) Typeface.BOLD else Typeface.NORMAL)
+                setTextColor(if (isExtra) Color.parseColor("#00FFFF") else Color.parseColor("#00E5FF"))
+                gravity = Gravity.END
+                isTextSelectable = true
+            }
+
+            row.addView(leftTv)
+            row.addView(rightTv)
+            container.addView(row)
+
+            copyText.append("$capPName №$i: $fmtAmt $itemName\n")
+        }
+
+        lastResultText = copyText.toString()
+
+        // 3. Разблокировка кнопки и показ второй кнопки через setVisibility()
+        btnCalc.setClickable(true)
+        btnCalc.setAlpha(1.0f)
+        btnCopy.setVisibility(View.VISIBLE)
+        
+        container.post { container.requestFocus() }
+        isProcessing = false
+    }
+
+    private fun copyResult() {
+        if (lastResultText.isEmpty()) return
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("Распределение", lastResultText))
+        showToast("Скопировано в буфер обмена")
+    }
+
+    private fun addSpan(builder: SpannableStringBuilder, text: String, colorHex: String, bold: Boolean = false) {
+        val start = builder.length
+        builder.append(text)
+        builder.setSpan(ForegroundColorSpan(Color.parseColor(colorHex)), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if (bold) builder.setSpan(StyleSpan(Typeface.BOLD), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 
     private fun addSpacer(heightPx: Int) {
-        val view = View(this).apply {
+        container.addView(View(this).apply {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, heightPx)
-        }
-        binding.resultsContainer.addView(view)
+        })
     }
 
-    private fun formatNumber(number: Number): String {
+    private fun formatNum(number: Number): String {
         return String.format("%,d", number.toLong()).replace(',', ' ')
     }
 
@@ -260,7 +255,7 @@ class FairDistributionActivity : AppCompatActivity() {
         }
     }
 
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    private fun showToast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 }
