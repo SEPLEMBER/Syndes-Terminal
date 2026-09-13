@@ -116,14 +116,18 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 setBackgroundColor(0x1100FFFF.toInt())
             }
 
-            val titleRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            val titleRow = LinearLayout(this).apply { 
+                orientation = LinearLayout.HORIZONTAL 
+            }
+            
+            // ИСПРАВЛЕНО: typeface вместо textStyle, и layoutWeight через LayoutParams
             val title = TextView(this).apply {
                 text = "Фильтр $i:"
                 setTextColor(0xFF00FFFF.toInt())
                 textSize = 14f
-                textStyle = android.graphics.Typeface.BOLD
-                layoutWeight = 1f
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
             }
+            title.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             
             val cbRegex = CheckBox(this).apply {
                 text = "Regex"
@@ -246,8 +250,6 @@ class AnalyzerToolActivity : AppCompatActivity() {
                         continue
                     }
                     if (isTextFile(child.name, child.type)) {
-                        // Выносим в отдельную suspend-функцию для возможности использования withTimeoutOrNull
-                        // Но чтобы не усложнять рекурсию, вызовем процессинг здесь, а таймаут внутри
                         processFileSafe(child, activeSlots, results)
                     }
                 }
@@ -266,7 +268,6 @@ class AnalyzerToolActivity : AppCompatActivity() {
             val input = contentResolver.openInputStream(doc.uri) ?: return
             val data = BufferedInputStream(input).use { it.readBytes() }
             
-            // ИСПРАВЛЕНО: Лимит снижен до 10 МБ для безопасности памяти
             if (data.size > 10 * 1024 * 1024) return 
             if (data.take(100).contains(0.toByte())) return
 
@@ -282,7 +283,6 @@ class AnalyzerToolActivity : AppCompatActivity() {
                     val includeTerms = slot.etInclude.text.toString().split(",").map { it.trim() }.filter { it.isNotEmpty() }
                     val excludeTerms = slot.etExclude.text.toString().split(",").map { it.trim().lowercase() }.filter { it.isNotEmpty() }
                     
-                    // 1. Проверка исключений
                     var isExcluded = false
                     for (exTerm in excludeTerms) {
                         if (lineLower.contains(exTerm)) {
@@ -292,7 +292,6 @@ class AnalyzerToolActivity : AppCompatActivity() {
                     }
                     if (isExcluded) continue
 
-                    // 2. Проверка включений
                     var isMatch = false
                     var confidence = 0
                     val matchedTerms = mutableListOf<String>()
@@ -302,7 +301,6 @@ class AnalyzerToolActivity : AppCompatActivity() {
                             val combinedRegex = includeTerms.joinToString("|") { "($it)" }
                             val regex = Regex(combinedRegex, RegexOption.IGNORE_CASE)
                             
-                            // ИСПРАВЛЕНО: Защита от ReDoS (таймаут 100 мс)
                             val matchResult = kotlinx.coroutines.runBlocking {
                                 withTimeoutOrNull(100) {
                                     regex.find(line)
@@ -322,7 +320,8 @@ class AnalyzerToolActivity : AppCompatActivity() {
                             continue
                         }
                     } else {
-                        val requireAll = slot.cbAll.isChecked
+                        // ИСПРАВЛЕНО: cbAllWords вместо cbAll
+                        val requireAll = slot.cbAllWords.isChecked 
                         
                         if (requireAll) {
                             var allFound = true
@@ -407,14 +406,14 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 layoutParams = params
             }
 
+            // ИСПРАВЛЕНО: typeface вместо textStyle
             val header = TextView(this).apply {
                 text = "📄 ${res.fileName} | Строка: ${res.lineNumber} | ${res.slotName} | Точность: ${res.confidence}%"
                 setTextColor(0xFF00FFFF.toInt())
                 textSize = 13f
-                textStyle = android.graphics.Typeface.BOLD
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
             }
 
-            // ИСПРАВЛЕНО: Добавлен импорт SpannableStringBuilder
             val spannableBuilder = SpannableStringBuilder()
             
             for (ctxLine in res.contextBlock) {
@@ -452,11 +451,12 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 }
             }
 
+            // ИСПРАВЛЕНО: setTextIsSelectable(true) вместо textIsSelectable = true
             val tvContext = TextView(this).apply {
                 text = spannableBuilder
                 textSize = 13f
                 typeface = android.graphics.Typeface.MONOSPACE
-                textIsSelectable = true
+                setTextIsSelectable(true)
                 setPadding(12, 12, 12, 12)
                 setBackgroundColor(0x00000000)
             }
@@ -510,10 +510,8 @@ class AnalyzerToolActivity : AppCompatActivity() {
                     }
                 }
                 
-                // ИСПРАВЛЕНО: Убран избыточный withContext(Dispatchers.Main), так как lifecycleScope.launch уже в Main
                 Toast.makeText(this@AnalyzerToolActivity, "✅ Отчет успешно сохранен!", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                // ИСПРАВЛЕНО: Убран избыточный withContext(Dispatchers.Main)
                 Toast.makeText(this@AnalyzerToolActivity, "❌ Ошибка сохранения: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
@@ -541,10 +539,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
         Toast.makeText(this, "Весь отчет скопирован!", Toast.LENGTH_LONG).show()
     }
 
-    // --- Математика нечеткого поиска ---
-    
     private fun calculateJaccard(s1: String, s2: String): Double {
-        // ИСПРАВЛЕНО: Ограничение количества слов для защиты от зависания
         val maxWords = 100
         val set1 = s1.split(Regex("\\W+")).filter { it.isNotEmpty() }.take(maxWords).toSet()
         val set2 = s2.split(Regex("\\W+")).filter { it.isNotEmpty() }.take(maxWords).toSet()
@@ -554,7 +549,6 @@ class AnalyzerToolActivity : AppCompatActivity() {
     }
 
     private fun calculateLevenshteinSimilarity(s1: String, s2: String): Double {
-        // ИСПРАВЛЕНО: Ограничение длины строк для предотвращения OutOfMemoryError (OOM)
         val maxAllowedLength = 500
         val s1Truncated = if (s1.length > maxAllowedLength) s1.take(maxAllowedLength) else s1
         val s2Truncated = if (s2.length > maxAllowedLength) s2.take(maxAllowedLength) else s2
