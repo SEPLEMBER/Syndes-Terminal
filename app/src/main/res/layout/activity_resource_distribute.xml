@@ -21,6 +21,42 @@
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 
+        <!-- Тип распределения -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Тип распределения:"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <RadioGroup
+            android:id="@+id/rgDistributionType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <RadioButton
+                android:id="@+id/rbEqual"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Равномерное"
+                android:textColor="#00FFFF"
+                android:buttonTint="#00FFFF"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/rbWeighted"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Весовое"
+                android:textColor="#00FFFF"
+                android:buttonTint="#00FFFF" />
+        </RadioGroup>
+
         <!-- Общее количество -->
         <TextView
             android:layout_width="wrap_content"
@@ -69,6 +105,30 @@
             android:textColorHint="#008B8B"
             android:backgroundTint="#00FFFF"
             android:layout_marginBottom="4dp" />
+
+        <!-- Веса участников (появляется при выборе "Весовое") -->
+        <TextView
+            android:id="@+id/tvWeightsLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Веса участников (через запятую):"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/etWeights"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Например: 1,2,1,3,1 (сумма весов не важна)"
+            android:inputType="text"
+            android:textColor="#00FFFF"
+            android:textColorHint="#008B8B"
+            android:backgroundTint="#00FFFF"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone" />
             
         <TextView 
             android:id="@+id/errParticipants" 
@@ -76,20 +136,46 @@
             android:layout_height="wrap_content" 
             android:textColor="#FF3333" 
             android:textSize="12sp" 
+            android:layout_marginBottom="16dp" 
+            android:visibility="gone" />
+
+        <TextView 
+            android:id="@+id/errWeights" 
+            android:layout_width="match_parent" 
+            android:layout_height="wrap_content" 
+            android:textColor="#FF3333" 
+            android:textSize="12sp" 
             android:layout_marginBottom="24dp" 
             android:visibility="gone" />
 
-        <!-- Кнопка расчета -->
-        <Button
-            android:id="@+id/btnDistribute"
+        <!-- Кнопки действий -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Распределить"
-            android:textColor="#0A0A0A"
-            android:backgroundTint="#00FFFF"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:layout_marginBottom="24dp" />
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/btnDistribute"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Распределить"
+                android:textColor="#0A0A0A"
+                android:backgroundTint="#00FFFF"
+                android:textStyle="bold"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/btnClear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✕"
+                android:textColor="#00FFFF"
+                android:backgroundTint="#1A1A1A"
+                android:textSize="20sp"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
 
         <!-- Результат -->
         <TextView
@@ -97,10 +183,59 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#00FFFF"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:typeface="monospace"
             android:textIsSelectable="true"
-            android:lineSpacingExtra="6dp" />
+            android:lineSpacingExtra="6dp"
+            android:visibility="gone" />
+
+        <!-- Кнопка копирования -->
+        <Button
+            android:id="@+id/btnCopyResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📋 Скопировать результат"
+            android:textColor="#00FFFF"
+            android:backgroundTint="#1A1A1A"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+        <!-- История -->
+        <TextView
+            android:id="@+id/tvHistoryLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📜 История расчётов:"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#00FFFF"
+            android:textSize="12sp"
+            android:typeface="monospace"
+            android:textIsSelectable="true"
+            android:lineSpacingExtra="4dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnClearHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Очистить историю"
+            android:textColor="#FF3333"
+            android:backgroundTint="#1A1A1A"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
 
     </LinearLayout>
 </ScrollView>
