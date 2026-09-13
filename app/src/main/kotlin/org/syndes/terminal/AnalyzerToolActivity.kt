@@ -51,12 +51,13 @@ class AnalyzerToolActivity : AppCompatActivity() {
         val etName: EditText,
         val etInclude: EditText,
         val etExclude: EditText,
-        val cbAllWords: CheckBox, // Искать ВСЕ слова (AND) или ЛЮБОЕ (OR)
-        val cbRegex: CheckBox     // Режим регулярных выражений
+        val cbAllWords: CheckBox,
+        val cbRegex: CheckBox
     )
     private val slots = mutableListOf<AnalyticSlot>()
 
-    private data class ContextLine(val text: String, val isMatch: Boolean, val matchedTerms: List<String> = emptyList())
+    // ИСПРАВЛЕНО: isMatchLine вместо isMatch, чтобы подсвечивать несколько строк блока
+    private data class ContextLine(val text: String, val isMatchLine: Boolean, val matchedTerms: List<String> = emptyList())
     private data class AnalysisResult(
         val fileName: String,
         val lineNumber: Int,
@@ -109,6 +110,16 @@ class AnalyzerToolActivity : AppCompatActivity() {
     }
 
     private fun setupSlots() {
+        // ОБНОВЛЕНО: Информационное сообщение теперь объясняет работу с переносами и дефисами
+        val infoText = TextView(this).apply {
+            text = "ℹ️ Поиск нечувствителен к регистру. `Dell-15` и `Dell 15` считаются одинаковыми. " +
+                   "Скрипт автоматически проверяет блоки по 3 строки, чтобы находить совпадения с переносами строк."
+            setTextColor(0xFFAAAAAA.toInt())
+            textSize = 12f
+            setPadding(0, 0, 0, 16)
+        }
+        llSlotsContainer.addView(infoText)
+
         for (i in 1..10) {
             val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -120,9 +131,8 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 orientation = LinearLayout.HORIZONTAL 
             }
             
-            // ИСПРАВЛЕНО: typeface вместо textStyle, и layoutWeight через LayoutParams
             val title = TextView(this).apply {
-                text = "Фильтр $i:"
+                text = "Правило $i:"
                 setTextColor(0xFF00FFFF.toInt())
                 textSize = 14f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -130,15 +140,23 @@ class AnalyzerToolActivity : AppCompatActivity() {
             title.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             
             val cbRegex = CheckBox(this).apply {
-                text = "Regex"
+                text = "Точный Regex"
                 setTextColor(0xFFFF5555.toInt())
                 textSize = 12f
+                setOnLongClickListener {
+                    Toast.makeText(context, "Использовать регулярные выражения вместо нечеткого поиска", Toast.LENGTH_SHORT).show()
+                    true
+                }
             }
             val cbAll = CheckBox(this).apply {
                 text = "Искать ВСЕ слова (AND)"
                 setTextColor(0xFF00FF00.toInt())
                 textSize = 12f
-                isChecked = true // По умолчанию строгий режим
+                isChecked = true
+                setOnLongClickListener {
+                    Toast.makeText(context, "Если включено: блок из 3-х строк должен содержать ВСЕ слова. Если выключено: достаточно ОДНОГО.", Toast.LENGTH_LONG).show()
+                    true
+                }
             }
             
             titleRow.addView(title)
@@ -146,21 +164,21 @@ class AnalyzerToolActivity : AppCompatActivity() {
             titleRow.addView(cbAll)
 
             val etName = EditText(this).apply {
-                hint = "Название (напр.: Ноутбуки Dell)"
+                hint = "Название правила (напр.: Dell Ноутбуки)"
                 setTextColor(0xFFFFFFFF.toInt())
                 setHintTextColor(0xFF666666.toInt())
                 backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FFFF.toInt())
             }
 
             val etInclude = EditText(this).apply {
-                hint = "Включить (напр.: Ноутбук, Dell, 15)"
+                hint = "ВКЛЮЧИТЬ: слова для поиска (напр.: Ноутбук, Dell, 15)"
                 setTextColor(0xFF00FF00.toInt())
                 setHintTextColor(0xFF666666.toInt())
                 backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FF00.toInt())
             }
 
             val etExclude = EditText(this).apply {
-                hint = "Исключить (напр.: б/у, ремонт)"
+                hint = "ИСКЛЮЧИТЬ: слова-фильтры (напр.: б/у, ремонт)"
                 setTextColor(0xFFFF5555.toInt())
                 setHintTextColor(0xFF666666.toInt())
                 backgroundTintList = android.content.res.ColorStateList.valueOf(0xFFFF5555.toInt())
@@ -200,7 +218,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
 
         val activeSlots = slots.filter { it.etInclude.text.toString().isNotBlank() }
         if (activeSlots.isEmpty()) {
-            Toast.makeText(this, "Заполните 'Включить' хотя бы в одном фильтре", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Заполните 'ВКЛЮЧИТЬ' хотя бы в одном правиле", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -212,7 +230,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
         }
 
         btnAnalyze.isEnabled = false
-        tvResultStatus.text = "Анализ файлов... (это может занять время)"
+        tvResultStatus.text = "Анализ файлов... (проверка блоков по 3 строки)"
         llResultsContainer.removeAllViews()
         allResults.clear()
 
@@ -274,24 +292,39 @@ class AnalyzerToolActivity : AppCompatActivity() {
             val text = String(data, Charset.forName("UTF-8"))
             val lines = text.split("\n")
 
+            // НОВАЯ ЛОГИКА: Отслеживаем последний найденный индекс, чтобы не дублировать совпадения в блоке
+            var lastMatchedIndex = -1
+
             for (i in lines.indices) {
-                val line = lines[i].trim()
-                if (line.length < 2) continue
-                val lineLower = line.lowercase()
+                // Если эта строка уже была частью успешно найденного блока, пропускаем её
+                if (i <= lastMatchedIndex) continue
+
+                // БЕРЕМ БЛОК ИЗ 3-Х СТРОК (предыдущая, текущая, следующая)
+                val startIdx = max(0, i - 1)
+                val endIdx = min(lines.size - 1, i + 1)
+                val blockLines = lines.subList(startIdx, endIdx + 1)
+                
+                // ОБЪЕДИНЯЕМ ИХ ЧЕРЕЗ ПРОБЕЛ. Это превращает перенос строки в обычный пробел!
+                val blockText = blockLines.joinToString(" ")
+                val blockTextLower = blockText.lowercase()
+
+                if (blockTextLower.trim().length < 2) continue
 
                 for (slot in activeSlots) {
                     val includeTerms = slot.etInclude.text.toString().split(",").map { it.trim() }.filter { it.isNotEmpty() }
                     val excludeTerms = slot.etExclude.text.toString().split(",").map { it.trim().lowercase() }.filter { it.isNotEmpty() }
                     
+                    // 1. ПРОВЕРКА ИСКЛЮЧЕНИЙ (теперь работает и для слов на разных строках внутри блока)
                     var isExcluded = false
                     for (exTerm in excludeTerms) {
-                        if (lineLower.contains(exTerm)) {
+                        if (blockTextLower.contains(exTerm)) {
                             isExcluded = true
                             break
                         }
                     }
                     if (isExcluded) continue
 
+                    // 2. ПРОВЕРКА ВКЛЮЧЕНИЙ
                     var isMatch = false
                     var confidence = 0
                     val matchedTerms = mutableListOf<String>()
@@ -302,9 +335,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
                             val regex = Regex(combinedRegex, RegexOption.IGNORE_CASE)
                             
                             val matchResult = kotlinx.coroutines.runBlocking {
-                                withTimeoutOrNull(100) {
-                                    regex.find(line)
-                                }
+                                withTimeoutOrNull(100) { regex.find(blockText) }
                             }
                             
                             if (matchResult != null) {
@@ -320,13 +351,12 @@ class AnalyzerToolActivity : AppCompatActivity() {
                             continue
                         }
                     } else {
-                        // ИСПРАВЛЕНО: cbAllWords вместо cbAll
                         val requireAll = slot.cbAllWords.isChecked 
                         
                         if (requireAll) {
                             var allFound = true
                             for (term in includeTerms) {
-                                if (!lineLower.contains(term.lowercase())) {
+                                if (!blockTextLower.contains(term.lowercase())) {
                                     allFound = false
                                     break
                                 }
@@ -339,8 +369,8 @@ class AnalyzerToolActivity : AppCompatActivity() {
                         } else {
                             var maxSim = 0.0
                             for (term in includeTerms) {
-                                val jaccard = calculateJaccard(lineLower, term.lowercase())
-                                val lev = calculateLevenshteinSimilarity(lineLower, term.lowercase())
+                                val jaccard = calculateJaccard(blockTextLower, term.lowercase())
+                                val lev = calculateLevenshteinSimilarity(blockTextLower, term.lowercase())
                                 val sim = (jaccard * 0.7) + (lev * 0.3)
                                 if (sim > maxSim) {
                                     maxSim = sim
@@ -355,22 +385,28 @@ class AnalyzerToolActivity : AppCompatActivity() {
                     }
 
                     if (isMatch) {
-                        val start = max(0, i - 3)
-                        val end = min(lines.size - 1, i + 3)
+                        // Запоминаем, что до этого индекса мы уже нашли совпадение, чтобы не спамить отчет
+                        lastMatchedIndex = endIdx 
+
+                        // Формируем красивый контекст: 3 строки до блока и 3 после
+                        val contextStart = max(0, startIdx - 3)
+                        val contextEnd = min(lines.size - 1, endIdx + 3)
                         val contextBlock = mutableListOf<ContextLine>()
                         
-                        for (j in start..end) {
-                            contextBlock.add(ContextLine(lines[j], j == i, if (j == i) matchedTerms else emptyList()))
+                        for (j in contextStart..contextEnd) {
+                            // Подсвечиваем все строки, которые вошли в совпавший блок
+                            val isPartOfMatch = j in startIdx..endIdx
+                            contextBlock.add(ContextLine(lines[j], isPartOfMatch, if (isPartOfMatch) matchedTerms else emptyList()))
                         }
 
                         results.add(AnalysisResult(
                             fileName = doc.name ?: "Unknown",
-                            lineNumber = i + 1,
-                            slotName = slot.etName.text.toString().ifBlank { "Фильтр ${slot.id}" },
+                            lineNumber = startIdx + 1, // Показываем номер первой строки блока
+                            slotName = slot.etName.text.toString().ifBlank { "Правило ${slot.id}" },
                             confidence = min(confidence, 100),
                             contextBlock = contextBlock
                         ))
-                        break
+                        break // Переходим к следующей строке после блока
                     }
                 }
             }
@@ -406,9 +442,8 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 layoutParams = params
             }
 
-            // ИСПРАВЛЕНО: typeface вместо textStyle
             val header = TextView(this).apply {
-                text = "📄 ${res.fileName} | Строка: ${res.lineNumber} | ${res.slotName} | Точность: ${res.confidence}%"
+                text = "📄 ${res.fileName} | Строки: ${res.lineNumber}+ | ${res.slotName} | Точность: ${res.confidence}%"
                 setTextColor(0xFF00FFFF.toInt())
                 textSize = 13f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -417,7 +452,8 @@ class AnalyzerToolActivity : AppCompatActivity() {
             val spannableBuilder = SpannableStringBuilder()
             
             for (ctxLine in res.contextBlock) {
-                if (ctxLine.isMatch) {
+                // Если строка является частью совпавшего блока, ставим маркер
+                if (ctxLine.isMatchLine) {
                     spannableBuilder.append("▶ ")
                 } else {
                     spannableBuilder.append("  ")
@@ -427,7 +463,8 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 spannableBuilder.append(ctxLine.text)
                 spannableBuilder.append("\n")
 
-                if (ctxLine.isMatch && ctxLine.matchedTerms.isNotEmpty()) {
+                // Подсветка терминов только внутри строк, которые являются частью совпадения
+                if (ctxLine.isMatchLine && ctxLine.matchedTerms.isNotEmpty()) {
                     val lowerText = ctxLine.text.lowercase()
                     for (term in ctxLine.matchedTerms) {
                         val lowerTerm = term.lowercase()
@@ -451,7 +488,6 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 }
             }
 
-            // ИСПРАВЛЕНО: setTextIsSelectable(true) вместо textIsSelectable = true
             val tvContext = TextView(this).apply {
                 text = spannableBuilder
                 textSize = 13f
@@ -492,10 +528,10 @@ class AnalyzerToolActivity : AppCompatActivity() {
                         appendLine("========================================\n")
                         
                         for (res in allResults) {
-                            appendLine("ФАЙЛ: ${res.fileName} | Строка: ${res.lineNumber} | Фильтр: ${res.slotName} (${res.confidence}%)")
+                            appendLine("ФАЙЛ: ${res.fileName} | Строки: ${res.lineNumber}+ | Правило: ${res.slotName} (${res.confidence}%)")
                             appendLine("---")
                             for (ctxLine in res.contextBlock) {
-                                if (ctxLine.isMatch) {
+                                if (ctxLine.isMatchLine) {
                                     appendLine("▶ ${ctxLine.text}")
                                 } else {
                                     appendLine("  ${ctxLine.text}")
@@ -528,9 +564,9 @@ class AnalyzerToolActivity : AppCompatActivity() {
         if (allResults.isEmpty()) return
         val textToCopy = buildString {
             for (res in allResults) {
-                appendLine("${res.fileName}:${res.lineNumber} | ${res.slotName} | ${res.confidence}%")
+                appendLine("${res.fileName}:${res.lineNumber}+ | ${res.slotName} | ${res.confidence}%")
                 for (ctxLine in res.contextBlock) {
-                    appendLine(if (ctxLine.isMatch) "▶ ${ctxLine.text}" else "  ${ctxLine.text}")
+                    appendLine(if (ctxLine.isMatchLine) "▶ ${ctxLine.text}" else "  ${ctxLine.text}")
                 }
                 appendLine()
             }
