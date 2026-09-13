@@ -95,6 +95,12 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="true" />
 
+        
+                                <activity
+            android:name=".FairDistributionActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="true" />
+
                                         <activity
             android:name=".IpTaxCalculatorActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
