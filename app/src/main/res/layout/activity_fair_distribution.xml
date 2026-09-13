@@ -98,7 +98,8 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="32dp" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <!-- Кнопка расчёта как TextView -->
+        <TextView
             android:id="@+id/btnCalculate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -107,11 +108,14 @@
             android:textStyle="bold"
             android:textSize="16sp"
             android:textColor="#0A0A0A"
-            android:backgroundTint="#00E5FF"
+            android:gravity="center"
             android:padding="16dp"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:clickable="true"
+            android:focusable="true" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <!-- Кнопка копирования как TextView -->
+        <TextView
             android:id="@+id/btnCopy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -120,8 +124,12 @@
             android:textStyle="bold"
             android:textSize="14sp"
             android:textColor="#00E5FF"
+            android:gravity="center"
+            android:padding="16dp"
             android:visibility="gone"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="24dp"
+            android:clickable="true"
+            android:focusable="true" />
 
         <View
             android:layout_width="match_parent"
