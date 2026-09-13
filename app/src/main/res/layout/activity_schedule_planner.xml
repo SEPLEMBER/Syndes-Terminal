@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A0A"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Планировщик смен (CSP)"
+            android:textColor="#00FFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Количество слотов -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Количество слотов (дней/смен):"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etSlots"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Например: 5"
+            android:inputType="number"
+            android:textColor="#00FFFF"
+            android:textColorHint="#008B8B"
+            android:backgroundTint="#00FFFF"
+            android:layout_marginBottom="4dp" />
+
+        <TextView 
+            android:id="@+id/errSlots" 
+            android:layout_width="match_parent" 
+            android:layout_height="wrap_content" 
+            android:textColor="#FF3333" 
+            android:textSize="12sp" 
+            android:layout_marginBottom="16dp" 
+            android:visibility="gone" />
+
+        <!-- Участники -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Участники (через запятую):"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etParticipants"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Например: Анна, Борис, Виктор"
+            android:inputType="text"
+            android:textColor="#00FFFF"
+            android:textColorHint="#008B8B"
+            android:backgroundTint="#00FFFF"
+            android:layout_marginBottom="4dp" />
+
+        <TextView 
+            android:id="@+id/errParticipants" 
+            android:layout_width="match_parent" 
+            android:layout_height="wrap_content" 
+            android:textColor="#FF3333" 
+            android:textSize="12sp" 
+            android:layout_marginBottom="16dp" 
+            android:visibility="gone" />
+
+        <!-- Максимум смен -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Максимум смен на участника:"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etMaxShifts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Например: 3 (пусто = без лимита)"
+            android:inputType="number"
+            android:textColor="#00FFFF"
+            android:textColorHint="#008B8B"
+            android:backgroundTint="#00FFFF"
+            android:layout_marginBottom="4dp" />
+
+        <TextView 
+            android:id="@+id/errMaxShifts" 
+            android:layout_width="match_parent" 
+            android:layout_height="wrap_content" 
+            android:textColor="#FF3333" 
+            android:textSize="12sp" 
+            android:layout_marginBottom="16dp" 
+            android:visibility="gone" />
+
+        <!-- Запрещённые пары -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Запрещённые пары (через запятую, разделитель пар: тире):"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etForbiddenPairs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Например: Анна-Борис, Виктор-Григорий"
+            android:inputType="text"
+            android:textColor="#00FFFF"
+            android:textColorHint="#008B8B"
+            android:backgroundTint="#00FFFF"
+            android:layout_marginBottom="4dp" />
+
+        <TextView 
+            android:id="@+id/errForbiddenPairs" 
+            android:layout_width="match_parent" 
+            android:layout_height="wrap_content" 
+            android:textColor="#FF3333" 
+            android:textSize="12sp" 
+            android:layout_marginBottom="16dp" 
+            android:visibility="gone" />
+
+        <!-- Обязательные участники -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Обязательные (должны быть хотя бы раз):"
+            android:textColor="#00FFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etRequired"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Например: Анна, Виктор"
+            android:inputType="text"
+            android:textColor="#00FFFF"
+            android:textColorHint="#008B8B"
+            android:backgroundTint="#00FFFF"
+            android:layout_marginBottom="4dp" />
+
+        <TextView 
+            android:id="@+id/errRequired" 
+            android:layout_width="match_parent" 
+            android:layout_height="wrap_content" 
+            android:textColor="#FF3333" 
+            android:textSize="12sp" 
+            android:layout_marginBottom="24dp" 
+            android:visibility="gone" />
+
+        <!-- Кнопки -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/btnSolve"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Найти решение"
+                android:textColor="#0A0A0A"
+                android:backgroundTint="#00FFFF"
+                android:textStyle="bold"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/btnClear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✕"
+                android:textColor="#00FFFF"
+                android:backgroundTint="#1A1A1A"
+                android:textSize="20sp"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- Результат -->
+        <TextView
+            android:id="@+id/tvResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#00FFFF"
+            android:textSize="14sp"
+            android:typeface="monospace"
+            android:textIsSelectable="true"
+            android:lineSpacingExtra="6dp"
+            android:visibility="gone" />
+
+        <!-- Кнопка копирования -->
+        <Button
+            android:id="@+id/btnCopyResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📋 Скопировать решение"
+            android:textColor="#00FFFF"
+            android:backgroundTint="#1A1A1A"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</ScrollView>
