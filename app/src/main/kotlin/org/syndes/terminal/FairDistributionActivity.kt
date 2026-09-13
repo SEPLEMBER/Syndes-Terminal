@@ -30,7 +30,7 @@ class FairDistributionActivity : AppCompatActivity() {
         binding = ActivityFairDistributionBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Применяем неоновый стиль ко всем EditText и кнопке копирования
+        // Применяем неоновый стиль ко всем полям ввода и кнопке копирования
         val neonBackground = createNeonBackground()
         binding.etTotalAmount.background = neonBackground
         binding.etParticipantsCount.background = neonBackground
@@ -51,8 +51,8 @@ class FairDistributionActivity : AppCompatActivity() {
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             setColor(0xFF121212.toInt()) // Тёмный фон полей
-            setStroke(4, 0xFF00E5FF.toInt()) // Неоновая рамка (2dp * 2 для плотности)
-            cornerRadius = 16f // 8dp * 2 для плотности
+            setStroke(4, 0xFF00E5FF.toInt()) // Неоновая рамка (толщина в пикселях)
+            cornerRadius = 16f // Скругление углов
         }
     }
 
@@ -100,7 +100,9 @@ class FairDistributionActivity : AppCompatActivity() {
         val fmtBasePlus = formatNumber(baseAmount + 1)
 
         binding.resultsContainer.removeAllViews()
-        binding.btnCalculate.isEnabled = false
+        
+        // Исправлено: используем методы вместо прямого присваивания
+        binding.btnCalculate.setEnabled(false)
         binding.btnCalculate.alpha = 0.5f
 
         val copyBuilder = StringBuilder()
@@ -150,7 +152,7 @@ class FairDistributionActivity : AppCompatActivity() {
 
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
-                setPadding(32, 32, 32, 32) // 16dp * 2
+                setPadding(32, 32, 32, 32)
                 setBackgroundColor(if (i % 2 == 0) 0xFF121212.toInt() else 0xFF0A0A0A.toInt())
             }
 
@@ -180,9 +182,12 @@ class FairDistributionActivity : AppCompatActivity() {
 
         lastResultText = copyBuilder.toString()
 
-        binding.btnCalculate.isEnabled = true
+        // Исправлено: возвращаем активность кнопки через методы
+        binding.btnCalculate.setEnabled(true)
         binding.btnCalculate.alpha = 1.0f
-        binding.btnCopy.visibility = View.VISIBLE
+        
+        // Исправлено: изменение видимости через метод
+        binding.btnCopy.setVisibility(View.VISIBLE)
         
         binding.resultsContainer.post {
             binding.resultsContainer.requestFocus()
