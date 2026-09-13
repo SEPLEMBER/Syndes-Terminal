@@ -56,14 +56,14 @@ class AnalyzerToolActivity : AppCompatActivity() {
     )
     private val slots = mutableListOf<AnalyticSlot>()
 
-    // ИСПРАВЛЕНО: isMatchLine вместо isMatch, чтобы подсвечивать несколько строк блока
-    private data class ContextLine(val text: String, val isMatchLine: Boolean, val matchedTerms: List<String> = emptyList())
+    // Теперь контекст - это список абзацев, а не строк
+    private data class ContextParagraph(val text: String, val isMatchBlock: Boolean, val matchedTerms: List<String> = emptyList())
     private data class AnalysisResult(
         val fileName: String,
-        val lineNumber: Int,
+        val blockIndex: Int,
         val slotName: String,
         val confidence: Int,
-        val contextBlock: List<ContextLine>
+        val contextBlock: List<ContextParagraph>
     )
 
     private val allResults = mutableListOf<AnalysisResult>()
@@ -110,10 +110,10 @@ class AnalyzerToolActivity : AppCompatActivity() {
     }
 
     private fun setupSlots() {
-        // ОБНОВЛЕНО: Информационное сообщение теперь объясняет работу с переносами и дефисами
         val infoText = TextView(this).apply {
-            text = "ℹ️ Поиск нечувствителен к регистру. `Dell-15` и `Dell 15` считаются одинаковыми. " +
-                   "Скрипт автоматически проверяет блоки по 3 строки, чтобы находить совпадения с переносами строк."
+            text = "ℹ️ Поиск нечувствителен к регистру. `Dell-15` и `Dell 15` одинаковы. " +
+                   "Скрипт анализирует смысловые абзацы (разделенные пустой строкой или ---), " +
+                   "игнорируя точные дубликаты."
             setTextColor(0xFFAAAAAA.toInt())
             textSize = 12f
             setPadding(0, 0, 0, 16)
@@ -127,9 +127,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 setBackgroundColor(0x1100FFFF.toInt())
             }
 
-            val titleRow = LinearLayout(this).apply { 
-                orientation = LinearLayout.HORIZONTAL 
-            }
+            val titleRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
             
             val title = TextView(this).apply {
                 text = "Правило $i:"
@@ -143,20 +141,12 @@ class AnalyzerToolActivity : AppCompatActivity() {
                 text = "Точный Regex"
                 setTextColor(0xFFFF5555.toInt())
                 textSize = 12f
-                setOnLongClickListener {
-                    Toast.makeText(context, "Использовать регулярные выражения вместо нечеткого поиска", Toast.LENGTH_SHORT).show()
-                    true
-                }
             }
             val cbAll = CheckBox(this).apply {
                 text = "Искать ВСЕ слова (AND)"
                 setTextColor(0xFF00FF00.toInt())
                 textSize = 12f
                 isChecked = true
-                setOnLongClickListener {
-                    Toast.makeText(context, "Если включено: блок из 3-х строк должен содержать ВСЕ слова. Если выключено: достаточно ОДНОГО.", Toast.LENGTH_LONG).show()
-                    true
-                }
             }
             
             titleRow.addView(title)
@@ -164,14 +154,14 @@ class AnalyzerToolActivity : AppCompatActivity() {
             titleRow.addView(cbAll)
 
             val etName = EditText(this).apply {
-                hint = "Название правила (напр.: Dell Ноутбуки)"
+                hint = "Название (напр.: Dell Ноутбуки)"
                 setTextColor(0xFFFFFFFF.toInt())
                 setHintTextColor(0xFF666666.toInt())
                 backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FFFF.toInt())
             }
 
             val etInclude = EditText(this).apply {
-                hint = "ВКЛЮЧИТЬ: слова для поиска (напр.: Ноутбук, Dell, 15)"
+                hint = "ВКЛЮЧИТЬ: слова (напр.: Ноутбук, Dell, 15)"
                 setTextColor(0xFF00FF00.toInt())
                 setHintTextColor(0xFF666666.toInt())
                 backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF00FF00.toInt())
@@ -230,7 +220,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
         }
 
         btnAnalyze.isEnabled = false
-        tvResultStatus.text = "Анализ файлов... (проверка блоков по 3 строки)"
+        tvResultStatus.text = "Анализ файлов... (поиск по смысловым абзацам)"
         llResultsContainer.removeAllViews()
         allResults.clear()
 
@@ -242,7 +232,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 btnAnalyze.isEnabled = true
                 allResults.addAll(results)
-                tvResultStatus.text = "Найдено совпадений: ${results.size}"
+                tvResultStatus.text = "Найдено уникальных совпадений: ${results.size}"
                 btnCopyAll.isEnabled = results.isNotEmpty()
                 btnExportFile.isEnabled = results.isNotEmpty()
                 displayResults(results)
@@ -290,34 +280,28 @@ class AnalyzerToolActivity : AppCompatActivity() {
             if (data.take(100).contains(0.toByte())) return
 
             val text = String(data, Charset.forName("UTF-8"))
-            val lines = text.split("\n")
+            
+            // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Разбиваем на смысловые абзацы (по двойному переносу или разделителю ---)
+            val paragraphs = text.split(Regex("\n\\s*\n|\\n---\\n")).map { it.trim() }.filter { it.isNotEmpty() }
 
-            // НОВАЯ ЛОГИКА: Отслеживаем последний найденный индекс, чтобы не дублировать совпадения в блоке
-            var lastMatchedIndex = -1
+            // Набор для дедупликации (храним нормализованный текст найденных абзацев)
+            val seenBlocks = mutableSetOf<String>()
 
-            for (i in lines.indices) {
-                // Если эта строка уже была частью успешно найденного блока, пропускаем её
-                if (i <= lastMatchedIndex) continue
+            for ((index, para) in paragraphs.withIndex()) {
+                // Заменяем внутренние переносы строк на пробелы для единого анализа абзаца
+                val cleanPara = para.replace("\n", " ").trim()
+                val cleanParaLower = cleanPara.lowercase()
 
-                // БЕРЕМ БЛОК ИЗ 3-Х СТРОК (предыдущая, текущая, следующая)
-                val startIdx = max(0, i - 1)
-                val endIdx = min(lines.size - 1, i + 1)
-                val blockLines = lines.subList(startIdx, endIdx + 1)
-                
-                // ОБЪЕДИНЯЕМ ИХ ЧЕРЕЗ ПРОБЕЛ. Это превращает перенос строки в обычный пробел!
-                val blockText = blockLines.joinToString(" ")
-                val blockTextLower = blockText.lowercase()
-
-                if (blockTextLower.trim().length < 2) continue
+                if (cleanParaLower.length < 2) continue
 
                 for (slot in activeSlots) {
                     val includeTerms = slot.etInclude.text.toString().split(",").map { it.trim() }.filter { it.isNotEmpty() }
                     val excludeTerms = slot.etExclude.text.toString().split(",").map { it.trim().lowercase() }.filter { it.isNotEmpty() }
                     
-                    // 1. ПРОВЕРКА ИСКЛЮЧЕНИЙ (теперь работает и для слов на разных строках внутри блока)
+                    // 1. ПРОВЕРКА ИСКЛЮЧЕНИЙ
                     var isExcluded = false
                     for (exTerm in excludeTerms) {
-                        if (blockTextLower.contains(exTerm)) {
+                        if (cleanParaLower.contains(exTerm)) {
                             isExcluded = true
                             break
                         }
@@ -335,7 +319,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
                             val regex = Regex(combinedRegex, RegexOption.IGNORE_CASE)
                             
                             val matchResult = kotlinx.coroutines.runBlocking {
-                                withTimeoutOrNull(100) { regex.find(blockText) }
+                                withTimeoutOrNull(100) { regex.find(cleanPara) }
                             }
                             
                             if (matchResult != null) {
@@ -356,7 +340,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
                         if (requireAll) {
                             var allFound = true
                             for (term in includeTerms) {
-                                if (!blockTextLower.contains(term.lowercase())) {
+                                if (!cleanParaLower.contains(term.lowercase())) {
                                     allFound = false
                                     break
                                 }
@@ -369,8 +353,8 @@ class AnalyzerToolActivity : AppCompatActivity() {
                         } else {
                             var maxSim = 0.0
                             for (term in includeTerms) {
-                                val jaccard = calculateJaccard(blockTextLower, term.lowercase())
-                                val lev = calculateLevenshteinSimilarity(blockTextLower, term.lowercase())
+                                val jaccard = calculateJaccard(cleanParaLower, term.lowercase())
+                                val lev = calculateLevenshteinSimilarity(cleanParaLower, term.lowercase())
                                 val sim = (jaccard * 0.7) + (lev * 0.3)
                                 if (sim > maxSim) {
                                     maxSim = sim
@@ -385,28 +369,31 @@ class AnalyzerToolActivity : AppCompatActivity() {
                     }
 
                     if (isMatch) {
-                        // Запоминаем, что до этого индекса мы уже нашли совпадение, чтобы не спамить отчет
-                        lastMatchedIndex = endIdx 
+                        // ДЕДУПЛИКАЦИЯ: Нормализуем текст (убираем лишние пробелы) и проверяем, не находили ли мы уже такой блок
+                        val normalizedText = cleanParaLower.replace(Regex("\\s+"), " ")
+                        if (seenBlocks.contains(normalizedText)) {
+                            continue // Пропускаем точный дубликат (как строки 805 и 807)
+                        }
+                        seenBlocks.add(normalizedText)
 
-                        // Формируем красивый контекст: 3 строки до блока и 3 после
-                        val contextStart = max(0, startIdx - 3)
-                        val contextEnd = min(lines.size - 1, endIdx + 3)
-                        val contextBlock = mutableListOf<ContextLine>()
+                        // Формируем контекст: предыдущий абзац, текущий, следующий
+                        val contextStart = max(0, index - 1)
+                        val contextEnd = min(paragraphs.size - 1, index + 1)
+                        val contextBlock = mutableListOf<ContextParagraph>()
                         
                         for (j in contextStart..contextEnd) {
-                            // Подсвечиваем все строки, которые вошли в совпавший блок
-                            val isPartOfMatch = j in startIdx..endIdx
-                            contextBlock.add(ContextLine(lines[j], isPartOfMatch, if (isPartOfMatch) matchedTerms else emptyList()))
+                            val isMatchBlock = (j == index)
+                            contextBlock.add(ContextParagraph(paragraphs[j], isMatchBlock, if (isMatchBlock) matchedTerms else emptyList()))
                         }
 
                         results.add(AnalysisResult(
                             fileName = doc.name ?: "Unknown",
-                            lineNumber = startIdx + 1, // Показываем номер первой строки блока
+                            blockIndex = index + 1,
                             slotName = slot.etName.text.toString().ifBlank { "Правило ${slot.id}" },
                             confidence = min(confidence, 100),
                             contextBlock = contextBlock
                         ))
-                        break // Переходим к следующей строке после блока
+                        break // Переходим к следующему абзацу
                     }
                 }
             }
@@ -443,7 +430,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
             }
 
             val header = TextView(this).apply {
-                text = "📄 ${res.fileName} | Строки: ${res.lineNumber}+ | ${res.slotName} | Точность: ${res.confidence}%"
+                text = "📄 ${res.fileName} | Абзац ~${res.blockIndex} | ${res.slotName} | Точность: ${res.confidence}%"
                 setTextColor(0xFF00FFFF.toInt())
                 textSize = 13f
                 typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -451,26 +438,25 @@ class AnalyzerToolActivity : AppCompatActivity() {
 
             val spannableBuilder = SpannableStringBuilder()
             
-            for (ctxLine in res.contextBlock) {
-                // Если строка является частью совпавшего блока, ставим маркер
-                if (ctxLine.isMatchLine) {
+            for (ctxPara in res.contextBlock) {
+                if (ctxPara.isMatchBlock) {
                     spannableBuilder.append("▶ ")
                 } else {
-                    spannableBuilder.append("  ")
+                    spannableBuilder.append("  ") // Отступ для контекста
                 }
                 
-                val lineStart = spannableBuilder.length
-                spannableBuilder.append(ctxLine.text)
-                spannableBuilder.append("\n")
+                val paraStart = spannableBuilder.length
+                spannableBuilder.append(ctxPara.text)
+                spannableBuilder.append("\n\n") // Разделение абзацев
 
-                // Подсветка терминов только внутри строк, которые являются частью совпадения
-                if (ctxLine.isMatchLine && ctxLine.matchedTerms.isNotEmpty()) {
-                    val lowerText = ctxLine.text.lowercase()
-                    for (term in ctxLine.matchedTerms) {
+                // Подсветка только в совпавшем абзаце
+                if (ctxPara.isMatchBlock && ctxPara.matchedTerms.isNotEmpty()) {
+                    val lowerText = ctxPara.text.lowercase()
+                    for (term in ctxPara.matchedTerms) {
                         val lowerTerm = term.lowercase()
                         var startIndex = lowerText.indexOf(lowerTerm)
                         while (startIndex != -1) {
-                            val actualStart = lineStart + startIndex
+                            val actualStart = paraStart + startIndex
                             val actualEnd = actualStart + term.length
                             
                             spannableBuilder.setSpan(
@@ -490,7 +476,7 @@ class AnalyzerToolActivity : AppCompatActivity() {
 
             val tvContext = TextView(this).apply {
                 text = spannableBuilder
-                textSize = 13f
+                textSize = 14f // Чуть крупнее для читаемости абзацев
                 typeface = android.graphics.Typeface.MONOSPACE
                 setTextIsSelectable(true)
                 setPadding(12, 12, 12, 12)
@@ -524,17 +510,17 @@ class AnalyzerToolActivity : AppCompatActivity() {
                     val fullText = buildString {
                         appendLine("=== ОТЧЕТ АНАЛИТИЧЕСКОГО СКАНЕРА PRO ===")
                         appendLine("Дата: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}")
-                        appendLine("Всего совпадений: ${allResults.size}")
+                        appendLine("Всего уникальных совпадений: ${allResults.size}")
                         appendLine("========================================\n")
                         
                         for (res in allResults) {
-                            appendLine("ФАЙЛ: ${res.fileName} | Строки: ${res.lineNumber}+ | Правило: ${res.slotName} (${res.confidence}%)")
+                            appendLine("ФАЙЛ: ${res.fileName} | Абзац: ${res.blockIndex} | Правило: ${res.slotName} (${res.confidence}%)")
                             appendLine("---")
-                            for (ctxLine in res.contextBlock) {
-                                if (ctxLine.isMatchLine) {
-                                    appendLine("▶ ${ctxLine.text}")
+                            for (ctxPara in res.contextBlock) {
+                                if (ctxPara.isMatchBlock) {
+                                    appendLine("▶ ${ctxPara.text}")
                                 } else {
-                                    appendLine("  ${ctxLine.text}")
+                                    appendLine("  ${ctxPara.text}")
                                 }
                             }
                             appendLine("\n")
@@ -564,9 +550,9 @@ class AnalyzerToolActivity : AppCompatActivity() {
         if (allResults.isEmpty()) return
         val textToCopy = buildString {
             for (res in allResults) {
-                appendLine("${res.fileName}:${res.lineNumber}+ | ${res.slotName} | ${res.confidence}%")
-                for (ctxLine in res.contextBlock) {
-                    appendLine(if (ctxLine.isMatchLine) "▶ ${ctxLine.text}" else "  ${ctxLine.text}")
+                appendLine("${res.fileName} (Абзац ${res.blockIndex}) | ${res.slotName} | ${res.confidence}%")
+                for (ctxPara in res.contextBlock) {
+                    appendLine(if (ctxPara.isMatchBlock) "▶ ${ctxPara.text}" else "  ${ctxPara.text}")
                 }
                 appendLine()
             }
