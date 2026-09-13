@@ -30,13 +30,17 @@ class FairDistributionActivity : AppCompatActivity() {
         binding = ActivityFairDistributionBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Применяем неоновый стиль ко всем полям ввода и кнопке копирования
-        val neonBackground = createNeonBackground()
-        binding.etTotalAmount.background = neonBackground
-        binding.etParticipantsCount.background = neonBackground
-        binding.etItemName.background = neonBackground
-        binding.etParticipantName.background = neonBackground
-        binding.btnCopy.background = neonBackground
+        // Применяем стили
+        val inputBackground = createInputBackground()
+        val buttonBackground = createButtonBackground()
+
+        binding.etTotalAmount.background = inputBackground
+        binding.etParticipantsCount.background = inputBackground
+        binding.etItemName.background = inputBackground
+        binding.etParticipantName.background = inputBackground
+        
+        binding.btnCalculate.background = buttonBackground
+        binding.btnCopy.background = buttonBackground
 
         binding.btnCalculate.setOnClickListener {
             calculateDistribution()
@@ -47,12 +51,20 @@ class FairDistributionActivity : AppCompatActivity() {
         }
     }
 
-    private fun createNeonBackground(): GradientDrawable {
+    private fun createInputBackground(): GradientDrawable {
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            setColor(0xFF121212.toInt()) // Тёмный фон полей
-            setStroke(4, 0xFF00E5FF.toInt()) // Неоновая рамка (толщина в пикселях)
-            cornerRadius = 16f // Скругление углов
+            setColor(0xFF121212.toInt()) // Тёмный фон
+            setStroke(4, 0xFF00E5FF.toInt()) // Неоновая рамка
+            cornerRadius = 16f
+        }
+    }
+
+    private fun createButtonBackground(): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(0xFF00E5FF.toInt()) // Сплошной неоновый циан
+            cornerRadius = 16f
         }
     }
 
@@ -101,8 +113,8 @@ class FairDistributionActivity : AppCompatActivity() {
 
         binding.resultsContainer.removeAllViews()
         
-        // Исправлено: используем методы вместо прямого присваивания
-        binding.btnCalculate.setEnabled(false)
+        // Безопасное отключение кнопки (избегаем ошибок ViewBinding с val)
+        binding.btnCalculate.isClickable = false
         binding.btnCalculate.alpha = 0.5f
 
         val copyBuilder = StringBuilder()
@@ -182,12 +194,10 @@ class FairDistributionActivity : AppCompatActivity() {
 
         lastResultText = copyBuilder.toString()
 
-        // Исправлено: возвращаем активность кнопки через методы
-        binding.btnCalculate.setEnabled(true)
+        // Безопасное включение кнопки и показ второй кнопки
+        binding.btnCalculate.isClickable = true
         binding.btnCalculate.alpha = 1.0f
-        
-        // Исправлено: изменение видимости через метод
-        binding.btnCopy.setVisibility(View.VISIBLE)
+        binding.btnCopy.setVisibility(View.VISIBLE) // Метод вместо присваивания
         
         binding.resultsContainer.post {
             binding.resultsContainer.requestFocus()
