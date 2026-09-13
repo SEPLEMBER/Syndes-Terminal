@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets
 import kotlin.math.max
 import kotlin.math.min
 
-// Класс переименован в MorphAnalyzerActivity1 по вашему запросу
 class MorphAnalyzerActivity1 : AppCompatActivity() {
 
     private val REQUEST_TREE = 46
@@ -48,11 +47,10 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
     private lateinit var llSlotsContainer: LinearLayout
     private lateinit var llResultsContainer: LinearLayout
 
-    // ИЗМЕНЕНО: tvStem заменен на etStem (EditText), чтобы пользователь мог его редактировать
     private data class MorphSlot(
         val id: Int,
         val etWord: EditText,
-        val etStem: EditText, 
+        val etStem: EditText,
         val cbExact: CheckBox
     )
     private val slots = mutableListOf<MorphSlot>()
@@ -68,10 +66,13 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
 
     private val allResults = mutableListOf<MorphResult>()
 
+    // Максимальное количество результатов для отрисовки в UI (защита от ANR)
+    private const val MAX_UI_RESULTS = 200
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        setContentView(R.layout.activity_morph_analyzer) // Используем тот же layout, он отлично подходит
+        setContentView(R.layout.activity_morph_analyzer)
 
         initViews()
         setupSlots()
@@ -112,7 +113,7 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
 
     private fun setupSlots() {
         val infoText = TextView(this).apply {
-            text = "ℹ️ Введите слово. Система предложит корень, но вы можете исправить его вручную для точного или масштабного поиска. 'Ё' = 'Е'."
+            text = "ℹ️ Введите слово. Система предложит корень, но вы можете исправить его вручную. 'Ё' = 'Е'."
             setTextColor(0xFFAAAAAA.toInt())
             textSize = 12f
             setPadding(0, 0, 0, 16)
@@ -174,14 +175,12 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
                 }
             }
 
-            // ИЗМЕНЕНО: Теперь это EditText, а не TextView. Пользователь может его редактировать!
             val etStem = EditText(this).apply {
                 hint = "Корень (можно изменить вручную)"
                 setTextColor(0xFF00FF00.toInt())
                 setHintTextColor(0xFF666666.toInt())
                 textSize = 13f
                 typeface = android.graphics.Typeface.defaultFromStyle(android.graphics.Typeface.ITALIC)
-                // Делаем фон чуть другим, чтобы было понятно, что это поле можно редактировать
                 backgroundTintList = android.content.res.ColorStateList.valueOf(0xFF008B8B.toInt())
                 setPadding(0, 4, 0, 4)
             }
@@ -198,7 +197,6 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
     private fun updateStemDisplay(id: Int, word: String) {
         val stem = getRussianStem(word)
         val slot = slots.find { it.id == id }
-        // Автоматически подставляем предложенный корень, если поле пустое или пользователь еще не менял его кардинально
         slot?.etStem?.setText(stem)
         slot?.etStem?.setTextColor(0xFF00FF00.toInt())
     }
@@ -225,7 +223,6 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
             return
         }
 
-        // Проверяем, что введено и слово, и корень (минимум 2 символа)
         val activeSlots = slots.filter { 
             it.etWord.text.toString().trim().length >= 2 && 
             it.etStem.text.toString().trim().length >= 2 
@@ -334,19 +331,20 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
                 for (slot in activeSlots) {
                     val originalWord = slot.etWord.text.toString().trim()
                     
-                    // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Берем корень напрямую из поля ввода пользователя!
-                    val userStem = normalize(slot.etStem.text.toString().trim())
+                    // ЗАЩИТА: Удаляем все пробелы из корня, чтобы избежать ошибок в Regex
+                    val userStem = normalize(slot.etStem.text.toString().trim()).replace(Regex("\\s+"), "")
                     
                     val searchPattern = if (slot.cbExact.isChecked) {
                         "\\b${Regex.escape(normalize(originalWord))}\\b"
                     } else {
                         if (userStem.length < 2) continue
-                        // Ищем корень в любой части слова (с префиксами и суффиксами)
                         "\\b[а-яё]*${Regex.escape(userStem)}[а-яё]*\\b"
                     }
 
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: UNICODE_CHARACTER_CLASS обязателен для корректной работы \b с кириллицей
+                    val regexOptions = setOf(RegexOption.IGNORE_CASE, RegexOption.UNICODE_CHARACTER_CLASS)
                     val regex = try { 
-                        Regex(searchPattern, RegexOption.IGNORE_CASE) 
+                        Regex(searchPattern, regexOptions) 
                     } catch (e: Exception) { 
                         continue 
                     }
@@ -373,7 +371,7 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
                             fileName = doc.name ?: "Unknown",
                             blockIndex = index + 1,
                             originalWord = originalWord,
-                            stem = userStem, // Сохраняем именно тот корень, который использовался для поиска
+                            stem = userStem,
                             contextBlock = contextBlock
                         ))
                         break
@@ -389,15 +387,12 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
         return text.lowercase().replace('ё', 'е').trim()
     }
 
-    /**
-     * Алгоритм теперь служит только как ПОМОЩНИК для первоначального заполнения поля.
-     */
     private fun getRussianStem(word: String): String {
         var w = normalize(word)
         if (w.length < 2) return w
 
         val suffixes = listOf(
-            "овать", "евать", "ивать", "ывать", // Составные суффиксы для точного попадания
+            "овать", "евать", "ивать", "ывать",
             "ившись", "ывшись", "ующий", "яющий", "авший", "явший", "аемый", "имый",
             "ивш", "ывш", "ующ", "яющ", "авш", "явш", "вши", "ясь",
             "енный", "анный", "янный", "енн", "анн", "янн",
@@ -429,7 +424,7 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
         
         if (results.isEmpty()) {
             val tv = TextView(this).apply {
-                text = "Совпадений не найдено. Попробуйте изменить корень вручную (сделать его короче или длиннее) или снимите галочку 'Точное совпадение'."
+                text = "Совпадений не найдено. Попробуйте изменить корень вручную (сделать его короче или длиннее)."
                 setTextColor(0xFFAAAAAA.toInt())
                 gravity = Gravity.CENTER
                 setPadding(0, 32, 0, 32)
@@ -438,7 +433,15 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
             return
         }
 
-        for (res in results) {
+        // ЗАЩИТА ОТ ANR: Отрисовываем только первые MAX_UI_RESULTS, чтобы интерфейс не завис
+        val displayList = if (results.size > MAX_UI_RESULTS) {
+            Toast.makeText(this, "Показаны первые $MAX_UI_RESULTS из ${results.size} совпадений. Полный список доступен в экспорте.", Toast.LENGTH_LONG).show()
+            results.take(MAX_UI_RESULTS)
+        } else {
+            results
+        }
+
+        for (res in displayList) {
             val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(16, 16, 16, 16)
@@ -535,7 +538,7 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
                         appendLine("Всего уникальных контекстов: ${allResults.size}")
                         appendLine("========================================\n")
                         
-                        for (res in allResults) {
+                        for (res in allResults) { // Экспортируем ВСЕ результаты, без лимита
                             appendLine("ФАЙЛ: ${res.fileName} | Абзац: ${res.blockIndex}")
                             appendLine("СЛОВО: «${res.originalWord}» | ИСПОЛЬЗОВАН КОРЕНЬ: «${res.stem}»")
                             appendLine("---")
@@ -571,7 +574,7 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
     private fun copyAllResults() {
         if (allResults.isEmpty()) return
         val textToCopy = buildString {
-            for (res in allResults) {
+            for (res in allResults) { // Копируем ВСЕ результаты
                 appendLine("${res.fileName} (Абзац ${res.blockIndex}) | «${res.originalWord}» → корень «${res.stem}»")
                 for (ctxPara in res.contextBlock) {
                     appendLine(if (ctxPara.isMatchBlock) "▶ ${ctxPara.text}" else "  ${ctxPara.text}")
