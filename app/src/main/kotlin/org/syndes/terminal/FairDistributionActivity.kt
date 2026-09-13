@@ -14,43 +14,40 @@ import android.text.style.StyleSpan
 import android.view.Gravity
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import org.syndes.terminal.databinding.ActivityFairDistributionBinding
 
 class FairDistributionActivity : AppCompatActivity() {
+
+    // Защита от утечек памяти (как в вашем образце)
+    private var _binding: ActivityFairDistributionBinding? = null
+    private val binding get() = _binding!!
 
     private val MAX_PARTICIPANTS = 500
     private var isProcessing = false
     private var lastResultText = ""
 
-    private lateinit var etTotal: EditText
-    private lateinit var etParticipants: EditText
-    private lateinit var etItem: EditText
-    private lateinit var etParticipantName: EditText
-    private lateinit var btnCalc: TextView
-    private lateinit var btnCopy: TextView
-    private lateinit var container: LinearLayout
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_fair_distribution)
 
-        // 1. Получаем ссылки напрямую через findViewById (без ViewBinding)
-        etTotal = findViewById(R.id.etTotalAmount)
-        etParticipants = findViewById(R.id.etParticipantsCount)
-        etItem = findViewById(R.id.etItemName)
-        etParticipantName = findViewById(R.id.etParticipantName)
-        btnCalc = findViewById(R.id.btnCalculate)
-        btnCopy = findViewById(R.id.btnCopy)
-        container = findViewById(R.id.resultsContainer)
+        _binding = ActivityFairDistributionBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         applyStyles()
 
-        btnCalc.setOnClickListener { calculate() }
-        btnCopy.setOnClickListener { copyResult() }
+        binding.btnCalculate.setOnClickListener {
+            if (!isProcessing) calculateDistribution()
+        }
+
+        binding.btnCopy.setOnClickListener {
+            copyResult()
+        }
+        
+        // Изначально скрываем кнопку копирования
+        binding.btnCopy.visibility = View.GONE
     }
 
     private fun applyStyles() {
@@ -67,21 +64,20 @@ class FairDistributionActivity : AppCompatActivity() {
             cornerRadius = 16f
         }
 
-        etTotal.background = inputBg
-        etParticipants.background = inputBg
-        etItem.background = inputBg
-        etParticipantName.background = inputBg
+        binding.etTotalAmount.background = inputBg
+        binding.etParticipantsCount.background = inputBg
+        binding.etItemName.background = inputBg
+        binding.etParticipantName.background = inputBg
         
-        btnCalc.background = btnBg
-        btnCopy.background = btnBg
+        binding.btnCalculate.background = btnBg
+        binding.btnCopy.background = btnBg
     }
 
-    private fun calculate() {
-        if (isProcessing) return
+    private fun calculateDistribution() {
         isProcessing = true
 
-        val totalStr = etTotal.text.toString().trim()
-        val partStr = etParticipants.text.toString().trim()
+        val totalStr = binding.etTotalAmount.text.toString().trim()
+        val partStr = binding.etParticipantsCount.text.toString().trim()
 
         if (totalStr.isEmpty() || partStr.isEmpty()) {
             showToast("Заполните числовые поля")
@@ -112,8 +108,8 @@ class FairDistributionActivity : AppCompatActivity() {
 
         hideKeyboard()
 
-        val itemName = etItem.text.toString().trim().ifEmpty { "единиц" }
-        val pName = etParticipantName.text.toString().trim().ifEmpty { "участников" }
+        val itemName = binding.etItemName.text.toString().trim().ifEmpty { "единиц" }
+        val pName = binding.etParticipantName.text.toString().trim().ifEmpty { "участников" }
         val capPName = pName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
         val base = total / parts
@@ -123,12 +119,7 @@ class FairDistributionActivity : AppCompatActivity() {
         val fmtBase = formatNum(base)
         val fmtBasePlus = formatNum(base + 1)
 
-        container.removeAllViews()
-        
-        // 2. Блокировка кнопки через явные методы setClickable() и setAlpha()
-        // Это обходит любые баги компилятора с val/var
-        btnCalc.setClickable(false)
-        btnCalc.setAlpha(0.5f)
+        binding.resultsContainer.removeAllViews()
 
         val copyText = StringBuilder()
         copyText.append("РАСПРЕДЕЛЕНИЕ РЕСУРСОВ\n")
@@ -161,7 +152,7 @@ class FairDistributionActivity : AppCompatActivity() {
             text = spannable
             isTextSelectable = true
         }
-        container.addView(resultTv)
+        binding.resultsContainer.addView(resultTv)
         
         addSpacer(32)
 
@@ -174,7 +165,7 @@ class FairDistributionActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 16)
             isTextSelectable = true
         }
-        container.addView(titleTv)
+        binding.resultsContainer.addView(titleTv)
         copyText.append("\nДЕТАЛИЗАЦИЯ:\n")
 
         for (i in 1..parts) {
@@ -207,19 +198,17 @@ class FairDistributionActivity : AppCompatActivity() {
 
             row.addView(leftTv)
             row.addView(rightTv)
-            container.addView(row)
+            binding.resultsContainer.addView(row)
 
             copyText.append("$capPName №$i: $fmtAmt $itemName\n")
         }
 
         lastResultText = copyText.toString()
 
-        // 3. Разблокировка кнопки и показ второй кнопки через setVisibility()
-        btnCalc.setClickable(true)
-        btnCalc.setAlpha(1.0f)
-        btnCopy.setVisibility(View.VISIBLE)
+        // Показываем кнопку копирования (используем стандартное присваивание, как в вашем образце)
+        binding.btnCopy.visibility = View.VISIBLE
         
-        container.post { container.requestFocus() }
+        binding.resultsContainer.post { binding.resultsContainer.requestFocus() }
         isProcessing = false
     }
 
@@ -238,7 +227,7 @@ class FairDistributionActivity : AppCompatActivity() {
     }
 
     private fun addSpacer(heightPx: Int) {
-        container.addView(View(this).apply {
+        binding.resultsContainer.addView(View(this).apply {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, heightPx)
         })
     }
@@ -257,5 +246,11 @@ class FairDistributionActivity : AppCompatActivity() {
 
     private fun showToast(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    // Очистка binding (как в вашем образце)
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 }
