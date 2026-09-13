@@ -111,6 +111,11 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="true" />
 
+                                                        <activity
+            android:name=".MorphAnalyzerActivity1"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="true" />
+
         
                                         <activity
             android:name=".SchedulePlannerActivity"
