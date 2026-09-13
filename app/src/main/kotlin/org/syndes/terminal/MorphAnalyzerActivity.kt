@@ -267,7 +267,8 @@ class MorphAnalyzerActivity : AppCompatActivity() {
         val results = mutableListOf<MorphResult>()
         var processedFiles = 0
 
-        fun traverse(dir: DocumentFile) {
+        // ИСПРАВЛЕНО: Добавлено ключевое слово suspend к локальной функции
+        suspend fun traverse(dir: DocumentFile) {
             val children = dir.listFiles() ?: return
             for (child in children) {
                 if (child.isDirectory) {
@@ -281,9 +282,9 @@ class MorphAnalyzerActivity : AppCompatActivity() {
                         processFileSafe(child, activeSlots, results)
                         processedFiles++
                         
-                        // ОПТИМИЗАЦИЯ: Обновляем UI не каждый файл, а каждые 5 файлов, чтобы не перегружать главный поток
+                        // Теперь withContext работает корректно внутри suspend функции
                         if (processedFiles % 5 == 0) {
-                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            withContext(Dispatchers.Main) {
                                 tvResultStatus.text = "Обработка файлов... (проверено: $processedFiles)"
                             }
                         }
@@ -304,13 +305,9 @@ class MorphAnalyzerActivity : AppCompatActivity() {
             val input = contentResolver.openInputStream(doc.uri) ?: return
             val data = BufferedInputStream(input).use { it.readBytes() }
             
-            // ЗАЩИТА ОТ OOM: Игнорируем файлы > 10 МБ
             if (data.size > 10 * 1024 * 1024) return 
-            
-            // ЗАЩИТА ОТ БИНАРНЫХ ФАЙЛОВ: Проверка на null-байты в заголовке
             if (data.take(100).contains(0.toByte())) return
 
-            // Безопасное декодирование с фоллбэком
             val text = try {
                 String(data, StandardCharsets.UTF_8)
             } catch (e: Exception) {
@@ -330,10 +327,8 @@ class MorphAnalyzerActivity : AppCompatActivity() {
                     val originalWord = slot.etWord.text.toString().trim()
                     
                     val searchPattern = if (slot.cbExact.isChecked) {
-                        // Точный поиск слова с границами
                         "\\b${Regex.escape(normalize(originalWord))}\\b"
                     } else {
-                        // Морфологический поиск: ИСПРАВЛЕНО для поддержки префиксов (напр. "раз-груз-ка")
                         val stem = getRussianStem(originalWord)
                         if (stem.length < 2) continue
                         "\\b[а-яё]*${Regex.escape(stem)}[а-яё]*\\b"
@@ -351,7 +346,6 @@ class MorphAnalyzerActivity : AppCompatActivity() {
                         val normalizedText = cleanParaLower.replace(Regex("\\s+"), " ")
                         val uniqueKey = "$normalizedText|${matches.sorted().joinToString(",")}"
                         
-                        // ДЕДУПЛИКАЦИЯ внутри файла
                         if (seenBlocks.contains(uniqueKey)) continue
                         seenBlocks.add(uniqueKey)
 
@@ -371,25 +365,19 @@ class MorphAnalyzerActivity : AppCompatActivity() {
                             stem = if (slot.cbExact.isChecked) originalWord else getRussianStem(originalWord),
                             contextBlock = contextBlock
                         ))
-                        break // Переходим к следующему абзацу
+                        break
                     }
                 }
             }
         } catch (e: Exception) {
-            // Молча игнорируем ошибки чтения отдельных файлов, чтобы не прерывать весь анализ
+            // Игнорируем ошибки чтения отдельных файлов
         }
     }
 
-    /**
-     * Нормализация: нижний регистр + замена Ё на Е для универсального поиска
-     */
     private fun normalize(text: String): String {
         return text.lowercase().replace('ё', 'е').trim()
     }
 
-    /**
-     * Эвристический стеммер. Отсекает окончания справа налево.
-     */
     private fun getRussianStem(word: String): String {
         var w = normalize(word)
         if (w.length < 2) return w
@@ -407,7 +395,6 @@ class MorphAnalyzerActivity : AppCompatActivity() {
         )
 
         for (suffix in suffixes) {
-            // Защита: не отрезаем, если остаток будет короче 2 символов
             if (w.endsWith(suffix) && w.length - suffix.length >= 2) {
                 w = w.substring(0, w.length - suffix.length)
                 break
