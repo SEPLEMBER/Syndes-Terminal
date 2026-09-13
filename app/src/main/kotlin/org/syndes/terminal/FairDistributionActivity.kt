@@ -24,13 +24,15 @@ class FairDistributionActivity : AppCompatActivity() {
     private val MAX_PARTICIPANTS_FOR_UI = 500
     private lateinit var binding: ActivityFairDistributionBinding
     private var lastResultText: String = ""
+    
+    // Флаг для защиты от повторных нажатий без изменения свойств View
+    private var isProcessing: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityFairDistributionBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Применяем стили
         val inputBackground = createInputBackground()
         val buttonBackground = createButtonBackground()
 
@@ -54,8 +56,8 @@ class FairDistributionActivity : AppCompatActivity() {
     private fun createInputBackground(): GradientDrawable {
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            setColor(0xFF121212.toInt()) // Тёмный фон
-            setStroke(4, 0xFF00E5FF.toInt()) // Неоновая рамка
+            setColor(0xFF121212.toInt())
+            setStroke(4, 0xFF00E5FF.toInt())
             cornerRadius = 16f
         }
     }
@@ -63,17 +65,22 @@ class FairDistributionActivity : AppCompatActivity() {
     private fun createButtonBackground(): GradientDrawable {
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            setColor(0xFF00E5FF.toInt()) // Сплошной неоновый циан
+            setColor(0xFF00E5FF.toInt())
             cornerRadius = 16f
         }
     }
 
     private fun calculateDistribution() {
+        // Если уже идёт обработка, игнорируем нажатие
+        if (isProcessing) return
+        isProcessing = true
+
         val totalStr = binding.etTotalAmount.text.toString().trim()
         val participantsStr = binding.etParticipantsCount.text.toString().trim()
 
         if (totalStr.isEmpty() || participantsStr.isEmpty()) {
             showToast("Заполните числовые поля")
+            isProcessing = false
             return
         }
 
@@ -82,16 +89,19 @@ class FairDistributionActivity : AppCompatActivity() {
 
         if (total == null || total < 0) {
             showToast("Некорректное общее количество")
+            isProcessing = false
             return
         }
 
         if (participants == null || participants <= 0) {
             showToast("Количество участников должно быть > 0")
+            isProcessing = false
             return
         }
 
         if (participants > MAX_PARTICIPANTS_FOR_UI) {
             showToast("Максимум $MAX_PARTICIPANTS_FOR_UI участников для отображения")
+            isProcessing = false
             return
         }
 
@@ -112,10 +122,6 @@ class FairDistributionActivity : AppCompatActivity() {
         val fmtBasePlus = formatNumber(baseAmount + 1)
 
         binding.resultsContainer.removeAllViews()
-        
-        // Безопасное отключение кнопки (избегаем ошибок ViewBinding с val)
-        binding.btnCalculate.isClickable = false
-        binding.btnCalculate.alpha = 0.5f
 
         val copyBuilder = StringBuilder()
         copyBuilder.append("РАСПРЕДЕЛЕНИЕ РЕСУРСОВ\n")
@@ -194,10 +200,9 @@ class FairDistributionActivity : AppCompatActivity() {
 
         lastResultText = copyBuilder.toString()
 
-        // Безопасное включение кнопки и показ второй кнопки
-        binding.btnCalculate.isClickable = true
-        binding.btnCalculate.alpha = 1.0f
-        binding.btnCopy.setVisibility(View.VISIBLE) // Метод вместо присваивания
+        // Снимаем флаг блокировки и показываем кнопку копирования через метод (не через присваивание)
+        isProcessing = false
+        binding.btnCopy.setVisibility(View.VISIBLE)
         
         binding.resultsContainer.post {
             binding.resultsContainer.requestFocus()
