@@ -102,6 +102,11 @@
             android:exported="true" />
 
                                         <activity
+            android:name=".SchedulePlannerActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="true" />
+
+                                        <activity
             android:name=".IpTaxCalculatorActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="true" />
