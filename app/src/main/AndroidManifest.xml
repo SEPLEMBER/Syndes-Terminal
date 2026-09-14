@@ -116,6 +116,11 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="true" />
 
+                                                                <activity
+            android:name=".MultiReplaceActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="true" />
+
         
                                         <activity
             android:name=".SchedulePlannerActivity"
