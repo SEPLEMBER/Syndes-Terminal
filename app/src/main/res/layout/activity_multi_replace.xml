@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A0A"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔄 Мульти-замена PRO"
+            android:textColor="#00FFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btnChooseFolder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📁 Выбрать папку"
+            android:backgroundTint="#008B8B"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/tvFolderStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Папка не выбрана"
+            android:textColor="#AAAAAA"
+            android:textSize="12sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- НОВОЕ: Фильтр расширений -->
+        <EditText
+            android:id="@+id/etFileFilter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Фильтр расширений (напр.: .txt,.xml)"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#666666"
+            android:backgroundTint="#00FFFF"
+            android:textSize="13sp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- НОВОЕ: Добавлен чекбокс Regex -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <CheckBox
+                    android:id="@+id/cbRecursive"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Рекурсивно (-r)"
+                    android:textColor="#00FFFF"
+                    android:buttonTint="#00FFFF" />
+                <CheckBox
+                    android:id="@+id/cbIgnoreCase"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Без регистра (-I)"
+                    android:textColor="#00FFFF"
+                    android:buttonTint="#00FFFF" />
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/cbUseRegex"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Использовать регулярные выражения (Regex)"
+                android:textColor="#FFBF00"
+                android:buttonTint="#FFBF00" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ℹ️ Замены каскадные (1 → 10). Лимит файла: 50 МБ. В режиме Regex экранируйте спецсимволы вручную."
+            android:textColor="#AAAAAA"
+            android:textSize="11sp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:id="@+id/llSlotsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:indeterminateTint="#00FFFF"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/tvResultStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ожидание запуска..."
+            android:textColor="#00FF00"
+            android:textSize="13sp"
+            android:gravity="center"
+            android:layout_marginTop="8dp" />
+
+        <!-- НОВОЕ: Две кнопки управления -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <Button
+                android:id="@+id/btnStart"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🚀 Старт"
+                android:backgroundTint="#00FFFF"
+                android:textColor="#0A0A0A"
+                android:textStyle="bold" />
+
+            <!-- НОВОЕ: Кнопка отмены (скрыта по умолчанию) -->
+            <Button
+                android:id="@+id/btnCancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="⛔ Отмена"
+                android:backgroundTint="#FF0000"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- НОВОЕ: Кнопка копирования отчета -->
+        <Button
+            android:id="@+id/btnCopyReport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📋 Копировать отчет"
+            android:backgroundTint="#008B8B"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="8dp"
+            android:enabled="false" />
+
+    </LinearLayout>
+</ScrollView>
