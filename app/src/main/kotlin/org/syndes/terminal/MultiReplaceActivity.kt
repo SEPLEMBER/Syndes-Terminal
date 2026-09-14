@@ -21,6 +21,7 @@ import kotlinx.coroutines.withContext
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.minOf
 
 class MultiReplaceActivity : AppCompatActivity() {
 
@@ -50,7 +51,10 @@ class MultiReplaceActivity : AppCompatActivity() {
     )
     private val slots = mutableListOf<ReplaceSlot>()
 
-    private const val MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024L 
+    // ИСПРАВЛЕНИЕ 1: const val должен быть в companion object или на верхнем уровне файла
+    companion object {
+        private const val MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024L 
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -223,11 +227,14 @@ class MultiReplaceActivity : AppCompatActivity() {
 
             try {
                 withContext(Dispatchers.IO) {
-                    fun traverse(dir: DocumentFile) {
-                        kotlinx.coroutines.ensureActive()
+                    // ИСПРАВЛЕНИЕ 2: Добавлен модификатор 'suspend' к локальной функции
+                    suspend fun traverse(dir: DocumentFile) {
+                        // ИСПРАВЛЕНИЕ 3: Явный вызов через coroutineContext
+                        coroutineContext.ensureActive()
+                        
                         val children = dir.listFiles() ?: return
                         for (child in children) {
-                            kotlinx.coroutines.ensureActive()
+                            coroutineContext.ensureActive()
 
                             if (child.isDirectory && isRecursive) {
                                 traverse(child)
@@ -241,6 +248,7 @@ class MultiReplaceActivity : AppCompatActivity() {
                                     continue
                                 }
 
+                                // ИСПРАВЛЕНИЕ 4: processFileSafe теперь тоже suspend функция
                                 val result = processFileSafe(child, activeSlots, isIgnoreCase, isRegex)
                                 if (result.modified) modifiedCount++
                                 if (result.error) errorCount++
@@ -282,14 +290,13 @@ class MultiReplaceActivity : AppCompatActivity() {
 
     private data class ProcessResult(val modified: Boolean, val error: Boolean)
 
-    private fun processFileSafe(
+    // ИСПРАВЛЕНИЕ 4: Добавлен модификатор 'suspend', чтобы внутри можно было использовать coroutineContext.ensureActive()
+    private suspend fun processFileSafe(
         doc: DocumentFile,
         activeSlots: List<ReplaceSlot>,
         isIgnoreCase: Boolean,
         isRegex: Boolean
     ): ProcessResult {
-        // ЗАЩИТА #1: Ловим Throwable, чтобы предотвратить краш всего приложения 
-        // из-за OutOfMemoryError, если SAF вернул неверный размер файла.
         return try {
             val input = contentResolver.openInputStream(doc.uri) ?: return ProcessResult(false, true)
             val data = input.use { it.readBytes() }
@@ -304,7 +311,6 @@ class MultiReplaceActivity : AppCompatActivity() {
             }
             if (isBinary) return ProcessResult(false, false)
 
-            // ЗАЩИТА #2: Определяем кодировку, чтобы записать файл обратно в ней же.
             var usedCharset: Charset = StandardCharsets.UTF_8
             var text = try {
                 String(data, StandardCharsets.UTF_8)
@@ -340,18 +346,17 @@ class MultiReplaceActivity : AppCompatActivity() {
             }
 
             if (hasChanges) {
-                kotlinx.coroutines.ensureActive() 
+                coroutineContext.ensureActive() 
                 
                 val output = contentResolver.openOutputStream(doc.uri, "w")
                 output?.use {
-                    // Записываем в той же кодировке, в которой читали
                     it.write(text.toByteArray(usedCharset))
                     it.flush() 
                 } ?: return ProcessResult(false, true)
             }
 
             ProcessResult(hasChanges, false)
-        } catch (e: Throwable) { // Ловим всё, включая OOM
+        } catch (e: Throwable) {
             ProcessResult(false, true)
         }
     }
