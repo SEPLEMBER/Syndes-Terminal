@@ -267,7 +267,7 @@ class MultiReplaceActivity : AppCompatActivity() {
             } catch (e: CancellationException) {
                 withContext(Dispatchers.Main) {
                     if (!isFinishing && !isDestroyed) {
-                        tvResultStatus.text = "⚠️ Операция отменена пользоват."
+                        tvResultStatus.text = "⚠️ Операция отменена пользователем."
                         Toast.makeText(this@MultiReplaceActivity, "Отменено", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -310,28 +310,25 @@ class MultiReplaceActivity : AppCompatActivity() {
             }
             if (isBinary) return ProcessResult(false, false)
 
-            // ИСПРАВЛЕНИЕ: Строгая проверка валидности UTF-8 через Decoder
-            var usedCharset: Charset = StandardCharsets.UTF_8
-            val utf8Decoder = StandardCharsets.UTF_8.newDecoder().apply {
-                onMalformedInput(CodingErrorAction.REPORT)
-                onUnmappableCharacter(CodingErrorAction.REPORT)
-            }
-            
             val isUtf8 = try {
-                utf8Decoder.decode(ByteBuffer.wrap(data))
+                val decoder = StandardCharsets.UTF_8.newDecoder().apply {
+                    onMalformedInput(CodingErrorAction.REPORT)
+                    onUnmappableCharacter(CodingErrorAction.REPORT)
+                }
+                decoder.decode(ByteBuffer.wrap(data))
                 true
             } catch (e: CharacterCodingException) {
-                false // Файл не является валидным UTF-8
+                false
             }
 
-            val text = if (isUtf8) {
-                String(data, StandardCharsets.UTF_8)
+            val usedCharset = if (isUtf8) {
+                StandardCharsets.UTF_8
             } else {
-                // Фоллбэк на Windows-1251 для кириллицы (стандарт для старых текстовых файлов)
-                usedCharset = Charset.forName("windows-1251")
-                String(data, usedCharset)
+                Charset.forName("windows-1251")
             }
-
+            
+            // ЕДИНСТВЕННЫЙ ПРАВИЛЬНЫЙ ЦИКЛ: currentText объявлен как var, к нему применяются замены
+            var currentText = String(data, usedCharset)
             var hasChanges = false
 
             for (slot in activeSlots) {
@@ -349,10 +346,10 @@ class MultiReplaceActivity : AppCompatActivity() {
                     continue 
                 }
 
-                val matches = regex.findAll(text).count()
+                val matches = regex.findAll(currentText).count()
                 if (matches > 0) {
                     val safeReplacement = java.util.regex.Matcher.quoteReplacement(replaceText)
-                    text = regex.replace(text, safeReplacement)
+                    currentText = regex.replace(currentText, safeReplacement)
                     slot.matchCount.addAndGet(matches)
                     hasChanges = true
                 }
@@ -363,7 +360,7 @@ class MultiReplaceActivity : AppCompatActivity() {
                 
                 val output = contentResolver.openOutputStream(doc.uri, "w")
                 output?.use {
-                    it.write(text.toByteArray(usedCharset))
+                    it.write(currentText.toByteArray(usedCharset))
                     it.flush() 
                 } ?: return ProcessResult(false, true)
             }
