@@ -334,18 +334,20 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
                     // ЗАЩИТА: Удаляем все пробелы из корня, чтобы избежать ошибок в Regex
                     val userStem = normalize(slot.etStem.text.toString().trim()).replace(Regex("\\s+"), "")
                     
+                    // Формируем паттерн. Заменяем 'е' на '[её]' для более гибкого поиска, так как normalize() заменяет 'ё' на 'е'.
                     val searchPattern = if (slot.cbExact.isChecked) {
-                        "\\b${Regex.escape(normalize(originalWord))}\\b"
+                        val escapedWord = Regex.escape(normalize(originalWord)).replace("е", "[её]")
+                        "\\b$escapedWord\\b"
                     } else {
                         if (userStem.length < 2) continue
-                        "\\b[а-яё]*${Regex.escape(userStem)}[а-яё]*\\b"
+                        val escapedStem = Regex.escape(userStem).replace("е", "[её]")
+                        "\\b[а-яё]*$escapedStem[а-яё]*\\b"
                     }
 
-                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Флаг (?U) включает UNICODE_CHARACTER_CLASS для корректной работы \b с кириллицей
-                    val regexOptions = setOf(RegexOption.IGNORE_CASE)
-                    val regexPattern = "(?U)$searchPattern"
+                    // ВАЖНО: Используем ТОЛЬКО IGNORE_CASE, точно как в рабочей версии MorphAnalyzerActivity.
+                    // Флаги UNICODE_CHARACTER_CLASS или (?U) на Android ломают работу \b с кириллицей!
                     val regex = try { 
-                        Regex(regexPattern, regexOptions) 
+                        Regex(searchPattern, RegexOption.IGNORE_CASE) 
                     } catch (e: Exception) { 
                         continue 
                     }
