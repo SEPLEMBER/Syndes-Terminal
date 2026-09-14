@@ -13,15 +13,16 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.minOf
 
 class MultiReplaceActivity : AppCompatActivity() {
 
@@ -51,7 +52,6 @@ class MultiReplaceActivity : AppCompatActivity() {
     )
     private val slots = mutableListOf<ReplaceSlot>()
 
-    // ИСПРАВЛЕНИЕ 1: const val должен быть в companion object или на верхнем уровне файла
     companion object {
         private const val MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024L 
     }
@@ -227,14 +227,13 @@ class MultiReplaceActivity : AppCompatActivity() {
 
             try {
                 withContext(Dispatchers.IO) {
-                    // ИСПРАВЛЕНИЕ 2: Добавлен модификатор 'suspend' к локальной функции
                     suspend fun traverse(dir: DocumentFile) {
-                        // ИСПРАВЛЕНИЕ 3: Явный вызов через coroutineContext
-                        coroutineContext.ensureActive()
+                        // ИСПРАВЛЕНИЕ: Явный вызов currentCoroutineContext()
+                        currentCoroutineContext().ensureActive()
                         
                         val children = dir.listFiles() ?: return
                         for (child in children) {
-                            coroutineContext.ensureActive()
+                            currentCoroutineContext().ensureActive()
 
                             if (child.isDirectory && isRecursive) {
                                 traverse(child)
@@ -248,7 +247,6 @@ class MultiReplaceActivity : AppCompatActivity() {
                                     continue
                                 }
 
-                                // ИСПРАВЛЕНИЕ 4: processFileSafe теперь тоже suspend функция
                                 val result = processFileSafe(child, activeSlots, isIgnoreCase, isRegex)
                                 if (result.modified) modifiedCount++
                                 if (result.error) errorCount++
@@ -264,7 +262,7 @@ class MultiReplaceActivity : AppCompatActivity() {
                     }
                     traverse(pickedRoot!!)
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (e: CancellationException) {
                 withContext(Dispatchers.Main) {
                     if (!isFinishing && !isDestroyed) {
                         tvResultStatus.text = "⚠️ Операция отменена пользователем."
@@ -290,7 +288,6 @@ class MultiReplaceActivity : AppCompatActivity() {
 
     private data class ProcessResult(val modified: Boolean, val error: Boolean)
 
-    // ИСПРАВЛЕНИЕ 4: Добавлен модификатор 'suspend', чтобы внутри можно было использовать coroutineContext.ensureActive()
     private suspend fun processFileSafe(
         doc: DocumentFile,
         activeSlots: List<ReplaceSlot>,
@@ -301,7 +298,8 @@ class MultiReplaceActivity : AppCompatActivity() {
             val input = contentResolver.openInputStream(doc.uri) ?: return ProcessResult(false, true)
             val data = input.use { it.readBytes() }
             
-            val checkLimit = minOf(data.size, 1024)
+            // ИСПРАВЛЕНИЕ: Math.min вместо minOf (гарантированно работает везде)
+            val checkLimit = Math.min(data.size, 1024)
             var isBinary = false
             for (i in 0 until checkLimit) {
                 if (data[i] == 0.toByte()) {
@@ -346,7 +344,8 @@ class MultiReplaceActivity : AppCompatActivity() {
             }
 
             if (hasChanges) {
-                coroutineContext.ensureActive() 
+                // ИСПРАВЛЕНИЕ: Явный вызов currentCoroutineContext()
+                currentCoroutineContext().ensureActive() 
                 
                 val output = contentResolver.openOutputStream(doc.uri, "w")
                 output?.use {
