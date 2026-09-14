@@ -20,7 +20,10 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.nio.ByteBuffer
+import java.nio.charset.CharacterCodingException
 import java.nio.charset.Charset
+import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -228,7 +231,6 @@ class MultiReplaceActivity : AppCompatActivity() {
             try {
                 withContext(Dispatchers.IO) {
                     suspend fun traverse(dir: DocumentFile) {
-                        // ИСПРАВЛЕНИЕ: Явный вызов currentCoroutineContext()
                         currentCoroutineContext().ensureActive()
                         
                         val children = dir.listFiles() ?: return
@@ -265,7 +267,7 @@ class MultiReplaceActivity : AppCompatActivity() {
             } catch (e: CancellationException) {
                 withContext(Dispatchers.Main) {
                     if (!isFinishing && !isDestroyed) {
-                        tvResultStatus.text = "⚠️ Операция отменена пользователем."
+                        tvResultStatus.text = "⚠️ Операция отменена пользоват."
                         Toast.makeText(this@MultiReplaceActivity, "Отменено", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -298,7 +300,6 @@ class MultiReplaceActivity : AppCompatActivity() {
             val input = contentResolver.openInputStream(doc.uri) ?: return ProcessResult(false, true)
             val data = input.use { it.readBytes() }
             
-            // ИСПРАВЛЕНИЕ: Math.min вместо minOf (гарантированно работает везде)
             val checkLimit = Math.min(data.size, 1024)
             var isBinary = false
             for (i in 0 until checkLimit) {
@@ -309,11 +310,25 @@ class MultiReplaceActivity : AppCompatActivity() {
             }
             if (isBinary) return ProcessResult(false, false)
 
+            // ИСПРАВЛЕНИЕ: Строгая проверка валидности UTF-8 через Decoder
             var usedCharset: Charset = StandardCharsets.UTF_8
-            var text = try {
+            val utf8Decoder = StandardCharsets.UTF_8.newDecoder().apply {
+                onMalformedInput(CodingErrorAction.REPORT)
+                onUnmappableCharacter(CodingErrorAction.REPORT)
+            }
+            
+            val isUtf8 = try {
+                utf8Decoder.decode(ByteBuffer.wrap(data))
+                true
+            } catch (e: CharacterCodingException) {
+                false // Файл не является валидным UTF-8
+            }
+
+            val text = if (isUtf8) {
                 String(data, StandardCharsets.UTF_8)
-            } catch (e: Exception) {
-                usedCharset = Charset.defaultCharset()
+            } else {
+                // Фоллбэк на Windows-1251 для кириллицы (стандарт для старых текстовых файлов)
+                usedCharset = Charset.forName("windows-1251")
                 String(data, usedCharset)
             }
 
@@ -344,7 +359,6 @@ class MultiReplaceActivity : AppCompatActivity() {
             }
 
             if (hasChanges) {
-                // ИСПРАВЛЕНИЕ: Явный вызов currentCoroutineContext()
                 currentCoroutineContext().ensureActive() 
                 
                 val output = contentResolver.openOutputStream(doc.uri, "w")
