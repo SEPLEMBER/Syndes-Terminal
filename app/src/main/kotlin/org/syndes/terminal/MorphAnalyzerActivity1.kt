@@ -67,7 +67,7 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
     private val allResults = mutableListOf<MorphResult>()
 
     // Максимальное количество результатов для отрисовки в UI (защита от ANR)
-    private const val MAX_UI_RESULTS = 200
+    private val MAX_UI_RESULTS = 200
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -341,10 +341,11 @@ class MorphAnalyzerActivity1 : AppCompatActivity() {
                         "\\b[а-яё]*${Regex.escape(userStem)}[а-яё]*\\b"
                     }
 
-                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: UNICODE_CHARACTER_CLASS обязателен для корректной работы \b с кириллицей
-                    val regexOptions = setOf(RegexOption.IGNORE_CASE, RegexOption.UNICODE_CHARACTER_CLASS)
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Флаг (?U) включает UNICODE_CHARACTER_CLASS для корректной работы \b с кириллицей
+                    val regexOptions = setOf(RegexOption.IGNORE_CASE)
+                    val regexPattern = "(?U)$searchPattern"
                     val regex = try { 
-                        Regex(searchPattern, regexOptions) 
+                        Regex(regexPattern, regexOptions) 
                     } catch (e: Exception) { 
                         continue 
                     }
