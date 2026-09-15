@@ -1,4 +1,4 @@
-package es.zelliot.epubeditor
+package org.syndes.terminal
 
 import android.content.Intent
 import android.net.Uri
