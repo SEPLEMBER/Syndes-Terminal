@@ -13,6 +13,8 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import org.syndes.terminal.databinding.ActivityNtrBinding
+// Импорт добавлен для явной указания класса, если он вдруг не подхватится автоматически
+import org.syndes.terminal.ResourcesDistributeActivity 
 
 class NTRActivity : AppCompatActivity() {
 
@@ -45,7 +47,6 @@ class NTRActivity : AppCompatActivity() {
                 
                 val input = binding.etCommandInput.text.toString().trim()
                 if (input.isNotEmpty()) {
-                    // Легкая вибрация при нажатии Enter (тактильный отклик)
                     binding.etCommandInput.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     executeCommand(input)
                     binding.etCommandInput.text.clear()
@@ -86,12 +87,17 @@ class NTRActivity : AppCompatActivity() {
             "20" -> launchExternal("es.zelliot.epubeditor.PurchaseActivity", "Покупка товара")
             "21" -> launchExternal("es.zelliot.epubeditor.TimeUtilityActivity", "Затраты времени")
             "22" -> launchExternal("es.zelliot.epubeditor.SpActivity", "Скорость шага")
-            "23" -> launchExternal("es.zelliot.epubeditor.CalculatorActivity", "Прочее 1")
-            "24" -> launchExternal("es.zelliot.epubeditor.UniversalCalcActivity", "Прочее 2")
+            
+            // НОВЫЙ ВНУТРЕННИЙ МОДУЛЬ
+            "23" -> launchInternal(ResourcesDistributeActivity::class.java, "Ресурсный распределитель")
+            
+            // Сдвинутые пункты "Прочее"
+            "24" -> launchExternal("es.zelliot.epubeditor.CalculatorActivity", "Прочее 1")
+            "25" -> launchExternal("es.zelliot.epubeditor.UniversalCalcActivity", "Прочее 2")
 
             else -> {
                 appendToTerminal("ОШИБКА: Модуль '$cmd' не найден.", colorError)
-                binding.etCommandInput.performHapticFeedback(HapticFeedbackConstants.REJECT) // Двойная вибрация при ошибке
+                binding.etCommandInput.performHapticFeedback(HapticFeedbackConstants.REJECT)
                 showToast("Неверная команда")
             }
         }
@@ -123,23 +129,15 @@ class NTRActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Добавляет текст в терминал с заданным цветом.
-     * Старый текст становится приглушенным, новый выделяется.
-     */
     private fun appendToTerminal(text: String, color: Int) {
         val currentText = binding.tvTerminalOutput.text.toString()
         val cleanText = currentText.removeSuffix("> ОЖИДАНИЕ ВВОДА_")
         
-        // Создаем Spannable для раскраски новой строки
         val newLine = "$text\n"
         val spannable = SpannableString(newLine)
         spannable.setSpan(ForegroundColorSpan(color), 0, newLine.length, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE)
         
-        // Собираем итоговый текст: старый (приглушенный) + новый (цветной) + курсор
         val finalText = SpannableString("$cleanText$spannable> ОЖИДАНИЕ ВВОДА_")
-        
-        // Делаем весь старый текст приглушенным для эффекта "уходящей в историю" консоли
         finalText.setSpan(ForegroundColorSpan(colorDefault), 0, cleanText.length, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE)
         
         binding.tvTerminalOutput.text = finalText
