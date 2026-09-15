@@ -89,11 +89,11 @@ class NTRActivity : AppCompatActivity() {
             "22" -> launchExternal("es.zelliot.epubeditor.SpActivity", "Скорость шага")
             
             // НОВЫЙ ВНУТРЕННИЙ МОДУЛЬ
-            "23" -> launchInternal(ResourceDistributeActivity::class.java, "Ресурсный распределитель")
+            //"23" -> launchInternal(ResourceDistributeActivity::class.java, "Ресурсный распределитель")
             
             // Сдвинутые пункты "Прочее"
-            "24" -> launchExternal("es.zelliot.epubeditor.CalculatorActivity", "Прочее 1")
-            "25" -> launchExternal("es.zelliot.epubeditor.UniversalCalcActivity", "Прочее 2")
+            "23" -> launchExternal("es.zelliot.epubeditor.CalculatorActivity", "Прочее 1")
+            "24" -> launchExternal("es.zelliot.epubeditor.UniversalCalcActivity", "Прочее 2")
 
             else -> {
                 appendToTerminal("ОШИБКА: Модуль '$cmd' не найден.", colorError)
