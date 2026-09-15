@@ -23,23 +23,21 @@ object Secure {
     private const val CIPHER_ALGORITHM = "AES/GCM/NoPadding"
     private const val FORMAT_VERSION = "v1"
 
-    // === Удобные перегрузки для String паролей ===
     @Throws(GeneralSecurityException::class)
     @JvmStatic
-    fun encrypt(password: String?, plaintext: String): String {
-        return encrypt(password?.toCharArray(), plaintext)
+    fun Coding(password: String?, plaintext: String): String {
+        return Coding(password?.toCharArray(), plaintext)
     }
 
     @Throws(GeneralSecurityException::class)
     @JvmStatic
-    fun decrypt(password: String?, input: String): String {
-        return decrypt(password?.toCharArray(), input)
+    fun Uncoding(password: String?, input: String): String {
+        return Uncoding(password?.toCharArray(), input)
     }
 
-    // === Основные методы с CharArray ===
     @Throws(GeneralSecurityException::class)
     @JvmStatic
-    fun encrypt(password: CharArray?, plaintext: String): String {
+    fun Coding(password: CharArray?, plaintext: String): String {
         if (password == null || password.isEmpty() || plaintext.isEmpty()) {
             throw IllegalArgumentException("Password and plaintext must be non-null and non-empty")
         }
@@ -61,7 +59,6 @@ object Secure {
             val spec = GCMParameterSpec(TAG_LENGTH_BITS, iv)
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, spec)
 
-            // AAD: format version, salt, iv (as in original)
             cipher.updateAAD(FORMAT_VERSION.toByteArray(StandardCharsets.UTF_8))
             cipher.updateAAD(salt)
             cipher.updateAAD(iv)
@@ -74,7 +71,6 @@ object Secure {
 
             return "$FORMAT_VERSION:$bSalt:$bIv:$bCt"
         } finally {
-            // secure wipe
             if (key != null) {
                 Arrays.fill(key, 0.toByte())
             }
@@ -84,7 +80,7 @@ object Secure {
 
     @Throws(GeneralSecurityException::class)
     @JvmStatic
-    fun decrypt(password: CharArray?, input: String): String {
+    fun Uncoding(password: CharArray?, input: String): String {
         if (password == null || input.isEmpty()) {
             throw IllegalArgumentException("Password and input must be non-null")
         }
@@ -99,7 +95,7 @@ object Secure {
         val ciphertext = Base64.decode(parts[3], Base64.NO_WRAP)
 
         if (salt.size != SALT_LENGTH_BYTES || iv.size != IV_LENGTH_BYTES) {
-            throw IllegalArgumentException("Invalid salt or IV length")
+            throw IllegalArgumentException("Invalid length")
         }
 
         var key: ByteArray? = null
@@ -132,3 +128,4 @@ object Secure {
         return factory.generateSecret(spec).encoded
     }
 }
+
