@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A0A"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="48dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#B46A3C"
+            android:textSize="24sp"
+            android:freezesText="false"
+            android:saveEnabled="false"
+            android:shadowColor="#B46A3C"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="14" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:textColor="#B46A3C"
+            android:textSize="18sp"
+            android:freezesText="false"
+            android:saveEnabled="false"
+            android:shadowColor="#B46A3C"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="12" />
+
+        <EditText
+            android:id="@+id/etRooms"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:background="#141414"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"
+            android:minLines="8"
+            android:maxLines="12"
+            android:padding="16dp"
+            android:textColor="#B46A3C"
+            android:textColorHint="#88B46A3C"
+            android:freezesText="false"
+            android:saveEnabled="false"
+            android:shadowColor="#B46A3C"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="8" />
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:background="#1A1A1A"
+            android:textColor="#B46A3C" />
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="#1A1A1A"
+            android:textColor="#B46A3C" />
+
+    </LinearLayout>
+</ScrollView>
