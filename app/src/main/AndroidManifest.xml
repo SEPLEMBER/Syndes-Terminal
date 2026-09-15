@@ -107,6 +107,11 @@
             android:exported="true" />
 
                                                 <activity
+            android:name=".DataSanitizerActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="true" />
+
+                                                <activity
             android:name=".MorphAnalyzerActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="true" />
