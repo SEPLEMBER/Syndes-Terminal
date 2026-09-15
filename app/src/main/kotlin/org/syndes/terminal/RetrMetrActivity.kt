@@ -17,7 +17,7 @@ class RetrMetrActivity : AppCompatActivity() {
     private val neonRed = Color.parseColor("#FF003C")
 
     private val promptText = "root@unsed-mst:~# "
-    private val welcomeText = "SYSTEM INITIALIZED.\nUNSED MODULES READY.\nENTER COMMAND TO NAVIGATE.\n\n"
+    private val welcomeText = "SYSTEM INITIALIZED.\nAVANGARD MODULES READY.\nENTER COMMAND TO NAVIGATE.\n\n"
     private val errorText = "ERR: UNKNOWN COMMAND OR MODULE NOT FOUND."
     private val hintText = "type command..."
 
@@ -98,7 +98,7 @@ class RetrMetrActivity : AppCompatActivity() {
 
             "LUA INFO" -> {
                 appendToOutput("Loading Lua Informatics...\n\n")
-                startActivity(Intent(this, LuaInformActivity::class.java))
+                startActivity(Intent(this, MainActivity::class.java))
             }
 
             else -> {
