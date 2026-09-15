@@ -25,21 +25,22 @@ class SystemRogueActivity : AppCompatActivity() {
         private const val PREFS_NAME = "SystemRoguePrefs"
         private const val KEY_HIGH_SCORE = "high_score"
         private const val MAX_LOG_LINES = 50
-        private const val WALK_STEPS_MULTIPLIER = 2
+        private const val WALK_STEPS_MULTIPLIER = 3
         private const val ENEMY_BASE_COUNT = 3
         private const val LOOT_COUNT = 3
         private const val ENEMY_KILL_CHANCE = 70
 
-        private const val CHAR_PLAYER = "🧑‍💻"
-        private const val CHAR_PLAYER_SHIELD = "🛡️" // Можно изменить на "🧑‍💻🛡️" для различения
-        private const val CHAR_WALL = "🧱"
-        private const val CHAR_FLOOR = "⬛"
-        private const val CHAR_FOG = "░"
-        private const val CHAR_ENEMY = "👾"
-        private const val CHAR_LOOT = "💾"
-        private const val CHAR_HEAL = "💊"
-        private const val CHAR_SHIELD = "🛡️"
-        private const val CHAR_EXIT = "🚪"
+        // Надежные ASCII/Unicode символы вместо эмодзи
+        private const val CHAR_PLAYER = "@"
+        private const val CHAR_PLAYER_SHIELD = "A"
+        private const val CHAR_WALL = "#"
+        private const val CHAR_FLOOR = "."
+        private const val CHAR_FOG = " "
+        private const val CHAR_ENEMY = "E"
+        private const val CHAR_LOOT = "$"
+        private const val CHAR_HEAL = "+"
+        private const val CHAR_SHIELD = "S"
+        private const val CHAR_EXIT = ">"
     }
 
     private lateinit var tvGrid: TextView
@@ -91,30 +92,32 @@ class SystemRogueActivity : AppCompatActivity() {
     private fun setupUI() {
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#0D1117"))
-            setPadding(16, 16, 16, 16)
+            setBackgroundColor(Color.BLACK)
+            setPadding(8, 8, 8, 8)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT
             )
         }
 
+        // Статистика
         tvStats = TextView(this).apply {
-            textSize = 15f
+            textSize = 14f
             typeface = Typeface.MONOSPACE
-            setTextColor(Color.parseColor("#00FF00"))
+            setTextColor(Color.GREEN)
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 12)
+            setPadding(0, 0, 0, 8)
             mainLayout.addView(this)
         }
 
+        // Игровое поле
         tvGrid = TextView(this).apply {
-            textSize = 22f
+            textSize = 18f
             typeface = Typeface.MONOSPACE
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#161B22"))
-            setPadding(16, 16, 16, 16)
+            setBackgroundColor(Color.parseColor("#1A1A1A"))
+            setPadding(12, 12, 12, 12)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -122,12 +125,24 @@ class SystemRogueActivity : AppCompatActivity() {
             mainLayout.addView(this)
         }
 
+        // Легенда
         TextView(this).apply {
-            text = "📟 SYSTEM LOG:"
-            textSize = 12f
+            text = "@-Вы  >-Выход  E-Враг  $-Лут  +-Лечение  S-Щит"
+            textSize = 11f
+            typeface = Typeface.MONOSPACE
+            setTextColor(Color.GRAY)
+            gravity = Gravity.CENTER
+            setPadding(0, 4, 0, 4)
+            mainLayout.addView(this)
+        }
+
+        // Лог событий
+        TextView(this).apply {
+            text = "SYSTEM LOG:"
+            textSize = 11f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.parseColor("#8B949E"))
-            setPadding(0, 16, 0, 4)
+            setTextColor(Color.CYAN)
+            setPadding(0, 8, 0, 2)
             mainLayout.addView(this)
         }
 
@@ -135,51 +150,68 @@ class SystemRogueActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0, 1f
-            )
+            ).apply { setMargins(0, 0, 0, 8) }
             mainLayout.addView(this)
         }
 
         tvLog = TextView(this).apply {
-            textSize = 13f
+            textSize = 12f
             typeface = Typeface.MONOSPACE
-            setTextColor(Color.parseColor("#58A6FF"))
-            setPadding(8, 8, 8, 8)
+            setTextColor(Color.parseColor("#00FFFF")) // Яркий циан
+            setPadding(4, 4, 4, 4)
+            setBackgroundColor(Color.parseColor("#0A0A0A"))
             scrollViewLog.addView(this)
         }
 
+        // Кнопки управления - более компактные
         val dpadContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = 12 }
+            )
             mainLayout.addView(this)
         }
 
-        val row1 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER; dpadContainer.addView(this) }
-        addDpadButton(row1, "⬆️", { processTurn(0, -1) })
+        // Верхний ряд
+        val row1 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            dpadContainer.addView(this)
+        }
+        addDpadButton(row1, "↑", { processTurn(0, -1) })
 
-        val row2 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER; dpadContainer.addView(this) }
-        addDpadButton(row2, "⬅️", { processTurn(-1, 0) })
-        addDpadButton(row2, "🔄", { restartGame() }, "Рестарт")
-        addDpadButton(row2, "➡️", { processTurn(1, 0) })
+        // Средний ряд
+        val row2 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            dpadContainer.addView(this)
+        }
+        addDpadButton(row2, "←", { processTurn(-1, 0) })
+        addDpadButton(row2, "↻", { restartGame() })
+        addDpadButton(row2, "→", { processTurn(1, 0) })
 
-        val row3 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER; dpadContainer.addView(this) }
-        addDpadButton(row3, "⬇️", { processTurn(0, 1) })
+        // Нижний ряд
+        val row3 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            dpadContainer.addView(this)
+        }
+        addDpadButton(row3, "↓", { processTurn(0, 1) })
 
         setContentView(mainLayout)
-        log("Система инициализирована. Рекорд: $highScore", Color.parseColor("#00FF00"))
-        log("Используйте свайпы или кнопки для перемещения.", Color.parseColor("#8B949E"))
+        log("Система инициализирована. Рекорд: $highScore", Color.GREEN)
+        log("Свайпы или кнопки для перемещения", Color.GRAY)
     }
 
-    private fun addDpadButton(container: LinearLayout, text: String, onClick: () -> Unit, label: String? = null) {
+    private fun addDpadButton(container: LinearLayout, text: String, onClick: () -> Unit) {
         val btn = Button(this).apply {
             this.text = text
-            textSize = 20f
-            setBackgroundColor(Color.parseColor("#21262D"))
+            textSize = 18f
+            setBackgroundColor(Color.parseColor("#333333"))
             setTextColor(Color.WHITE)
-            layoutParams = LinearLayout.LayoutParams(100, 100).apply { setMargins(6, 6, 6, 6) }
+            layoutParams = LinearLayout.LayoutParams(90, 90).apply { setMargins(4, 4, 4, 4) }
             setOnClickListener { onClick() }
         }
         container.addView(btn)
@@ -195,13 +227,13 @@ class SystemRogueActivity : AppCompatActivity() {
         logLines.clear()
         tvLog.text = ""
         generateLevel()
-        log("--- ПЕРЕЗАГРУЗКА СИСТЕМЫ ---", Color.YELLOW)
+        log("=== ПЕРЕЗАГРУЗКА ===", Color.YELLOW)
         render()
     }
 
     private fun generateLevel() {
         var attempts = 0
-        val maxAttempts = 10
+        val maxAttempts = 20
         
         do {
             generateLevelInternal()
@@ -209,16 +241,17 @@ class SystemRogueActivity : AppCompatActivity() {
         } while (!isMapSolvable() && attempts < maxAttempts)
         
         if (!isMapSolvable()) {
-            log("⚠️ Карта не проходима. Генерация упрощена.", Color.RED)
+            log("Генерация упрощена", Color.RED)
             simplifyMap()
         }
         
         updateFog()
-        log("Уровень $level загружен. Найдите 🚪 Выход.", Color.parseColor("#00FFFF"))
+        log("Уровень $level. Найдите выход (>)", Color.CYAN)
         updateStats()
     }
 
     private fun generateLevelInternal() {
+        // Заполнение стенами
         for (y in 0 until GRID_SIZE) {
             for (x in 0 until GRID_SIZE) {
                 grid[y][x] = CHAR_WALL[0]
@@ -226,6 +259,7 @@ class SystemRogueActivity : AppCompatActivity() {
             }
         }
 
+        // Random Walk для создания проходов
         var cx = GRID_SIZE / 2
         var cy = GRID_SIZE / 2
         val steps = GRID_SIZE * GRID_SIZE * WALK_STEPS_MULTIPLIER
@@ -233,40 +267,44 @@ class SystemRogueActivity : AppCompatActivity() {
         for (i in 0 until steps) {
             grid[cy][cx] = CHAR_FLOOR[0]
             when (Random.nextInt(4)) {
-                0 -> if (cx < GRID_SIZE - 2) cx++
-                1 -> if (cx > 1) cx--
-                2 -> if (cy < GRID_SIZE - 2) cy++
-                3 -> if (cy > 1) cy--
+                0 -> if (cx < GRID_SIZE - 1) cx++
+                1 -> if (cx > 0) cx--
+                2 -> if (cy < GRID_SIZE - 1) cy++
+                3 -> if (cy > 0) cy--
             }
         }
 
+        // Сбор всех свободных клеток
         val freeCells = mutableListOf<Pair<Int, Int>>()
-        for (y in 1 until GRID_SIZE - 1) {
-            for (x in 1 until GRID_SIZE - 1) {
+        for (y in 0 until GRID_SIZE) {
+            for (x in 0 until GRID_SIZE) {
                 if (grid[y][x] == CHAR_FLOOR[0]) {
                     freeCells.add(Pair(x, y))
                 }
             }
         }
 
-        if (freeCells.size < 10) return
+        if (freeCells.size < 20) return
 
         freeCells.shuffle()
 
         var cellIndex = 0
         
+        // Игрок
         if (cellIndex < freeCells.size) {
             playerX = freeCells[cellIndex].first
             playerY = freeCells[cellIndex].second
             cellIndex++
         }
 
+        // Выход
         if (cellIndex < freeCells.size) {
             val (ex, ey) = freeCells[cellIndex]
             grid[ey][ex] = CHAR_EXIT[0]
             cellIndex++
         }
 
+        // Враги
         val enemyCount = ENEMY_BASE_COUNT + (level / 2)
         repeat(enemyCount) {
             if (cellIndex < freeCells.size) {
@@ -276,6 +314,7 @@ class SystemRogueActivity : AppCompatActivity() {
             }
         }
 
+        // Лут
         repeat(LOOT_COUNT) {
             if (cellIndex < freeCells.size) {
                 val (lx, ly) = freeCells[cellIndex]
@@ -284,12 +323,14 @@ class SystemRogueActivity : AppCompatActivity() {
             }
         }
 
+        // Лечение
         if (Random.nextBoolean() && cellIndex < freeCells.size) {
             val (hx, hy) = freeCells[cellIndex]
             grid[hy][hx] = CHAR_HEAL[0]
             cellIndex++
         }
 
+        // Щит
         if (Random.nextBoolean() && level > 1 && cellIndex < freeCells.size) {
             val (sx, sy) = freeCells[cellIndex]
             grid[sy][sx] = CHAR_SHIELD[0]
@@ -326,12 +367,13 @@ class SystemRogueActivity : AppCompatActivity() {
     }
 
     private fun simplifyMap() {
-        for (x in 1 until GRID_SIZE - 1) {
+        // Простой коридор через центр
+        for (x in 0 until GRID_SIZE) {
             grid[GRID_SIZE / 2][x] = CHAR_FLOOR[0]
         }
-        playerX = 1
+        playerX = 0
         playerY = GRID_SIZE / 2
-        grid[GRID_SIZE / 2][GRID_SIZE - 2] = CHAR_EXIT[0]
+        grid[GRID_SIZE / 2][GRID_SIZE - 1] = CHAR_EXIT[0]
     }
 
     private fun updateFog() {
@@ -354,7 +396,7 @@ class SystemRogueActivity : AppCompatActivity() {
         try {
             if (hp <= 0) {
                 isGameOver = true
-                log("СИСТЕМА ЗАБЛОКИРОВАНА. Нажмите 🔄 для рестарта.", Color.RED)
+                log("СБОЙ. Нажмите ↻", Color.RED)
                 return
             }
 
@@ -366,19 +408,19 @@ class SystemRogueActivity : AppCompatActivity() {
             val target = grid[newY][newX]
 
             when (target) {
-                CHAR_WALL[0] -> log("⛔ Брандмауэр блокирует путь.", Color.RED)
+                CHAR_WALL[0] -> log("Стена", Color.RED)
                 
                 CHAR_ENEMY[0] -> {
-                    log("⚔️ Атака аномалии! Вы наносите 1 урон.", Color.YELLOW)
+                    log("Атака!", Color.YELLOW)
                     if (Random.nextInt(100) < ENEMY_KILL_CHANCE) {
                         grid[newY][newX] = CHAR_FLOOR[0]
                         score += 50
-                        log("✅ Аномалия устранена. +50 очков.", Color.parseColor("#00FF00"))
+                        log("Враг уничтожен +50", Color.GREEN)
                         playerX = newX
                         playerY = newY
                     } else {
                         takeDamage(1)
-                        log("⚠️ Атака отражена, но вы получили повреждение!", Color.RED)
+                        log("Урон! HP: $hp", Color.RED)
                     }
                 }
                 
@@ -387,7 +429,7 @@ class SystemRogueActivity : AppCompatActivity() {
                     playerY = newY
                     score += 100
                     grid[newY][newX] = CHAR_FLOOR[0]
-                    log("💾 Пакет данных извлечен. +100 очков.", Color.parseColor("#00FFFF"))
+                    log("Данные +100", Color.CYAN)
                 }
                 
                 CHAR_HEAL[0] -> {
@@ -395,9 +437,9 @@ class SystemRogueActivity : AppCompatActivity() {
                     playerY = newY
                     if (hp < maxHp) {
                         hp++
-                        log("💊 Системный патч применен. HP восстановлено.", Color.parseColor("#00FF00"))
+                        log("Лечение HP: $hp", Color.GREEN)
                     } else {
-                        log("💊 Здоровье уже полно. Патч сохранен в кэш (+25 очков).", Color.parseColor("#8B949E"))
+                        log("HP полно +25", Color.GRAY)
                         score += 25
                     }
                     grid[newY][newX] = CHAR_FLOOR[0]
@@ -408,14 +450,14 @@ class SystemRogueActivity : AppCompatActivity() {
                     playerY = newY
                     shieldActive = true
                     grid[newY][newX] = CHAR_FLOOR[0]
-                    log("🛡️ Временный брандмауэр активирован.", Color.parseColor("#00FFFF"))
+                    log("Щит активен", Color.CYAN)
                 }
 
                 CHAR_EXIT[0] -> {
                     level++
                     score += 500
                     shieldActive = false
-                    log("🚪 Уровень пройден! Синхронизация...", Color.parseColor("#00FF00"))
+                    log("Уровень пройден! +500", Color.GREEN)
                     generateLevel()
                     return
                 }
@@ -437,7 +479,7 @@ class SystemRogueActivity : AppCompatActivity() {
     private fun takeDamage(amount: Int) {
         if (shieldActive) {
             shieldActive = false
-            log("🛡️ Брандмауэр поглотил урон!", Color.parseColor("#00FFFF"))
+            log("Щит поглотил урон", Color.CYAN)
             return
         }
         
@@ -445,11 +487,11 @@ class SystemRogueActivity : AppCompatActivity() {
         
         if (hp <= 0) {
             isGameOver = true
-            log("💀 КРИТИЧЕСКИЙ СБОЙ ЯДРА. Игра окончена.", Color.RED)
+            log("КРИТИЧЕСКИЙ СБОЙ", Color.RED)
             if (score > highScore) {
                 highScore = score
                 prefs.edit().putInt(KEY_HIGH_SCORE, highScore).apply()
-                log("🏆 НОВЫЙ РЕКОРД: $highScore", Color.parseColor("#FFD700"))
+                log("НОВЫЙ РЕКОРД: $highScore", Color.YELLOW)
             }
         }
     }
@@ -475,12 +517,12 @@ class SystemRogueActivity : AppCompatActivity() {
     }
 
     private fun updateStats() {
-        val hpStr = "❤️".repeat(hp) + "🖤".repeat(maxOf(0, maxHp - hp))
-        val shieldStr = if (shieldActive) " 🛡️" else ""
-        tvStats.text = "ГЛУБИНА: $level | СЧЕТ: $score (Рек: $highScore)\nЦЕЛОСТНОСТЬ: $hpStr$shieldStr"
+        val hpStr = "♥".repeat(hp) + "♡".repeat(maxOf(0, maxHp - hp))
+        val shieldStr = if (shieldActive) " [S]" else ""
+        tvStats.text = "LVL:$level SCORE:$score REC:$highScore\nHP:$hpStr$shieldStr"
     }
 
-    private fun log(message: String, color: Int = Color.parseColor("#58A6FF")) {
+    private fun log(message: String, color: Int = Color.CYAN) {
         if (isFinishing || isDestroyed) return
         
         val time = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
