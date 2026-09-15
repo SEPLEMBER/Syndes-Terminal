@@ -48,7 +48,7 @@
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Clear"
-            app:tint="#FF5252"
+            app:tint="#FF3333"
             android:visibility="gone"/>
     </LinearLayout>
 
@@ -58,7 +58,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text=""
-        android:textColor="#80E27E"
+        android:textColor="#00FFF0"
         android:textSize="12sp"
         android:paddingHorizontal="8dp"
         android:paddingVertical="12dp"
@@ -70,7 +70,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:overScrollMode="ifContentScrolls"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:scrollbars="none">
 
         <TextView
             android:id="@+id/tutorial_text"
