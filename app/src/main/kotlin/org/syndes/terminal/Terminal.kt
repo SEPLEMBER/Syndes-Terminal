@@ -624,33 +624,6 @@ Hello!   \__/'---'\__/
                             "Info: snapshot created: ${buildPath(destDir)} (files copied: $copied)"
                         }
 
-                        "encrypt" -> {
-                    if (args.size < 2) return "Usage: encrypt <password> <path>"
-                    val password = args[0]
-                    val path = args.drop(1).joinToString(" ")
-                    val (parent, name) = resolvePath(ctx, path) ?: return "Error: invalid path"
-                    val target = parent.findFile(name) ?: return "Error: no such file/dir '$path'"
-                    val processed = if (target.isDirectory) {
-                        encryptInDir(ctx, password, target)
-                    } else {
-                        if (encryptFile(ctx, password, target)) 1 else 0
-                    }
-                    "Info: encrypted $processed file(s)"
-                }
-
-                "decrypt" -> {
-                    if (args.size < 2) return "Usage: decrypt <password> <path>"
-                    val password = args[0]
-                    val path = args.drop(1).joinToString(" ")
-                    val (parent, name) = resolvePath(ctx, path) ?: return "Error: invalid path"
-                    val target = parent.findFile(name) ?: return "Error: no such file/dir '$path'"
-                    val processed = if (target.isDirectory) {
-                        decryptInDir(ctx, password, target)
-                    } else {
-                        if (decryptFile(ctx, password, target)) 1 else 0
-                    }
-                    "Info: decrypted $processed file(s)"
-                }
   
                           "old batchren" -> {
     if (args.size < 2) return "Usage: batchren <dir> <newPattern>"
@@ -2803,80 +2776,6 @@ private fun humanReadableBytes(size: Long): String {
         uIndex++
     }
     return if (uIndex == -1) "${size} B" else String.format("%.1f %s", s, units[uIndex])
-}
-
-// ---------------------------
-// Encrypt / Decrypt helpers
-// ---------------------------
-private fun isProbablyTextFile(ctx: Context, file: DocumentFile): Boolean {
-    return try {
-        ctx.contentResolver.openInputStream(file.uri)?.use { stream ->
-            val buf = ByteArray(1024)
-            val read = stream.read(buf)
-            if (read <= 0) return true
-            for (i in 0 until read) {
-                if (buf[i].toInt() == 0) return false
-            }
-            true
-        } ?: false
-    } catch (_: Throwable) { false }
-}
-
-private fun encryptFile(ctx: Context, password: String, file: DocumentFile): Boolean {
-    return try {
-        if (!isProbablyTextFile(ctx, file)) return false
-        ctx.contentResolver.openInputStream(file.uri)?.use { input ->
-            val text = input.bufferedReader().use { it.readText() }
-            val enc = Secure.encrypt(password, text)
-            ctx.contentResolver.openOutputStream(file.uri, "wt")?.use { out ->
-                out.write(enc.toByteArray())
-            } ?: return false
-            true
-        } ?: false
-    } catch (_: Throwable) {
-        false
-    }
-}
-
-private fun decryptFile(ctx: Context, password: String, file: DocumentFile): Boolean {
-    return try {
-        ctx.contentResolver.openInputStream(file.uri)?.use { input ->
-            val text = input.bufferedReader().use { it.readText() }
-            val dec = try { Secure.decrypt(password, text) } catch (_: Throwable) { return false }
-            ctx.contentResolver.openOutputStream(file.uri, "wt")?.use { out ->
-                out.write(dec.toByteArray())
-            } ?: return false
-            true
-        } ?: false
-    } catch (_: Throwable) {
-        false
-    }
-}
-
-private fun encryptInDir(ctx: Context, password: String, dir: DocumentFile): Int {
-    var changed = 0
-    try {
-        for (child in dir.listFiles()) {
-            if (child.isDirectory) changed += encryptInDir(ctx, password, child)
-            else {
-                if (encryptFile(ctx, password, child)) changed++
-            }
-        }
-    } catch (_: Throwable) { }
-    return changed
-}
-
-private fun decryptInDir(ctx: Context, password: String, dir: DocumentFile): Int {
-    var changed = 0
-    try {
-        for (child in dir.listFiles()) {
-            if (child.isDirectory) changed += decryptInDir(ctx, password, child)
-            else {
-                if (decryptFile(ctx, password, child)) changed++
-            }
-        }
-    } catch (_: Throwable) { }
-    return changed
 }
 
     // ---------------------------
