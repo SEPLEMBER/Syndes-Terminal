@@ -89,7 +89,7 @@ class NTRActivity : AppCompatActivity() {
             "22" -> launchExternal("es.zelliot.epubeditor.SpActivity", "Скорость шага")
             
             // НОВЫЙ ВНУТРЕННИЙ МОДУЛЬ
-            "23" -> launchInternal(ResourcesDistributeActivity::class.java, "Ресурсный распределитель")
+            "23" -> launchInternal(ResourceDistributeActivity::class.java, "Ресурсный распределитель")
             
             // Сдвинутые пункты "Прочее"
             "24" -> launchExternal("es.zelliot.epubeditor.CalculatorActivity", "Прочее 1")
