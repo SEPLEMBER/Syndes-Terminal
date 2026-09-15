@@ -26,7 +26,7 @@
             android:shadowDx="0"
             android:shadowDy="0"
             android:shadowRadius="4"
-            android:text="NUMTRAP v3.16\n\n[ МОДУЛИ ]\n01. Финансовые проценты\n02. Бюджет\n03. Налоги\n04. УСН, Патент, Страхование ИП\n05. Бюджет сетевого трафика\n06. Доход\n07. Скорость x Расстояние\n08. RSI, DUI (External)\n09. Rush (External)\n10. PurMoney (External)\n11. Запасы и потребление (External)\n12. Распределение ресурсов (External)\n13. Управление ресурсами (External)\n14. Динамический эффект (External)\n15. Накопительный эффект (External)\n16. Спокойствие при обретении ресурса (External)\n17. Гео (External)\n18. Даты (External)\n19. CPI + ROI (External)\n20. Покупка товара (External)\n21. Затраты времени (External)\n22. Скорость шага (External)\n23. Ресурсный распределитель\n24. Прочее 1 (External)\n25. Прочее 2 (External)\n\n> ОЖИДАНИЕ ВВОДА_"
+            android:text="NUMTRAP v3.16\n\n[ МОДУЛИ ]\n01. Финансовые проценты\n02. Бюджет\n03. Налоги\n04. УСН, Патент, Страхование ИП\n05. Бюджет сетевого трафика\n06. Доход\n07. Скорость x Расстояние\n08. RSI, DUI (External)\n09. Rush (External)\n10. PurMoney (External)\n11. Запасы и потребление (External)\n12. Распределение ресурсов (External)\n13. Управление ресурсами (External)\n14. Динамический эффект (External)\n15. Накопительный эффект (External)\n16. Спокойствие при обретении ресурса (External)\n17. Гео (External)\n18. Даты (External)\n19. CPI + ROI (External)\n20. Покупка товара (External)\n21. Затраты времени (External)\n22. Скорость шага (External)\n23. Прочее 1 (External)\n23. Прочее 2 (External)\n\n> ОЖИДАНИЕ ВВОДА_"
             android:textColor="#00AAAA"
             android:textIsSelectable="true"
             android:textSize="15sp" />
