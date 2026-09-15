@@ -7,7 +7,7 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import es.zelliot.epubeditor.databinding.ActivityRetrMetrBinding
+import org.syndes.terminal.databinding.ActivityRetrMetrBinding
 
 class RetrMetrActivity : AppCompatActivity() {
 
