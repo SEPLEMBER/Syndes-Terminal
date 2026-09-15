@@ -12,11 +12,11 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.UnderlineSpan
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 
 class RuTutorialActivity : AppCompatActivity() {
 
@@ -26,12 +26,12 @@ class RuTutorialActivity : AppCompatActivity() {
     private lateinit var searchStats: TextView
     
     private var originalText: String = ""
-    private val colorCommand = Color.parseColor("#4FC3F7")
-    private val colorArg = Color.parseColor("#80E27E")
-    private val colorWarning = Color.parseColor("#FF5252")
+    
+    // Цветовая палитра
     private val colorNeonCyan = Color.parseColor("#00FFF0")
+    private val colorNeonRed = Color.parseColor("#FF3333")
     private val colorDefault = Color.parseColor("#E0E0E0")
-    private val colorSearchHighlight = Color.parseColor("#3300FFF0") // полупрозрачный cyan
+    private val colorSearchHighlight = Color.parseColor("#3300FFF0") // Полупрозрачный cyan для фона поиска
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,11 +46,17 @@ class RuTutorialActivity : AppCompatActivity() {
         tutorialText.typeface = Typeface.MONOSPACE
         applyNeon(tutorialText, colorNeonCyan, radius = 4f)
 
-        // Build original text
-        originalText = buildHighlightedCommands().toString()
-        tutorialText.setText(buildHighlightedCommands(), TextView.BufferType.SPANNABLE)
+        // 1. Создаем исходный текст и применяем синтаксическую подсветку
+        val initialSpannable = buildHighlightedCommands()
+        applySyntaxHighlighting(initialSpannable)
+        
+        // 2. Сохраняем чистый текст для надежного поиска по индексам
+        originalText = initialSpannable.toString()
+        
+        // 3. Устанавливаем подсвеченный текст
+        tutorialText.text = initialSpannable
 
-        // Search functionality
+        // Настройка поиска
         setupSearch()
     }
 
@@ -63,12 +69,16 @@ class RuTutorialActivity : AppCompatActivity() {
                 val query = s?.toString()?.trim() ?: ""
                 if (query.isNotEmpty()) {
                     performSearch(query)
-                    clearSearch.visibility = android.view.View.VISIBLE
-                    searchStats.visibility = android.view.View.VISIBLE
+                    clearSearch.visibility = View.VISIBLE
+                    searchStats.visibility = View.VISIBLE
                 } else {
-                    tutorialText.setText(buildHighlightedCommands(), TextView.BufferType.SPANNABLE)
-                    clearSearch.visibility = android.view.View.GONE
-                    searchStats.visibility = android.view.View.GONE
+                    // Возвращаем исходный подсвеченный текст
+                    val initialSpannable = SpannableStringBuilder(originalText)
+                    applySyntaxHighlighting(initialSpannable)
+                    tutorialText.text = initialSpannable
+                    
+                    clearSearch.visibility = View.GONE
+                    searchStats.visibility = View.GONE
                 }
             }
         })
@@ -76,7 +86,7 @@ class RuTutorialActivity : AppCompatActivity() {
         searchEdit.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH || 
                 (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
-                // Можно добавить переход к следующему результату
+                searchEdit.clearFocus() // Скрываем клавиатуру при поиске
                 true
             } else {
                 false
@@ -94,7 +104,6 @@ class RuTutorialActivity : AppCompatActivity() {
         val lowerQuery = query.lowercase()
         var matchCount = 0
         
-        // Highlight command names that match
         val lines = originalText.split("\n")
         var offset = 0
         
@@ -102,7 +111,6 @@ class RuTutorialActivity : AppCompatActivity() {
             val lineStart = offset
             val lineLower = line.lowercase()
             
-            // Check if line contains query
             if (lineLower.contains(lowerQuery)) {
                 var searchStart = 0
                 while (true) {
@@ -112,12 +120,19 @@ class RuTutorialActivity : AppCompatActivity() {
                     val absStart = lineStart + idx
                     val absEnd = absStart + query.length
                     
-                    // Apply highlight
+                    // Подсветка фона (полупрозрачный cyan)
                     sb.setSpan(
                         BackgroundColorSpan(colorSearchHighlight),
                         absStart, absEnd,
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
+                    // Подсветка текста (Neon Cyan)
+                    sb.setSpan(
+                        ForegroundColorSpan(colorNeonCyan),
+                        absStart, absEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    // Подчеркивание
                     sb.setSpan(
                         UnderlineSpan(),
                         absStart, absEnd,
@@ -128,19 +143,17 @@ class RuTutorialActivity : AppCompatActivity() {
                     searchStart = idx + 1
                 }
             }
-            
             offset += line.length + 1
         }
         
-        // Reapply syntax highlighting on top
+        // Повторно применяем синтаксическую подсветку поверх поиска
         applySyntaxHighlighting(sb)
         
-        tutorialText.setText(sb, TextView.BufferType.SPANNABLE)
+        tutorialText.text = sb
         searchStats.text = "Найдено: $matchCount совпадений"
     }
 
     private fun applySyntaxHighlighting(sb: SpannableStringBuilder) {
-        // Re-apply command colors (blue) and arg colors (green)
         val lines = originalText.split("\n")
         var offset = 0
         
@@ -149,45 +162,50 @@ class RuTutorialActivity : AppCompatActivity() {
             val sepIndexInLine = line.indexOf(" - ")
             
             if (sepIndexInLine >= 0 && line.trim().isNotEmpty()) {
-                // Command part
+                // 1. Имя команды: Neon Cyan
                 val commandEnd = lineStart + sepIndexInLine
-                sb.setSpan(ForegroundColorSpan(colorCommand), lineStart, commandEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(
+                    ForegroundColorSpan(colorNeonCyan), 
+                    lineStart, commandEnd, 
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
                 
-                // Args in command part
+                // 2. Аргументы в части команды (если есть)
                 val leftPart = line.substring(0, sepIndexInLine)
                 highlightArgsInText(sb, leftPart, lineStart)
                 
-                // Description part
+                // 3. Описание: базовый цвет (наследуется от TextView), но аргументы внутри - Neon Red
                 val descStart = lineStart + sepIndexInLine + 3
                 val descText = line.substring(sepIndexInLine + 3)
                 highlightArgsInText(sb, descText, descStart)
             }
-            
             offset += line.length + 1
         }
     }
 
     private fun highlightArgsInText(sb: SpannableStringBuilder, text: String, baseOffset: Int) {
-        // Highlight <...>
+        // Подсветка <...> цветом Neon Red
         var relIndex = 0
         while (true) {
             val lt = text.indexOf('<', relIndex)
             if (lt < 0) break
             val gt = text.indexOf('>', lt + 1)
             if (gt < 0) break
+            
             sb.setSpan(
-                ForegroundColorSpan(colorArg),
+                ForegroundColorSpan(colorNeonRed),
                 baseOffset + lt, baseOffset + gt + 1,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
             relIndex = gt + 1
         }
         
-        // Highlight flags
+        // Подсветка флагов (например, -r, --inplace) цветом Neon Red
+        // \B гарантирует, что мы берем тире, которое не является частью слова (например, не в "a-b")
         val flagRegex = Regex("""\B-[-\w\[\]]+""")
         flagRegex.findAll(text).forEach { m ->
             sb.setSpan(
-                ForegroundColorSpan(colorArg),
+                ForegroundColorSpan(colorNeonRed),
                 baseOffset + m.range.first, baseOffset + m.range.last + 1,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
@@ -365,7 +383,6 @@ wtchd                - открыть Watchdog
   - Параллельно: 'parallel: cmd1; cmd2' выполняются параллельно
   - Фоновые: 'cmd1 & cmd2' - неблокирующие команды
   - Поддерживаются суффиксы времени: ms, s, m
-
 """.trimIndent()
 
         return SpannableStringBuilder(raw)
@@ -375,7 +392,7 @@ wtchd                - открыть Watchdog
         try {
             tv.setShadowLayer(radius, dx, dy, color)
         } catch (_: Throwable) {
-            // ignore
+            // Игнорируем ошибки рендеринга теней на некоторых устройствах
         }
     }
 }
