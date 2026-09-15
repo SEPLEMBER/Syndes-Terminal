@@ -1,4 +1,4 @@
-package es.zelliot.epubeditor
+package org.syndes.terminal
 
 import android.os.Bundle
 import android.view.WindowManager
