@@ -184,6 +184,33 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="false" />
 
+                        <activity
+            android:name=".ElPrimeActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+
+                <activity
+            android:name=".NEXYDACTIVITY"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+
+                <activity
+            android:name=".RetrMetrActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+
+                <activity
+            android:name=".EleganceThroneActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+
+                <activity
+            android:name=".BrPulseActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+
+
         <activity
             android:name=".ArrivalActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
