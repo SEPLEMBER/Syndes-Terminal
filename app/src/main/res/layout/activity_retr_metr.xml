@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Область вывода истории команд -->
+    <TextView
+        android:id="@+id/tvOutput"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:freezesText="false"
+        android:saveEnabled="false"
+        android:gravity="bottom"
+        android:fontFamily="monospace" />
+
+    <!-- Строка ввода (Prompt + EditText) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:freezesText="false"
+            android:saveEnabled="false"
+            android:fontFamily="monospace" />
+
+        <EditText
+            android:id="@+id/etCommand"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:fontFamily="monospace"
+            android:inputType="text"
+            android:freezesText="false"
+            android:saveEnabled="false"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
+            android:textCursorDrawable="@null" />
+    </LinearLayout>
+</LinearLayout>
