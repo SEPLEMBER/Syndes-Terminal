@@ -3,285 +3,396 @@ package org.syndes.terminal
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
+import android.text.TextWatcher
+import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.UnderlineSpan
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
+import android.view.View
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
-class TutorialActivity : AppCompatActivity() {
+class RuTutorialActivity : AppCompatActivity() {
+
+    private lateinit var tutorialText: TextView
+    private lateinit var searchEdit: EditText
+    private lateinit var clearSearch: ImageButton
+    private lateinit var searchStats: TextView
+    
+    private var originalText: String = ""
+    
+    // Цветовая палитра
+    private val colorNeonCyan = Color.parseColor("#00FFF0")
+    private val colorNeonRed = Color.parseColor("#FF3333")
+    private val colorDefault = Color.parseColor("#E0E0E0")
+    private val colorSearchHighlight = Color.parseColor("#3300FFF0") // Полупрозрачный cyan для фона поиска
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tutorial)
 
-        val tv: TextView = findViewById(R.id.tutorial_text)
-        // monospace for terminal feel
-        tv.typeface = Typeface.MONOSPACE
-        // subtle neon glow
-        val neonCyan = Color.parseColor("#00FFF0")
-        applyNeon(tv, neonCyan, radius = 4f)
+        tutorialText = findViewById(R.id.tutorial_text)
+        searchEdit = findViewById(R.id.search_edit)
+        clearSearch = findViewById(R.id.clear_search)
+        searchStats = findViewById(R.id.search_stats)
 
-        tv.setText(buildHighlightedCommands(), TextView.BufferType.SPANNABLE)
+        // Настройка TextView
+        tutorialText.typeface = Typeface.MONOSPACE
+        applyNeon(tutorialText, colorNeonCyan, radius = 4f)
+
+        // 1. Создаем исходный текст и применяем синтаксическую подсветку
+        val initialSpannable = buildHighlightedCommands()
+        applySyntaxHighlighting(initialSpannable)
+        
+        // 2. Сохраняем чистый текст для надежного поиска по индексам
+        originalText = initialSpannable.toString()
+        
+        // 3. Устанавливаем подсвеченный текст
+        tutorialText.text = initialSpannable
+
+        // Настройка поиска
+        setupSearch()
+    }
+
+    private fun setupSearch() {
+        searchEdit.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim() ?: ""
+                if (query.isNotEmpty()) {
+                    performSearch(query)
+                    clearSearch.visibility = View.VISIBLE
+                    searchStats.visibility = View.VISIBLE
+                } else {
+                    // Возвращаем исходный подсвеченный текст
+                    val initialSpannable = SpannableStringBuilder(originalText)
+                    applySyntaxHighlighting(initialSpannable)
+                    tutorialText.text = initialSpannable
+                    
+                    clearSearch.visibility = View.GONE
+                    searchStats.visibility = View.GONE
+                }
+            }
+        })
+
+        searchEdit.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || 
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
+                searchEdit.clearFocus() // Скрываем клавиатуру при поиске
+                true
+            } else {
+                false
+            }
+        }
+
+        clearSearch.setOnClickListener {
+            searchEdit.setText("")
+            searchEdit.clearFocus()
+        }
+    }
+
+    private fun performSearch(query: String) {
+        val sb = SpannableStringBuilder(originalText)
+        val lowerQuery = query.lowercase()
+        var matchCount = 0
+        
+        val lines = originalText.split("\n")
+        var offset = 0
+        
+        for (line in lines) {
+            val lineStart = offset
+            val lineLower = line.lowercase()
+            
+            if (lineLower.contains(lowerQuery)) {
+                var searchStart = 0
+                while (true) {
+                    val idx = lineLower.indexOf(lowerQuery, searchStart)
+                    if (idx == -1) break
+                    
+                    val absStart = lineStart + idx
+                    val absEnd = absStart + query.length
+                    
+                    // Подсветка фона (полупрозрачный cyan)
+                    sb.setSpan(
+                        BackgroundColorSpan(colorSearchHighlight),
+                        absStart, absEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    // Подсветка текста (Neon Cyan)
+                    sb.setSpan(
+                        ForegroundColorSpan(colorNeonCyan),
+                        absStart, absEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    // Подчеркивание
+                    sb.setSpan(
+                        UnderlineSpan(),
+                        absStart, absEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    
+                    matchCount++
+                    searchStart = idx + 1
+                }
+            }
+            offset += line.length + 1
+        }
+        
+        // Повторно применяем синтаксическую подсветку поверх поиска
+        applySyntaxHighlighting(sb)
+        
+        tutorialText.text = sb
+        searchStats.text = "Найдено: $matchCount совпадений"
+    }
+
+    private fun applySyntaxHighlighting(sb: SpannableStringBuilder) {
+        val lines = originalText.split("\n")
+        var offset = 0
+        
+        for (line in lines) {
+            val lineStart = offset
+            val sepIndexInLine = line.indexOf(" - ")
+            
+            if (sepIndexInLine >= 0 && line.trim().isNotEmpty()) {
+                // 1. Имя команды: Neon Cyan
+                val commandEnd = lineStart + sepIndexInLine
+                sb.setSpan(
+                    ForegroundColorSpan(colorNeonCyan), 
+                    lineStart, commandEnd, 
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                
+                // 2. Аргументы в части команды (если есть)
+                val leftPart = line.substring(0, sepIndexInLine)
+                highlightArgsInText(sb, leftPart, lineStart)
+                
+                // 3. Описание: базовый цвет (наследуется от TextView), но аргументы внутри - Neon Red
+                val descStart = lineStart + sepIndexInLine + 3
+                val descText = line.substring(sepIndexInLine + 3)
+                highlightArgsInText(sb, descText, descStart)
+            }
+            offset += line.length + 1
+        }
+    }
+
+    private fun highlightArgsInText(sb: SpannableStringBuilder, text: String, baseOffset: Int) {
+        // Подсветка <...> цветом Neon Red
+        var relIndex = 0
+        while (true) {
+            val lt = text.indexOf('<', relIndex)
+            if (lt < 0) break
+            val gt = text.indexOf('>', lt + 1)
+            if (gt < 0) break
+            
+            sb.setSpan(
+                ForegroundColorSpan(colorNeonRed),
+                baseOffset + lt, baseOffset + gt + 1,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            relIndex = gt + 1
+        }
+        
+        // Подсветка флагов (например, -r, --inplace) цветом Neon Red
+        // \B гарантирует, что мы берем тире, которое не является частью слова (например, не в "a-b")
+        val flagRegex = Regex("""\B-[-\w\[\]]+""")
+        flagRegex.findAll(text).forEach { m ->
+            sb.setSpan(
+                ForegroundColorSpan(colorNeonRed),
+                baseOffset + m.range.first, baseOffset + m.range.last + 1,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
     }
 
     private fun buildHighlightedCommands(): SpannableStringBuilder {
-        // Цвета
-        val colorCommand = Color.parseColor("#4FC3F7") // blue-ish
-        val colorArg = Color.parseColor("#80E27E")     // green-ish
-        val colorWarning = Color.parseColor("#FF5252") // red
-        val colorNeonCyan = Color.parseColor("#00FFF0") // neon cyan
-        val colorDefault = Color.parseColor("#E0E0E0")
-
-        // Organized categories (A..E). Commands in each category are alphabetically sorted.
         val raw = """
-Available commands:
+Доступные команды:
 
-about                - show application information and version
-aband                - open “About phone” / device information
-acc                  - open accounts / sync settings
-accs                 - open accessibility settings
-act                  - launch an Activity of the specified app (if exported=true)
-alarm                - open the alarm application
-alias <name>=<cmd>   - define an alias (shortcut). Alias names must not contain spaces
-alias list           - show list of defined aliases
-alias run <name>     - execute alias by name
-apm                  - open airplane mode settings
-apkkey|filekey <apk> - show APK signatures / certificates
-apps                 - open application settings screen
-appscheck            - utility to check application package names (syndes component)
-appmanager           - shell application manager utility
-apse <app|pkg>       - open application details for specified app
-backup|snapshot <path> - create a backup of a file/folder using SydBack (if available)
-batchren             - batch file renaming utility (syndes component)
-batchedit <old> <new> <dir> [--dry] - batch text replacement in files
-bootshell            - open BootShell (UI for autostart / auto-command editing)
-browser [url]        - open browser (optionally with URL)
-bts                  - open Bluetooth settings
-btss                 - open battery / power saving settings
-calc                 - open calculator application
-call <number>        - open dialer with specified number
-cam                  - open camera (ACTION_IMAGE_CAPTURE)
-cat <file>           - show file contents (SAF/relative paths supported)
-cd                   - change working directory
-checksum <file> [md5|sha256] - calculate file hash (default: sha256)
-clear                - clear terminal output
-cleartrash           - empty trash
-clk                  - open date/time settings
-cmp <f1> <f2>        - compare two text files
-contacts             - open contacts application
-console/settings     - terminal settings
-cp <src> <dst>       - copy file or directory
-cut -d<delim> -f<fields> <file> - extract fields from file using delimiter
-data                 - open mobile data settings
-date                 - show current date and time
-dev                  - open developer options
-device               - show device information
-diff [-u] [-c <n>] [-i] <f1> <f2> - show text differences
-dsp                  - open display settings
-du <file|dir>        - show size in bytes
-email [addr] [subj] [body] - open email composer
-echo <text>          - print text
-exit                 - exit application
-find <name>          - find files by name
-findpkg|pkgof <app>  - find package name(s) by visible app name
-grep [-r] [-i] [-l] [-n] <pattern> <path> - search text in files
-hash utilities       - use checksum/sha256/md5
-head <file> [n]      - show first n lines
-help                 - show this help
-history              - show input history
-home                 - open launcher settings
-join|merge <file1> <file2> [sep] - merge files line by line
-kbd                  - open keyboard settings
-lang                 - open language settings
-launch <app>         - launch app by visible name
-ln <src> <link>      - create file pseudo-link
-loc                  - open location settings
-ls|dir               - list files
-md5|sha256 <path>    - calculate file hash
-mem [pkg]            - show memory usage
-mkdir <name>         - create directory
-mv <src> <dst>       - move file or directory
-nfc                  - open NFC settings
-night                - open night mode settings
-notif                - open notification settings
-notify -t <title> -m <message> - send system notification
-pm install <apk>     - install APK
-pm launch <pkg|app>  - launch package or app
-pm list [user|system]- list installed packages
-pm uninstall <pkg>   - uninstall package
-pminfo|pkginfo <pkg> - show package information
-preview <path> [lines] - preview file
-priv                 - open privacy settings
-ps|top               - show running processes
-rename <old> <new> <path> - rename files
-replace <old> <new> <path> - replace text in files
-replacetool          - batch text replacement utility (syndes component)
-rev <file> [--inplace] - reverse line order
-rm [-r] <path>       - delete file or directory
-runsyd <name>        - load and execute a syd script from SAF/scripts
-rust                 - rust text editor
-search <query>       - internet search
-sec                  - open security / application security details
-shortc               - create a terminal command shortcut
-sleep <min>/<ms>/<sec> - execution delay
-sydcheck <name>      - scan syd scripts for suspicious commands
-sms [number] [text]  - open SMS application
-snd                  - open sound settings
-sort-lines <file> [--unique] [--reverse] [--inplace] - sort lines
-split <file> <lines_per_file> [prefix] - split file
-stg                  - open storage settings
-stat <path>          - file/directory statistics
-status               - system information utility
-stash|trash <path>   - move to trash
-sysclipboard get|set <text> - system clipboard access
-tail <file> [n]      - show last lines of file
-touch <name>         - create empty file
-uname                - show system name
-unzip <archive> [dest] - extract ZIP archive
-uptime               - system uptime
-vpns                 - open VPN settings
-wait <sec>           - block execution
-watchdog             - same as sleep
-wc <file>            - count lines/words/characters
-wifi                 - open Wi-Fi settings
-whoami               - show current user
-zip <source> <archive> - create ZIP archive
+=== ОСНОВНЫЕ КОМАНДЫ ===
+about                - показать информацию о приложении и версию
+aband                - открыть «О телефоне» / информация об устройстве
+acc                  - открыть настройки аккаунтов / синхронизации
+accs                 - открыть настройки доступности (Accessibility)
+act                  - запустить Activity указанного приложения (если exported=true)
+alarm                - открыть приложение будильника
+apm                  - открыть настройки режима полёта
+apps                 - открыть экран настроек приложения
+apse <app|pkg>       - открыть настройки указанного приложения (application details)
+backup|snapshot <path> - создать резервную копию файла/папки с SydBack
+bootshell            - открыть BootShell (UI для автозагрузки)
+browser [url]        - открыть браузер (опционально с URL)
+bts                  - открыть настройки Bluetooth
+btss                 - открыть настройки энергосбережения / батареи
+calc                 - открыть приложение калькулятора
+call <number>        - открыть набор номера в Dialer
+cam                  - открыть камеру (ACTION_IMAGE_CAPTURE)
+clk                  - открыть настройки даты/времени
+contacts             - открыть приложение контактов
+data                 - открыть настройки мобильных данных
+date                 - показать текущие дату и время
+dev                  - открыть настройки разработчика
+device               - показать информацию об устройстве
+dsp                  - открыть настройки дисплея
+email [addr] [subj] [body] - открыть компоновщик письма
+exit                 - завершить работу приложения
+flashlight <1|0>     - включить/выключить фонарик (1=ON, 0=OFF)
+help                 - показать эту справку
+history              - показать историю ввода
+home                 - открыть настройки лаунчера
+kbd                  - открыть настройки клавиатуры
+lang                 - открыть языковые настройки
+loc                  - открыть настройки местоположения
+nfc                  - открыть настройки NFC
+night                - открыть настройки ночного режима
+notif                - открыть настройки уведомлений
+priv                 - открыть настройки приватности
+search <query>       - поиск в интернете
+sec                  - открыть безопасность / детали приложения
+sms [number] [text]  - открыть SMS-приложение
+snd                  - открыть настройки звука
+stg                  - открыть настройки хранилища
+vpns                 - открыть настройки VPN
+wifi                 - открыть настройки Wi-Fi
 
-NOTES:
+=== ФАЙЛОВЫЕ ОПЕРАЦИИ ===
+cat <file>           - показать содержимое файла (SAF/относительные пути)
+cd <path>            - сменить рабочую директорию
+checksum <file> [md5|sha256] - вычислить хеш файла (по умолчанию sha256)
+cleartrash           - очистить корзину
+cmp <f1> <f2>        - сравнить два текстовых файла
+cp <src> <dst>       - копировать файл или директорию
+cut -d<delim> -f<fields> <file> - извлечь поля из файла по разделителю
+diff [-u] [-c <n>] [-i] <f1> <f2> - показать текстовые отличия
+du <file|dir>        - показать размер в байтах
+find <name>          - найти файлы по имени
+grep [-r] [-i] [-l] [-n] <pattern> <path> - поиск текста в файлах
+head <file> [n]      - показать первые n строк
+join|merge <file1> <file2> [sep] - объединить файлы построчно
+ls|dir               - перечислить файлы
+md5|sha256 <path>    - вычислить хеш файла
+mkdir <name>         - создать директорию
+mv <src> <dst>       - переместить файл или директорию
+preview <path> [lines] - предварительный просмотр файла
+rename <old> <new> <path> - переименовать файлы
+replace <old> <new> <path> - заменить текст в файлах
+rev <file> [--inplace] - обратить порядок строк
+rm [-r] <path>       - удалить файл или директорию
+sort-lines <file> [--unique] [--reverse] [--inplace] - сортировка строк
+split <file> <lines_per_file> [prefix] - разбить файл
+stat <path>          - статистика файла/директории
+stash|trash <path>   - переместить в корзину
+tail <file> [n]      - последние строки файла
+touch <name>         - создать пустой файл
+unzip <archive> [dest] - распаковать ZIP
+zip <source> <archive> - создать ZIP-архив
 
-  - runsyd reads scripts from SAF root → 'scripts' directory (tries name.syd, name.sh, name.txt). Supports both specifying the file extension and omitting it — e.g. you can run "runsyd scriptname" or "runsyd scriptname.syd".
-  - pm uninstall starts system uninstall flow (user must confirm each uninstall dialog).
-  - resetup opens UI that iterates package list and launches system uninstall dialogs one-by-one.
-  - many file operations support SAF paths or relative paths from the configured work directory.
-  - aliases are local to the app and do not affect the Android shell.
-  - Command sequences are supported: commands of the form 'cmd1; cmd2; cmd3' run sequentially. Groups prefixed with 'parallel:' such as 'parallel: cmd1; cmd2; cmd3' run concurrently. Commands that include '&' (for example 'cmd1 & cmd2; cmd3') behave as backgrounded or non-blocking tasks — useful when, for example, you need to start an Activity without stopping the rest of the chain.
-  - Supports the 'button' command: 'button (Question text - Option1=cmd1 - Option2=cmd2 - ...)', using '-' as the separator between parts. If a 'button(...)' appears in a command chain (for example 'button(...); othercommand'), the following commands will be paused until the user selects one of the options. After a choice is made the chain resumes, and the command associated with the chosen option is appended to the chain (executed as if the user had entered it by pressing the button).
-  - Supports the 'random {cmd1-cmd2-cmd3}' command. This runs a randomly selected command from the provided list.
-  
-  - SyPL Compiler extends the terminal functions with the following commands:
-  - `if <left> = <right> then <command>` with `else <command>` support. `then` executes the specified command as if the user typed it manually (including waits/blocks). `else` refers to the entire sequence of consecutive `if` statements (as long as there are no other commands between them) and is executed only if none of the previous `if` statements in the chain have triggered. Examples with `echo`: `if 1 = 1 then echo ok` — will trigger and output `ok` (literal comparison).
-  - `echo hello` `if echo hello = whatever then echo prev_cmd_matched` — will trigger because the last executed command is being compared. `echo hi` `if hi = hi then echo result_matched` — will trigger because the last command result is being compared. Chain:
-    - `if cmdA = x then echo A`
-    - `if cmdB = y then echo B`
-    `else echo fallback`
-    — `else` will execute only if neither `A` nor `B` was triggered.
-  - cycle support exists. Supported forms:
-  - `cycle <N>t <interval>=<cmd>` — execute `<cmd>` N times with `<interval>` pause between executions. Examples: `cycle 10t 3ms=echo hi`, `cycle 5t 2s=echo tick`. Time suffixes `ms`, `s`, `m` are supported.
-  - `cycle next <Mi>i <N>t=<cmd>` — execute `<cmd>` N times, each time after `Mi` commands have been processed (i.e., after the specified number of processed commands). Example: `cycle next 3i 7t=echo every3` — the command `echo every3` will be injected and executed 7 times, each time after processing 3 commands.
-  - cycles are scheduled as background tasks and add commands to the execution queue according to their schedule/trigger.
+=== УТИЛИТЫ ===
+apkkey|filekey <apk> - показать подписи/сертификаты APK
+appscheck            - утилита проверки package name программ
+appmanager           - утилита менеджера приложений оболочки
+batchren             - утилита массового переименования файлов
+batchedit <old> <new> <dir> [--dry] - массовая замена текста в файлах
+basename <path>      - получить имя файла из пути
+clear                - очистить вывод терминала
+console/settings     - настройки терминала
+dirname <path>       - получить путь к директории
+echo <text>          - вывести текст
+file <path>          - определить тип файла
+findpkg|pkgof <app>  - найти имя пакета по имени приложения
+mem [pkg]            - показать использование памяти
+notify -t <title> -m <message> - отправить системное уведомление
+ps|top               - показать запущенные процессы
+replacetool          - утилита пакетной замены текста
+shortc               - создать ярлык команды терминала
+status               - утилита информации о системе
+sysclipboard get|set <text> - системный буфер обмена
+uname                - показать системное имя
+uptime               - время работы системы
+wait <sec>           - блокировка выполнения
+watchdog             - то же самое, что sleep
+wc <file>            - подсчитать строки/слова/символы
+whoami               - показать текущего пользователя
 
+=== РАСШИРЕННЫЕ УТИЛИТЫ ===
+base64 <-e|-d> <file> - кодирование/декодирование base64
+neopad <filename>    - открыть файл в редакторе NeonPad
+printf <format> [args] - форматированный вывод
+seq <start> <end>    - генерация последовательности чисел
+strings <file>       - поиск печатаемых строк в файле
+tree [path]          - показать структуру директорий
+xxd <file>           - hex-дамп файла
+
+=== АЛИАСЫ ===
+alias <name>=<cmd>   - определить псевдоним (ярлык)
+alias list           - показать список псевдонимов
+alias run <name>     - выполнить псевдоним по имени
+sydalias list        - показать все алиасы
+sydalias create <name>=<cmd> - создать/обновить алиас
+sydalias remove <name> - удалить алиас
+
+=== ПАКЕТНЫЙ МЕНЕДЖМЕНТ ===
+pm install <apk>     - установить APK
+pm launch <pkg|app>  - запустить пакет или приложение
+pm list [user|system]- перечислить установленные пакеты
+pm uninstall <pkg>   - удалить пакет
+pminfo|pkginfo <pkg> - показать информацию о пакете
+
+=== СКРИПТЫ И АВТОМАТИЗАЦИЯ ===
+runsyd <name>        - загрузить и выполнить syd скрипт из SAF/scripts
+rust                 - текстовый редактор rust
+sydcheck <name>      - поиск подозрительных команд в syd-скриптах
+
+=== СПЕЦИАЛЬНЫЕ КОМАНДЫ ===
+button (Текст - Опция1=cmd1 - Опция2=cmd2) - показать выбор пользователю
+cycle <N>t <interval>=<cmd> - выполнить cmd N раз с интервалом
+cycle next <Mi>i <N>t=<cmd> - выполнять cmd каждые Mi команд
+if <left> = <right> then <cmd> [else <cmd>] - условное выполнение
+parallel: cmd1; cmd2 - параллельное выполнение команд
+random {cmd1-cmd2-cmd3} - случайная команда из списка
+sleep <min>/<ms>/<sec> - задержка выполнения
+
+=== ПРИЛОЖЕНИЯ И АКТИВНОСТИ ===
+aspernet             - открыть AsperNet
+bugfixer             - открыть игру BUG FIXER
+bugtrack             - открыть BugTracker
+bye script           - открыть Bye Script
+epub editor          - открыть Epub Editor
+flowscript           - открыть FlowScript
+led form             - открыть Led Form
+metro                - открыть METRO
+numtrap              - открыть Numtrap
+omnisearch           - открыть OMNISEARCH
+scriptsteel          - открыть Scriptsteel
+vectorframe          - открыть Vector Frame
+wtchd                - открыть Watchdog
+
+Примечания:
+  - runsyd читает скрипты из корня SAF → директории 'scripts' (пытается name.syd, name.sh, name.txt)
+  - pm uninstall требует подтверждения каждого диалога удаления
+  - многие файловые операции поддерживают SAF-пути или относительные пути
+  - псевдонимы (aliases) локальны для приложения
+  - Последовательности: 'cmd1; cmd2; cmd3' выполняются по очереди
+  - Параллельно: 'parallel: cmd1; cmd2' выполняются параллельно
+  - Фоновые: 'cmd1 & cmd2' - неблокирующие команды
+  - Поддерживаются суффиксы времени: ms, s, m
 """.trimIndent()
 
-        val sb = SpannableStringBuilder(raw)
-
-        // 1) highlight the "!!! WARNING :" header in red
-        val warningHeader = "!!! WARNING :"
-        val whIndex = raw.indexOf(warningHeader)
-        if (whIndex >= 0) {
-            val start = whIndex
-            val end = whIndex + warningHeader.length
-            sb.setSpan(ForegroundColorSpan(colorWarning), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-
-        // 2) highlight the essence of the warning (look for sentence containing "large folders")
-        val essenceTargets = listOf(
-            " large folders is CPU-intensive.",
-            "use small folders or specific directories one-by-one.",
-            "please"
-        )
-        essenceTargets.forEach { t ->
-            val idx = raw.indexOf(t, ignoreCase = true)
-            if (idx >= 0) {
-                sb.setSpan(ForegroundColorSpan(colorNeonCyan), idx, idx + t.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-        }
-
-        // 3) per-line parsing: command part (left of " - ") -> blue; args <...> and flags -x -> green
-        val lines = raw.split("\n")
-        var offset = 0
-        for (line in lines) {
-            // position of this line in sb
-            val lineStart = offset
-            val lineEnd = offset + line.length
-
-            // find separator " - "
-            val sepIndexInLine = line.indexOf(" - ")
-            val commandPartEnd = if (sepIndexInLine >= 0) lineStart + sepIndexInLine else lineEnd
-
-            if (line.trim().isNotEmpty()) {
-                // color command part (left of " - ") in blue (only if it's not description/warning block)
-                if (commandPartEnd > lineStart) {
-                    sb.setSpan(ForegroundColorSpan(colorCommand), lineStart, commandPartEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-                    // inside left part, highlight <...> and -flags as green
-                    val leftPart = line.substring(0, if (sepIndexInLine >= 0) sepIndexInLine else line.length)
-                    var relIndex = 0
-                    while (true) {
-                        val lt = leftPart.indexOf('<', relIndex)
-                        if (lt < 0) break
-                        val gt = leftPart.indexOf('>', lt + 1)
-                        if (gt < 0) break
-                        val absStart = lineStart + lt
-                        val absEnd = lineStart + gt + 1
-                        sb.setSpan(ForegroundColorSpan(colorArg), absStart, absEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        relIndex = gt + 1
-                    }
-                    val flagRegex = Regex("""\B-[-\w\[\]]+""")
-                    flagRegex.findAll(leftPart).forEach { m ->
-                        val absStart = lineStart + m.range.first
-                        val absEnd = lineStart + m.range.last + 1
-                        sb.setSpan(ForegroundColorSpan(colorArg), absStart, absEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    }
-                } else {
-                    val firstNonSpace = line.indexOfFirst { !it.isWhitespace() }
-                    if (firstNonSpace >= 0) {
-                        val tokenEndInLine = line.indexOfFirst { it.isWhitespace() }.let { if (it < 0) line.length else it }
-                        val absStart = lineStart + firstNonSpace
-                        val absEnd = lineStart + tokenEndInLine
-                        if (absEnd > absStart) {
-                            sb.setSpan(ForegroundColorSpan(colorCommand), absStart, absEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        }
-                    }
-                }
-            }
-
-            // description part highlight (<...> and flags)
-            if (sepIndexInLine >= 0) {
-                val descStart = lineStart + sepIndexInLine + 3 // after " - "
-                val descText = line.substring(sepIndexInLine + 3)
-                var relIndex = 0
-                while (true) {
-                    val lt = descText.indexOf('<', relIndex)
-                    if (lt < 0) break
-                    val gt = descText.indexOf('>', lt + 1)
-                    if (gt < 0) break
-                    val absStart = descStart + lt
-                    val absEnd = descStart + gt + 1
-                    sb.setSpan(ForegroundColorSpan(colorArg), absStart, absEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    relIndex = gt + 1
-                }
-                val flagRegex = Regex("""\B-[-\w\[\]]+""")
-                flagRegex.findAll(descText).forEach { m ->
-                    val absStart = descStart + m.range.first
-                    val absEnd = descStart + m.range.last + 1
-                    sb.setSpan(ForegroundColorSpan(colorArg), absStart, absEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-
-            // advance offset (+1 for newline)
-            offset += line.length + 1
-        }
-
-        return sb
+        return SpannableStringBuilder(raw)
     }
 
-    // subtle neon glow helper
     private fun applyNeon(tv: TextView, color: Int, radius: Float = 4f, dx: Float = 0f, dy: Float = 0f) {
         try {
             tv.setShadowLayer(radius, dx, dy, color)
         } catch (_: Throwable) {
-            // defensive: some devices could behave differently; ignore failure
+            // Игнорируем ошибки рендеринга теней на некоторых устройствах
         }
     }
-} 
+}
