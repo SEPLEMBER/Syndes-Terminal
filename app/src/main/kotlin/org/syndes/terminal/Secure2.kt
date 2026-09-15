@@ -1,4 +1,4 @@
-package es.zelliot.epubeditor
+package org.syndes.terminal
 
 object Secure2 {
 
