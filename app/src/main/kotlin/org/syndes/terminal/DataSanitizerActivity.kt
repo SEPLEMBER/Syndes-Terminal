@@ -18,13 +18,11 @@ import kotlinx.coroutines.*
 class DataSanitizerActivity : AppCompatActivity() {
 
     companion object {
-        // Лимиты безопасности
         private const val MAX_INPUT_SIZE_BYTES = 5 * 1024 * 1024 // 5 МБ
         private const val MAX_LINES = 100_000
         private const val MAX_LINE_LENGTH = 10_000
         private const val DISPLAY_LIMIT = 200
 
-        // Цвета (вынесены для единообразия)
         private val COLOR_CYAN = Color.parseColor("#00FFFF")
         private val COLOR_GREEN = Color.parseColor("#00FF00")
         private val COLOR_RED = Color.parseColor("#FF5555")
@@ -32,14 +30,11 @@ class DataSanitizerActivity : AppCompatActivity() {
         private val COLOR_GRAY = Color.parseColor("#AAAAAA")
         private val COLOR_BG_DARK = Color.parseColor("#121212")
 
-        // Скомпилированные Regex (безопасные, атомарные)
         private val REGEX_INVISIBLE = Regex("[\\u200B-\\u200D\\uFEFF\\u00A0]")
         private val REGEX_SPACES = Regex("\\s+")
         private val REGEX_DIGITS = Regex("\\D")
         private val REGEX_INN = Regex("^\\d{10}$|^\\d{12}$")
         private val REGEX_OGRN = Regex("^\\d{13}$|^\\d{15}$")
-        
-        // Безопасные regex для экстракции (без вложенных квантификаторов)
         private val REGEX_EMAIL = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
         private val REGEX_PHONE = Regex("(?:\\+7|8)?\\s*\\(?\\d{3}\\)?[\\s-]?\\d{3}[\\s-]?\\d{2}[\\s-]?\\d{2}")
     }
@@ -250,7 +245,6 @@ class DataSanitizerActivity : AppCompatActivity() {
             return
         }
 
-        // Проверка лимитов безопасности
         if (rawText.length > MAX_INPUT_SIZE_BYTES) {
             Toast.makeText(this, "⚠️ Превышен лимит: ${MAX_INPUT_SIZE_BYTES / 1024 / 1024} МБ", Toast.LENGTH_LONG).show()
             return
@@ -262,7 +256,6 @@ class DataSanitizerActivity : AppCompatActivity() {
             return
         }
 
-        // Отмена предыдущей задачи, если она еще работает
         processJob?.cancel()
 
         btnProcess.isEnabled = false
@@ -304,7 +297,6 @@ class DataSanitizerActivity : AppCompatActivity() {
 
         for (line in lines) {
             try {
-                // Защита от слишком длинных строк
                 if (line.length > MAX_LINE_LENGTH) {
                     results.add(ProcessResult(line, "", Status.ERROR, "Строка слишком длинная (>${MAX_LINE_LENGTH} символов)"))
                     continue
@@ -314,7 +306,6 @@ class DataSanitizerActivity : AppCompatActivity() {
                 var status = Status.UNCHANGED
                 var reason = ""
 
-                // 1. Базовая очистка
                 if (cbTrimInvisible.isChecked) {
                     current = current.replace(REGEX_INVISIBLE, "")
                 }
@@ -323,13 +314,11 @@ class DataSanitizerActivity : AppCompatActivity() {
                 }
                 current = current.trim()
 
-                // 2. Пустые строки
                 if (cbRemoveEmpty.isChecked && current.isEmpty()) {
                     results.add(ProcessResult(line, "", Status.REMOVED_EMPTY, "Пустая строка"))
                     continue
                 }
 
-                // 3. Дубликаты
                 if (cbRemoveDuplicates.isChecked) {
                     val lower = current.lowercase()
                     if (seenLines.contains(lower)) {
@@ -339,7 +328,6 @@ class DataSanitizerActivity : AppCompatActivity() {
                     seenLines.add(lower)
                 }
 
-                // 4. ЭКСТРАКТОРЫ
                 if (cbExtractEmails.isChecked) {
                     val emails = REGEX_EMAIL.findAll(current).map { it.value }.toList()
                     if (emails.isNotEmpty()) {
@@ -367,7 +355,6 @@ class DataSanitizerActivity : AppCompatActivity() {
                         reason = "Телефоны не найдены в строке"
                     }
                 } else {
-                    // 5. СТРОГИЕ ВАЛИДАТОРЫ
                     if (cbValidateInn.isChecked && REGEX_INN.matches(current)) {
                         if (!isValidInn(current)) {
                             status = Status.INVALID
@@ -395,7 +382,6 @@ class DataSanitizerActivity : AppCompatActivity() {
                 if (status == Status.UNCHANGED) reason = "Без изменений"
                 results.add(ProcessResult(line, current, status, reason))
             } catch (e: Exception) {
-                // Изоляция сбоев: если строка вызвала исключение, помечаем как ошибку и идем дальше
                 results.add(ProcessResult(line, "", Status.ERROR, "Ошибка обработки: ${e.javaClass.simpleName}"))
             }
         }
@@ -435,10 +421,10 @@ class DataSanitizerActivity : AppCompatActivity() {
         return try {
             if (ogrn.length == 13) {
                 val num = ogrn.substring(0, 12).toLongOrNull() ?: return false
-                ((num % 11) % 10) == ogrn[12].digitToInt()
+                ((num % 11) % 10).toInt() == ogrn[12].digitToInt() // ИСПРАВЛЕНО: добавлено .toInt()
             } else if (ogrn.length == 15) {
                 val num = ogrn.substring(0, 14).toLongOrNull() ?: return false
-                ((num % 11) % 10) == ogrn[14].digitToInt()
+                ((num % 11) % 10).toInt() == ogrn[14].digitToInt() // ИСПРАВЛЕНО: добавлено .toInt()
             } else false
         } catch (e: Exception) {
             false
