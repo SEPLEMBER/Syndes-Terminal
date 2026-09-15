@@ -14,7 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import org.syndes.terminal.databinding.ActivityNtrBinding
 // Импорт добавлен для явной указания класса, если он вдруг не подхватится автоматически
-import org.syndes.terminal.ResourcesDistributeActivity 
+import org.syndes.terminal.ResourceDistributeActivity 
 
 class NTRActivity : AppCompatActivity() {
 
