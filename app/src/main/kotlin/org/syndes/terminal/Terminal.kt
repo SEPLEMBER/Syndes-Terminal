@@ -2053,7 +2053,7 @@ Hello!   \__/'---'\__/
     }
 }
 
-"epub editor -> {
+"epub editor" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
     val activityClass = ".MainActivity"
