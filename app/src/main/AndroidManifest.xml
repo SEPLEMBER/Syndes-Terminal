@@ -111,6 +111,12 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:exported="true" />
 
+        
+                                                <activity
+            android:name=".VFActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="true" />
+
                                                         <activity
             android:name=".SystemRogueActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
