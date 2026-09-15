@@ -60,7 +60,8 @@
         android:text=""
         android:textColor="#80E27E"
         android:textSize="12sp"
-        android:padding="8dp 12dp"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="12dp"
         android:background="#1A1A1A"
         android:visibility="gone"/>
 
