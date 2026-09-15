@@ -5,29 +5,17 @@
     android:background="#050505"
     android:orientation="vertical">
 
-    <!-- 
-      ScrollView с улучшенным скроллингом: 
-      fadeScrollbars и scrollbarThumbVertical делают полосу прокрутки стильной и ненавязчивой.
-      clipToPadding="false" позволяет контенту красиво уходить под края при скролле.
-    -->
+    <!-- Терминал вывода (скроллбар полностью скрыт для чистоты UI) -->
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:fadeScrollbars="true"
         android:fillViewport="true"
         android:padding="20dp"
-        android:scrollbarStyle="outsideOverlay"
-        android:scrollbarThumbVertical="#00FFFF">
+        android:scrollbars="none">
 
-        <!-- 
-          TextView: 
-          - textIsSelectable="true" позволяет пользователю копировать вывод терминала (огромный плюс к UX).
-          - shadowColor и shadowRadius создают мягкое неоновое свечение текста без падения производительности.
-          - Цвет #00AAAA идеально совпадает с colorDefault из вашего Kotlin-кода, обеспечивая бесшовный переход.
-        -->
         <TextView
             android:id="@+id/tvTerminalOutput"
             android:layout_width="match_parent"
@@ -44,18 +32,14 @@
             android:textSize="15sp" />
     </ScrollView>
 
-    <!-- Тонкий неоновый разделитель с прозрачностью для мягкого визуального перехода -->
+    <!-- Тонкий неоновый разделитель -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:alpha="0.3"
         android:background="#00FFFF" />
 
-    <!-- 
-      Современная панель ввода: 
-      Обособленный блок с чуть более светлым фоном (#0A0A0A) создает эффект "панели инструментов" 
-      и визуально отделяет зону ввода от истории терминала.
-    -->
+    <!-- Панель ввода -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -67,7 +51,6 @@
         android:paddingEnd="16dp"
         android:paddingBottom="14dp">
 
-        <!-- Статичный символ приглашения ввода -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -77,7 +60,6 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- Поле ввода -->
         <EditText
             android:id="@+id/etCommandInput"
             android:layout_width="0dp"
@@ -98,5 +80,4 @@
             android:textSize="16sp" />
 
     </LinearLayout>
-
 </LinearLayout>
