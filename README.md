@@ -1,7 +1,7 @@
 # Android Terminal Emulator 
    
 A small, handy terminal for Android. Unlike Termux, it doesn’t run a virtual system — everything works directly with Android itself.  
-
+ 
 ## What it can do 
   
 - A variety of familiar Linux-style commands.
