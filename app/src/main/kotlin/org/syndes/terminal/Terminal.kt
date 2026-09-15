@@ -226,12 +226,6 @@ Hello!   \__/'---'\__/
                         null
                     }
 
-                    "справка", "ruhelp", "туториал", "инструкция", "помощь" -> {
-                        val intent = Intent(ctx, RuTutorialActivity::class.java) // TODO: switch to RuTutorialActivity when available
-                        if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        ctx.startActivity(intent)
-                        null
-                    }
 
                     "resetup", "batch uninstall" -> {
                         val intent = Intent(ctx, ResetupActivity::class.java) // TODO: switch to TutorialActivity when available
@@ -1914,6 +1908,47 @@ Hello!   \__/'---'\__/
                 }
 
 
+// === ВНУТРЕННИЕ АКТИВНОСТИ (org.syndes.terminal) ===
+// Используем прямой Intent, это работает всегда, независимо от exported
+
+"справка", "ruhelp", "туториал", "инструкция", "помощь" -> {
+    val intent = Intent(ctx, RuTutorialActivity::class.java)
+    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    ctx.startActivity(intent)
+    null
+}
+
+"vectorframe" -> {
+    val intent = Intent(ctx, VFActivity::class.java)
+    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    ctx.startActivity(intent)
+    null
+}
+
+"numtrap" -> {
+    val intent = Intent(ctx, NTRActivity::class.java)
+    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    ctx.startActivity(intent)
+    null
+}
+
+"metro" -> {
+    val intent = Intent(ctx, RetrMetrActivity::class.java)
+    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    ctx.startActivity(intent)
+    null
+}
+
+"bugfixer", "bug fixer" -> {
+    val intent = Intent(ctx, SystemRogueActivity::class.java)
+    if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    ctx.startActivity(intent)
+    null
+}
+
+// === ВНЕШНИЕ АКТИВНОСТИ ===
+// Оставляем ComponentName, так как мы не можем импортировать их классы напрямую
+
 "rust" -> {
     val pm = ctx.packageManager
     val packageName = "org.syndes.kotlincomponents"
@@ -1923,391 +1958,12 @@ Hello!   \__/'---'\__/
 
     try {
         val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: RustStartActivity is not exported"
-        } else {
+        if (!ai.exported) "Error: activity not exported"
+        else {
             val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening rust"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-"bugfixer", "bug fixer" -> {
-    val pm = ctx.packageManager
-    val packageName = "org.syndes.terminal"
-    val activityClass = ".SystemRogueActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening game BUG FIXER"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-"wtchd" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".WatchdogActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening Watchdog"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-"aspernet" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".AspernetActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening AsperNet"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-"epub editor" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".MainActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening Epub Editor"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-
-"led form" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".LedFormActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening Led Form"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-
-"bugtrack" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".LoggerTermActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening BugTracker"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-
-"flowscript" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".FlowScriptActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening FlowScript"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-
-"bye script" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".BYEScriptActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening Bye Script"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-
-"omnisearch" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".SearchsActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening OMNISEARCH"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-"scriptsteel" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".ScriptsActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening Scriptsteel"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-
-"vectorframe" -> {
-    val pm = ctx.packageManager
-    val packageName = "org.syndes.terminal"
-    val activityClass = ".VFActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening Vector Frame"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-
-"numtrap" -> {
-    val pm = ctx.packageManager
-    val packageName = "org.syndes.terminal"
-    val activityClass = ".NTRActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening Numtrap"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-
-"metro" -> {
-    val pm = ctx.packageManager
-    val packageName = "org.syndes.terminal"
-    val activityClass = ".RetrMetrActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: 403"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening METRO"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
         }
     } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
         "Error: package or activity not found"
@@ -2323,19 +1979,12 @@ Hello!   \__/'---'\__/
 
     try {
         val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: activity not exported"
-        } else {
+        if (!ai.exported) "Error: activity not exported"
+        else {
             val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening text replace tool"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
         }
     } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
         "Error: package or activity not found"
@@ -2351,19 +2000,12 @@ Hello!   \__/'---'\__/
 
     try {
         val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: activity not exported"
-        } else {
+        if (!ai.exported) "Error: activity not exported"
+        else {
             val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening batch rename tool"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
         }
     } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
         "Error: package or activity not found"
@@ -2379,24 +2021,207 @@ Hello!   \__/'---'\__/
 
     try {
         val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: activity not exported"
-        } else {
+        if (!ai.exported) "Error: activity not exported"
+        else {
             val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening app check"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
         }
     } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
         "Error: package or activity not found"
     }
 }
+
+"wtchd" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".WatchdogActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"aspernet" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".AspernetActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"epub editor" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".MainActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"led form" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".LedFormActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"bugtrack" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".LoggerTermActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"flowscript" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".FlowScriptActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"bye script" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".BYEScriptActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"omnisearch" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".SearchsActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"scriptsteel" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.epubeditor"
+    val activityClass = ".ScriptsActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: 403"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
 
 "zeroless" -> {
     val pm = ctx.packageManager
