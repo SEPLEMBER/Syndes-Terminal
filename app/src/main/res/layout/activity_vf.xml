@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#050505"
+    android:orientation="vertical">
+
+    <!-- Заголовок -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:padding="20dp"
+        android:shadowColor="#3000FFFF"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="4"
+        android:text="VF MODULES\n[ ВЕКТОРНЫЕ ФУНКЦИИ ]"
+        android:textColor="#00FFFF"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- Список модулей -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fadeScrollbars="true"
+        android:padding="16dp"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbarThumbVertical="#00FFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- === ВНУТРЕННИЕ МОДУЛИ === -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:paddingStart="4dp"
+                android:paddingBottom="8dp"
+                android:text="[ ВНУТРЕННИЕ ]"
+                android:textColor="#005555"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btnMorphAnalyzer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="01. Морфологический анализатор"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/btnMultiReplace"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="02. Множественная замена текста"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/btnSchedulePlanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="03. Планировщик расписания"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/btnDataSanitizer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="04. Номер и Email"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/btnAnalyzerTool"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="05. Инструмент анализа"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+            <!-- === ВНЕШНИЕ МОДУЛИ === -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:paddingStart="4dp"
+                android:paddingBottom="8dp"
+                android:text="[ ВНЕШНИЕ ]"
+                android:textColor="#005555"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btnTedSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="06. TedSearch"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/btnTextWalker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="07. TextWalker"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/btnExperimentalText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="08. Экспериментальная обработка текста"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/btnTextFormatter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="#0A0A0A"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:text="09. Форматирование текста"
+                android:textColor="#00AAAA"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
