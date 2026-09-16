@@ -262,7 +262,7 @@ Hello!   \__/'---'\__/
                         null
                     }
 
-                   "old numtrap"  -> {
+                   "oldnumtrap"  -> {
                         val intent = Intent(ctx, ArrivalActivity::class.java) // TODO: switch to KanjiMapperActivity when available
                         if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         ctx.startActivity(intent)
@@ -619,7 +619,7 @@ Hello!   \__/'---'\__/
                         }
 
   
-                          "old batchren" -> {
+                          "oldbatchren" -> {
     if (args.size < 2) return "Usage: batchren <dir> <newPattern>"
     val dirPath = args[0]
     val pattern = args.drop(1).joinToString(" ")
