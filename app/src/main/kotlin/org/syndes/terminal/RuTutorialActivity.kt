@@ -392,6 +392,11 @@ omnisearch           - открыть OMNISEARCH
 scriptsteel          - открыть Scriptsteel
 vectorframe          - открыть Vector Frame
 wtchd                - открыть Watchdog
+forth                - интерпретатор ForthME
+lua                  - интерпретатор LuaMe
+perceptron           - интерпретатор Perceptron
+
+
 
 Примечания:
   - runsyd читает скрипты из корня SAF → директории 'scripts' (пытается name.syd, name.sh, name.txt)
