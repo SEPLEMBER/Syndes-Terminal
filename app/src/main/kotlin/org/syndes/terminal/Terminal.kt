@@ -1970,6 +1970,111 @@ Hello!   \__/'---'\__/
     }
 }
 
+"synarch", "obsidian" -> {
+    val pm = ctx.packageManager
+    val packageName = "md.obsidian"
+    val activityClass = ".MainActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: activity not exported"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"greenstash" -> {
+    val pm = ctx.packageManager
+    val packageName = "com.starry.greenstash"
+    val activityClass = ".MainActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: activity not exported"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"buckwheat" -> {
+    val pm = ctx.packageManager
+    val packageName = "com.danilkinkin.buckwheat"
+    val activityClass = ".MainActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: activity not exported"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"zest" -> {
+    val pm = ctx.packageManager
+    val packageName = "com.yoshi.todark"
+    val activityClass = ".MainActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: activity not exported"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
+"tasks" -> {
+    val pm = ctx.packageManager
+    val packageName = "org.tasks"
+    val activityClass = ".MainActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) "Error: activity not exported"
+        else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent)
+            null
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
 "replacetool" -> {
     val pm = ctx.packageManager
     val packageName = "org.syndes.kotlincomponents"
