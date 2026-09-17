@@ -8,13 +8,15 @@
     android:background="#0A0A0A"
     android:padding="0dp">
 
-    <!-- Search Bar -->
+    <!-- Search Bar (добавлен id для программной подсветки при открытии) -->
     <LinearLayout
+        android:id="@+id/search_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="#1A1A1A"
         android:padding="12dp"
+        android:layout_margin="8dp"
         android:gravity="center_vertical">
 
         <ImageView
@@ -60,8 +62,8 @@
         android:text=""
         android:textColor="#00FFF0"
         android:textSize="12sp"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="12dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
         android:background="#1A1A1A"
         android:visibility="gone"/>
 
