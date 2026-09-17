@@ -2,6 +2,7 @@ package org.syndes.terminal
 
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.Spannable
@@ -15,6 +16,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
@@ -24,6 +26,7 @@ class RuTutorialActivity : AppCompatActivity() {
     private lateinit var searchEdit: EditText
     private lateinit var clearSearch: ImageButton
     private lateinit var searchStats: TextView
+    private lateinit var searchContainer: LinearLayout
     
     private var originalText: String = ""
     
@@ -41,12 +44,13 @@ class RuTutorialActivity : AppCompatActivity() {
         searchEdit = findViewById(R.id.search_edit)
         clearSearch = findViewById(R.id.clear_search)
         searchStats = findViewById(R.id.search_stats)
+        searchContainer = findViewById(R.id.search_container)
 
-        // Настройка TextView
+        // Настройка TextView (без glow/теней)
         tutorialText.typeface = Typeface.MONOSPACE
-        applyNeon(tutorialText, colorNeonCyan, radius = 4f)
+        tutorialText.setTextColor(colorDefault)
 
-        // 1. Создаем исходный текст и применяем синтаксическую подсветку
+        // 1. Создаем исходный текст и применяем синтаксическую подсветку СРАЗУ при открытии
         val initialSpannable = buildHighlightedCommands()
         applySyntaxHighlighting(initialSpannable)
         
@@ -56,8 +60,24 @@ class RuTutorialActivity : AppCompatActivity() {
         // 3. Устанавливаем подсвеченный текст
         tutorialText.text = initialSpannable
 
+        // 4. Подсветка панели поиска при открытии (привлекает внимание)
+        highlightSearchOnOpen()
+
         // Настройка поиска
         setupSearch()
+    }
+
+    private fun highlightSearchOnOpen() {
+        // Создаем эффект подсветки для панели поиска: неоновая рамка + легкий фон
+        val drawable = GradientDrawable().apply {
+            setColor(Color.parseColor("#1500FFF0")) // Очень легкий cyan фон (прозрачность ~8%)
+            cornerRadius = 16f
+            setStroke(3, colorNeonCyan) // Неоновая рамка толщиной 3px
+        }
+        
+        searchContainer.background = drawable
+        // Запрашиваем фокус, чтобы показать готовность к вводу (клавиатура появится, если разрешено)
+        searchEdit.requestFocus()
     }
 
     private fun setupSearch() {
@@ -146,7 +166,7 @@ class RuTutorialActivity : AppCompatActivity() {
             offset += line.length + 1
         }
         
-        // Повторно применяем синтаксическую подсветку поверх поиска
+        // Повторно применяем синтаксическую подсветку поверх поиска, чтобы сохранить цвета команд
         applySyntaxHighlighting(sb)
         
         tutorialText.text = sb
@@ -174,7 +194,7 @@ class RuTutorialActivity : AppCompatActivity() {
                 val leftPart = line.substring(0, sepIndexInLine)
                 highlightArgsInText(sb, leftPart, lineStart)
                 
-                // 3. Описание: базовый цвет (наследуется от TextView), но аргументы внутри - Neon Red
+                // 3. Описание: базовый цвет, но аргументы внутри - Neon Red
                 val descStart = lineStart + sepIndexInLine + 3
                 val descText = line.substring(sepIndexInLine + 3)
                 highlightArgsInText(sb, descText, descStart)
@@ -201,7 +221,6 @@ class RuTutorialActivity : AppCompatActivity() {
         }
         
         // Подсветка флагов (например, -r, --inplace) цветом Neon Red
-        // \B гарантирует, что мы берем тире, которое не является частью слова (например, не в "a-b")
         val flagRegex = Regex("""\B-[-\w\[\]]+""")
         flagRegex.findAll(text).forEach { m ->
             sb.setSpan(
@@ -386,13 +405,5 @@ wtchd                - открыть Watchdog
 """.trimIndent()
 
         return SpannableStringBuilder(raw)
-    }
-
-    private fun applyNeon(tv: TextView, color: Int, radius: Float = 4f, dx: Float = 0f, dy: Float = 0f) {
-        try {
-            tv.setShadowLayer(radius, dx, dy, color)
-        } catch (_: Throwable) {
-            // Игнорируем ошибки рендеринга теней на некоторых устройствах
-        }
     }
 }
