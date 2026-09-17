@@ -382,10 +382,10 @@ sleep <min>/<ms>/<sec> - задержка выполнения
 aspernet             - открыть AsperNet
 bugfixer             - открыть игру BUG FIXER
 bugtrack             - открыть BugTracker
-bye script           - открыть Bye Script
-epub editor          - открыть Epub Editor
+byescript            - открыть Bye Script
+epubeditor           - открыть Epub Editor
 flowscript           - открыть FlowScript
-led form             - открыть Led Form
+ledform              - открыть Led Form
 metro                - открыть METRO
 numtrap              - открыть Numtrap
 omnisearch           - открыть OMNISEARCH
