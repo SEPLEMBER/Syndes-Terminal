@@ -395,12 +395,6 @@ wtchd                - открыть Watchdog
 forth                - интерпретатор ForthME
 lua                  - интерпретатор LuaMe
 perceptron           - интерпретатор Perceptron
-synarch              - открыть Synarch
-tasks                - открыть Tasks.org
-zest                 - открыть Zest
-notally              - открыть Notally
-greenstash           - открыть GreenStash
-buckwheat            - открыть Buckwheat
 
 
 Примечания:
