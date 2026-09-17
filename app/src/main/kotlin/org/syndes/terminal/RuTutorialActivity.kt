@@ -50,12 +50,12 @@ class RuTutorialActivity : AppCompatActivity() {
         tutorialText.typeface = Typeface.MONOSPACE
         tutorialText.setTextColor(colorDefault)
 
-        // 1. Создаем исходный текст и применяем синтаксическую подсветку СРАЗУ при открытии
-        val initialSpannable = buildHighlightedCommands()
-        applySyntaxHighlighting(initialSpannable)
+        // 1. Сначала получаем чистый текст и сохраняем его для надежного поиска по индексам
+        originalText = buildHighlightedCommands().toString()
         
-        // 2. Сохраняем чистый текст для надежного поиска по индексам
-        originalText = initialSpannable.toString()
+        // 2. Создаем Spannable и применяем синтаксическую подсветку СРАЗУ при открытии
+        val initialSpannable = SpannableStringBuilder(originalText)
+        applySyntaxHighlighting(initialSpannable)
         
         // 3. Устанавливаем подсвеченный текст
         tutorialText.text = initialSpannable
@@ -63,8 +63,20 @@ class RuTutorialActivity : AppCompatActivity() {
         // 4. Подсветка панели поиска при открытии (привлекает внимание)
         highlightSearchOnOpen()
 
-        // Настройка поиска
+        // 5. Настройка поиска
         setupSearch()
+
+        // 6. ФИШКА: Имитация ввода "SYNDES PROJECT" для гарантированного триггера подсветки и вау-эффекта
+        searchEdit.post {
+            // Вводим текст (сработает TextWatcher -> performSearch)
+            searchEdit.setText("SYNDES PROJECT")
+            
+            // Мгновенно (с минимальной задержкой 300мс, чтобы глаз успел заметить текст) стираем его
+            searchEdit.postDelayed({
+                searchEdit.setText("") // Сработает TextWatcher -> сброс к originalText с applySyntaxHighlighting
+                searchEdit.clearFocus() // Скрываем клавиатуру, завершая "иллюзию" системной проверки
+            }, 300) // Можно поставить 0 для абсолютно мгновенного стирания
+        }
     }
 
     private fun highlightSearchOnOpen() {
@@ -76,7 +88,7 @@ class RuTutorialActivity : AppCompatActivity() {
         }
         
         searchContainer.background = drawable
-        // Запрашиваем фокус, чтобы показать готовность к вводу (клавиатура появится, если разрешено)
+        // Запрашиваем фокус, чтобы показать готовность к вводу
         searchEdit.requestFocus()
     }
 
@@ -92,7 +104,7 @@ class RuTutorialActivity : AppCompatActivity() {
                     clearSearch.visibility = View.VISIBLE
                     searchStats.visibility = View.VISIBLE
                 } else {
-                    // Возвращаем исходный подсвеченный текст
+                    // Возвращаем исходный подсвеченный текст (этот блок сработает после стирания "SYNDES PROJECT")
                     val initialSpannable = SpannableStringBuilder(originalText)
                     applySyntaxHighlighting(initialSpannable)
                     tutorialText.text = initialSpannable
