@@ -2180,7 +2180,7 @@ Hello!   \__/'---'\__/
     }
 }
 
-"epub editor" -> {
+"epubeditor" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
     val activityClass = ".MainActivity"
@@ -2201,7 +2201,7 @@ Hello!   \__/'---'\__/
     }
 }
 
-"led form" -> {
+"ledform" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
     val activityClass = ".LedFormActivity"
