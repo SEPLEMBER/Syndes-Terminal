@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🔍 Морфологический анализатор (RU Pro)"
+            android:text="🔍 Морфологический анализатор (Русская версия)"
             android:textColor="#00FFFF"
             android:textSize="20sp"
             android:textStyle="bold"
