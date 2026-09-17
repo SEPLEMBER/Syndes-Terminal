@@ -219,7 +219,7 @@ Hello!   \__/'---'\__/
                     null
                 }
  
-                    "tutorial", "help" -> {
+                    "tutorial", "hell" -> {
                         val intent = Intent(ctx, TutorialActivity::class.java) // TODO: switch to TutorialActivity when available
                         if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         ctx.startActivity(intent)
@@ -545,34 +545,6 @@ Hello!   \__/'---'\__/
             try {
                 ctx.startActivity(intent)
                 "Info: opening PhraseScript"
-            } catch (e: android.content.ActivityNotFoundException) {
-                "Error: activity not found or cannot be started: ${e.message}"
-            } catch (e: SecurityException) {
-                "Error: cannot start activity due to security: ${e.message}"
-            }
-        }
-    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
-        "Error: package or activity not found"
-    }
-}
-
-"aspernet" -> {
-    val pm = ctx.packageManager
-    val packageName = "es.zelliot.epubeditor"
-    val activityClass = ".AspernetActivity"
-    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
-    val component = android.content.ComponentName(packageName, fullActivity)
-
-    try {
-        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
-        if (!ai.exported) {
-            "Error: AspernetActivity is not exported"
-        } else {
-            val intent = android.content.Intent().setComponent(component)
-            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                ctx.startActivity(intent)
-                "Info: opening Aspernet"
             } catch (e: android.content.ActivityNotFoundException) {
                 "Error: activity not found or cannot be started: ${e.message}"
             } catch (e: SecurityException) {
@@ -1911,7 +1883,7 @@ Hello!   \__/'---'\__/
 // === ВНУТРЕННИЕ АКТИВНОСТИ (org.syndes.terminal) ===
 // Используем прямой Intent, это работает всегда, независимо от exported
 
-"справка", "ruhelp", "туториал", "инструкция", "помощь" -> {
+"справка", "ruhelp", "help", "туториал", "инструкция", "помощь" -> {
     val intent = Intent(ctx, RuTutorialActivity::class.java)
     if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     ctx.startActivity(intent)
