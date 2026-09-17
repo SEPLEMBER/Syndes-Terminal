@@ -2264,7 +2264,7 @@ Hello!   \__/'---'\__/
     }
 }
 
-"bye script" -> {
+"byescript" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.epubeditor"
     val activityClass = ".BYEScriptActivity"
