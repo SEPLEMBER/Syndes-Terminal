@@ -102,7 +102,7 @@ class DataSanitizerActivity : AppCompatActivity() {
         }
 
         TextView(this).apply {
-            text = "🛡️ PRO: Детерминированный очиститель и Экстрактор"
+            text = "BETA: Детерминированный очиститель и Экстрактор"
             setTextColor(COLOR_CYAN)
             textSize = 18f
             setTypeface(null, android.graphics.Typeface.BOLD)
@@ -110,7 +110,7 @@ class DataSanitizerActivity : AppCompatActivity() {
             mainLayout.addView(this)
         }
         TextView(this).apply {
-            text = "Математическая валидация (ИНН, ОГРН) и извлечение сущностей. Без ИИ."
+            text = "Математическая валидация (ИНН, ОГРН) и извлечение сущносте."
             setTextColor(COLOR_GRAY)
             textSize = 12f
             setPadding(0, 0, 0, 16)
