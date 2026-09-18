@@ -383,9 +383,6 @@ sydcheck <name>      - поиск подозрительных команд в s
 
 === СПЕЦИАЛЬНЫЕ КОМАНДЫ ===
 button (Текст - Опция1=cmd1 - Опция2=cmd2) - показать выбор пользователю
-cycle <N>t <interval>=<cmd> - выполнить cmd N раз с интервалом
-cycle next <Mi>i <N>t=<cmd> - выполнять cmd каждые Mi команд
-if <left> = <right> then <cmd> [else <cmd>] - условное выполнение
 parallel: cmd1; cmd2 - параллельное выполнение команд
 random {cmd1-cmd2-cmd3} - случайная команда из списка
 sleep <min>/<ms>/<sec> - задержка выполнения
