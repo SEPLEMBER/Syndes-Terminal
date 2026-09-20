@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         appendToTerminal(colorize("Welcome to Syndes Terminal!\nType 'help' to see commands.\n\n", infoColor), infoColor)
         
         sendButton.text = "RUN"
-        val embeddedYellow = Color.parseColor("#FFaf12ed")
+        val embeddedYellow = Color.parseColor("#FFCC00")
         sendButton.setTextColor(embeddedYellow)
         sendButton.setBackgroundColor(Color.TRANSPARENT)
         
