@@ -395,7 +395,6 @@ byescript            - открыть Bye Script
 epubeditor           - открыть Epub Editor
 flowscript           - открыть FlowScript
 ledform              - открыть Led Form
-metro                - открыть METRO
 numtrap              - открыть Numtrap
 omnisearch           - открыть OMNISEARCH
 scriptsteel          - открыть Scriptsteel
@@ -404,7 +403,7 @@ wtchd                - открыть Watchdog
 forth                - интерпретатор ForthME
 lua                  - интерпретатор LuaMe
 perceptron           - интерпретатор Perceptron
-
+rowan                - интерпретатор Rowan
 
 Примечания:
   - runsyd читает скрипты из корня SAF → директории 'scripts' (пытается name.syd, name.sh, name.txt)
