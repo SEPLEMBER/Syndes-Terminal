@@ -240,7 +240,7 @@ class MainActivity : AppCompatActivity() {
             if (stopQueueButton != null) return
             val btn = Button(this).apply {
                 text = "STOP QUEUE"
-                setTextColor(Color.parseColor("#FF5F1F"))
+                setTextColor(Color.parseColor("#1E90FF"))
                 setBackgroundColor(Color.TRANSPARENT)
                 setOnClickListener { stopQueue() }
                 visibility = View.GONE
@@ -349,7 +349,7 @@ class MainActivity : AppCompatActivity() {
         val defaultColor = ContextCompat.getColor(this@MainActivity, R.color.terminal_text)
         val infoColor = ContextCompat.getColor(this, R.color.color_info)
         val errorColor = ContextCompat.getColor(this, R.color.color_error)
-        val systemYellow = Color.parseColor("#FFD54F")
+        val systemYellow = Color.parseColor("#40E0D0")
 
         if (inputToken == "watchdog") {
             val parts = command.split("\\s+".toRegex()).filter { it.isNotEmpty() }
