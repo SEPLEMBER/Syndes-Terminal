@@ -332,6 +332,34 @@ Hello!   \__/'---'\__/
     }
 }
 
+"rowan" -> {
+    val pm = ctx.packageManager
+    val packageName = "es.zelliot.perceptron"
+    val activityClass = ".RWStartActivity"
+    val fullActivity = if (activityClass.startsWith(".")) packageName + activityClass else activityClass
+    val component = android.content.ComponentName(packageName, fullActivity)
+
+    try {
+        val ai = pm.getActivityInfo(component, android.content.pm.PackageManager.GET_META_DATA)
+        if (!ai.exported) {
+            "Error: Perceptron is not exported"
+        } else {
+            val intent = android.content.Intent().setComponent(component)
+            if (ctx !is android.app.Activity) intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                ctx.startActivity(intent)
+                "Info: opening Rowan VM"
+            } catch (e: android.content.ActivityNotFoundException) {
+                "Error: activity not found or cannot be started: ${e.message}"
+            } catch (e: SecurityException) {
+                "Error: cannot start activity due to security: ${e.message}"
+            }
+        }
+    } catch (e: android.content.pm.PackageManager.NameNotFoundException) {
+        "Error: package or activity not found"
+    }
+}
+
 "perceptron" -> {
     val pm = ctx.packageManager
     val packageName = "es.zelliot.perceptron"
