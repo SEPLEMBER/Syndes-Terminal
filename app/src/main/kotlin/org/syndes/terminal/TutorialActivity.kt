@@ -27,10 +27,10 @@ class TutorialActivity : AppCompatActivity() {
 
     private fun buildHighlightedCommands(): SpannableStringBuilder {
         // Цвета
-        val colorCommand = Color.parseColor("#4FC3F7") // blue-ish
-        val colorArg = Color.parseColor("#80E27E")     // green-ish
+        val colorCommand = Color.parseColor("#00A3FF") // blue-ish
+        val colorArg = Color.parseColor("#00A3FF")     // green-ish
         val colorWarning = Color.parseColor("#FF5252") // red
-        val colorNeonCyan = Color.parseColor("#00FFF0") // neon cyan
+        val colorNeonCyan = Color.parseColor("#00A3FF") // neon cyan
         val colorDefault = Color.parseColor("#E0E0E0")
 
         // Organized categories (A..E). Commands in each category are alphabetically sorted.
