@@ -31,10 +31,10 @@ class RuTutorialActivity : AppCompatActivity() {
     private var originalText: String = ""
     
     // Цветовая палитра
-    private val colorNeonCyan = Color.parseColor("#00FFF0")
+    private val colorNeonCyan = Color.parseColor("#00A3FF")
     private val colorNeonRed = Color.parseColor("#FF3333")
     private val colorDefault = Color.parseColor("#E0E0E0")
-    private val colorSearchHighlight = Color.parseColor("#3300FFF0") // Полупрозрачный cyan для фона поиска
+    private val colorSearchHighlight = Color.parseColor("#00A3FF") // Полупрозрачный cyan для фона поиска
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
