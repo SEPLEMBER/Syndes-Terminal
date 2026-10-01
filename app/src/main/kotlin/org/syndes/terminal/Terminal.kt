@@ -211,7 +211,7 @@ Hello!   \__/'---'\__/
                     "Info: Screen cleared."
                 }
 
-                "settings", "console" -> {
+                "settings", "console", "консоль", "настройки" -> {
                     val intent = Intent(ctx, SettingsActivity::class.java)
                     if (ctx !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
